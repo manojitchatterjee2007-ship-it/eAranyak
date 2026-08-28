@@ -43,3 +43,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+supabase/gemini.env
+
+firebase-service-account.json
+earanyak-*-firebase-adminsdk-*.json
+_sa_b64.txt
+
+# Local Codemagic credentials (never commit!)
+.codemagic_token
+codemagic.token

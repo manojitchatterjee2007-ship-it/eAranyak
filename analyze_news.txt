@@ -1,0 +1,6 @@
+Analyzing main.dart...
+
+   info - main.dart:6310:32 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - main.dart:6311:34 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+
+2 issues found.

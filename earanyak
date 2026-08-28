@@ -1,0 +1,15 @@
+NotFound: FileSystem.readFile (C:\Users\a\.supabase\profile)
+Using access token for profile: supabase
+Supabase CLI 2.115.0
+Using profile: supabase (supabase.co)
+Using access token for profile: supabase
+2026/08/26 15:28:27 HTTP GET: https://api.supabase.com/v1/projects/btbcojfuipogpsarjcdw/functions
+Deploying Function: bengali-news-editor
+Uploading asset (bengali-news-editor): supabase/functions/bengali-news-editor/deno.json
+Uploading asset (bengali-news-editor): supabase/functions/bengali-news-editor/index.ts
+2026/08/26 15:28:28 HTTP POST: https://api.supabase.com/v1/projects/btbcojfuipogpsarjcdw/functions/deploy
+Deploying Function: emp
+WARN: failed to read file: open supabase/functions/emp/index.ts: no such file or directory
+2026/08/26 15:28:29 HTTP POST: https://api.supabase.com/v1/projects/btbcojfuipogpsarjcdw/functions/deploy
+2026/08/26 15:28:30 HTTP PUT: https://api.supabase.com/v1/projects/btbcojfuipogpsarjcdw/functions
+[31munexpected deploy status 400: {"message":"Entrypoint path does not exist - /tmp/user_fn_btbcojfuipogpsarjcdw_a30f5b90-2d5e-440b-abc7-c3ee63c7e2c7_1/source/supabase/functions/emp/index.ts"}[39m

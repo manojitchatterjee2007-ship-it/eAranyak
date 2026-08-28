@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "246575627680",
+    "project_id": "earanyak-6d102",
+    "storage_bucket": "earanyak-6d102.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:246575627680:android:e61efce8fcba443282f8c5",
+        "android_client_info": {
+          "package_name": "com.example.earanyak"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsXLcwuJu0JhcRQ94tQVQuIRbRtOB1FkU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

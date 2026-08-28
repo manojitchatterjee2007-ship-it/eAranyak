@@ -1,0 +1,114 @@
+# Codemagic CI/CD configuration for eAranyak
+# Docs: https://docs.codemagic.io/yaml/yaml-getting-started/
+#
+# NOTE (free tier): you get 500 build minutes/month shared across ALL workflows.
+# macOS instances consume minutes ~2x faster than Linux/Windows, so these
+# workflows are MANUAL-TRIGGER ONLY ("Start build" from the Codemagic dashboard,
+# or via the Codemagic CLI). Change `when:` blocks below to trigger on push if
+# you upgrade or want automatic builds.
+
+workflows:
+
+  # ---------------------------------------------------------------------
+  # ANDROID - debug-signed release APK (works without a keystore).
+  # Runs on a Linux instance = cheapest/fastest on the free tier.
+  # ---------------------------------------------------------------------
+  android-workflow:
+    name: Android APK
+    instance_type: linux_x2
+    max_build_duration: 30
+    environment:
+      flutter: stable
+      vars:
+        BUNDLE_ID: com.example.earanyak
+    scripts:
+      - name: Get Flutter packages
+        script: flutter packages pub get
+      - name: Run tests (non-blocking)
+        script: flutter test || echo "tests failed - continuing"
+      - name: Build release APK (debug-signed until a keystore is added)
+        script: flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+
+  # ---------------------------------------------------------------------
+  # WINDOWS - zipped release folder. Package with installer.iss (Inno Setup)
+  # locally or add an Inno Setup step here later.
+  # ---------------------------------------------------------------------
+  windows-workflow:
+    name: Windows Build
+    instance_type: windows_x2
+    max_build_duration: 30
+    environment:
+      flutter: stable
+    scripts:
+      - name: Get Flutter packages
+        script: flutter packages pub get
+      - name: Build Windows release
+        script: flutter build windows --release
+      - name: Zip release folder
+        script: |
+          cd build\windows\x64\runner\Release
+          Compress-Archive -Path * -DestinationPath ..\..\..\..\earanyak-windows.zip -Force
+    artifacts:
+      - earanyak-windows.zip
+
+  # ---------------------------------------------------------------------
+  # iOS / iPadOS - builds WITHOUT code signing (no paid Apple Developer
+  # account needed). Produces an unsigned .xcarchive-derived .app and a
+  # Payload-based "ipa". iPadOS uses this identical iOS binary.
+  # NOTE: an unsigned ipa cannot be installed on physical devices without
+  # a $99/yr Apple Developer account; use the simulator app or sign later.
+  # ---------------------------------------------------------------------
+  ios-workflow:
+    name: iOS / iPadOS (unsigned)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter packages pub get
+      - name: Install CocoaPods dependencies
+        script: find ios -name "Podfile" -exec pod install --project-directory=ios \;
+      - name: Build iOS app (no codesign)
+        script: flutter build ios --release --no-codesign
+      - name: Package unsigned ipa
+        script: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/Runner.app
+          zip -r earanyak-ios-unsigned.ipa Payload
+          # Also keep a copy of the .app for the iOS simulator
+          cd ../../../
+          zip -r earanyak-ios-sim.zip build/ios/iphonesimulator 2>/dev/null || true
+    artifacts:
+      - build/ios/iphoneos/*.ipa
+      - earanyak-ios-sim.zip
+
+  # ---------------------------------------------------------------------
+  # macOS - unsigned/notarized .app. Recipients must right-click > Open
+  # to bypass Gatekeeper unless you later add Developer ID signing +
+  # notarization (requires paid Apple Developer Program).
+  # ---------------------------------------------------------------------
+  macos-workflow:
+    name: macOS App (unsigned)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter packages pub get
+      - name: Build macOS app
+        script: flutter build macos --release
+      - name: Zip app bundle
+        script: |
+          cd build/macos/Build/Products/Release
+          zip -r "$CM_BUILD_DIR/earanyak-macos.zip" earanyak.app
+    artifacts:
+      - earanyak-macos.zip

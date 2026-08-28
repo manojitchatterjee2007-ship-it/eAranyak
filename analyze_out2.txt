@@ -1,0 +1,5 @@
+Analyzing main.dart...                                          
+
+   info - Use 'const' with the constructor to improve performance - lib\main.dart:6256:32 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\main.dart:6257:34 - prefer_const_constructors
+

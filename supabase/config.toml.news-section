@@ -1,0 +1,17 @@
+# These are the relevant entries for the replacement news functions.
+# Merge them into your existing supabase/config.toml; do not replace the whole file.
+
+[functions.fetch-news-article]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/fetch-news-article/index.ts"
+
+[functions.bengali-news-editor]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/bengali-news-editor/index.ts"
+
+[functions.refresh-wildlife-news]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/refresh-wildlife-news/index.ts"

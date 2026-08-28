@@ -1,0 +1,279 @@
+Launching lib\main.dart on CPH2737 (wireless) in debug mode...
+Running Gradle task 'assembleDebug'...                          
+I/flutter (13001): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+D/FlutterJNI( 3805): Beginning load of flutter...
+D/FlutterJNI( 3805): flutter (null) was loaded normally!
+I/flutter ( 3805): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+D/FlutterRenderer( 3805): Width is zero. 0,0
+I/flutter ( 3805): supabase.supabase_flutter: INFO: ***** Supabase init completed ***** 
+D/FlutterRenderer( 3805): Width is zero. 0,0
+D/FlutterJNI( 3805): Sending viewport metrics to the engine.
+D/FlutterJNI( 3805): Sending viewport metrics to the engine.
+I/flutter ( 3805): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+W/FlutterLoader( 7799): If you are trying to specify io.flutter.embedding.engine.loader.FlutterLoader.aot-shared-library-name in your application manifest, please make sure to use the new metadata key name: io.flutter.embedding.android.AOTSharedLibraryName
+E/FlutterLoader( 7799): External path /libandroid_release_android_library_flutter_artifacts.so rejected; not overriding aot-shared-library-name.
+E/FlutterLoader( 7799): Skipping unsafe AOT shared library name flag: libandroid_release_android_library_flutter_artifacts.so. Please ensure that the library is vetted and placed in your application's internal storage.
+W/FlutterLoader( 7799): If you are trying to specify io.flutter.embedding.engine.loader.FlutterLoader.flutter-assets-dir in your application manifest, please make sure to use the new metadata key name: io.flutter.embedding.android.FlutterAssetsDir
+I/flutter ( 7799): [IMPORTANT:flutter/shell/common/shell.cc(529)] [Action Required]: Impeller opt-out deprecated.
+I/flutter ( 7799):     The application opted out of Impeller by either using the
+I/flutter ( 7799):     `--no-enable-impeller` flag or the
+I/flutter ( 7799):     `io.flutter.embedding.android.EnableImpeller` `AndroidManifest.xml` entry.
+I/flutter ( 7799):     These options are going to go away in an upcoming Flutter release. Remove
+I/flutter ( 7799):     the explicit opt-out. If you need to opt-out, please report a bug describing
+I/flutter ( 7799):     the issue.
+I/flutter ( 7799): 
+I/flutter ( 7799):     https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+I/flutter ( 7799): 
+W/flutter-plugin-( 7799): type=1400 audit(0.0:9332): avc:  granted  { execute } for  path="/data/data/com.google.android.apps.nbu.paisa.user/app_pccache2/5/FCA0BF52AC6325643D5029EB0445E265E8586A98/pcam.jar" dev="dm-79" ino=1257326 scontext=u:r:untrusted_app:s0:c170,c256,c512,c768 tcontext=u:object_r:app_data_file:s0:c170,c256,c512,c768 tclass=file app=com.google.android.apps.nbu.paisa.user
+Running Gradle task 'assembleDebug'...                            320.9s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...          46.4s
+D/FlutterJNI( 7000): Beginning load of flutter...
+D/FlutterJNI( 7000): flutter (null) was loaded normally!
+I/flutter ( 7000): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+D/FlutterRenderer( 7000): Width is zero. 0,0
+I/flutter ( 7000): supabase.supabase_flutter: INFO: ***** Supabase init completed ***** 
+D/FlutterRenderer( 7000): Width is zero. 0,0
+D/FlutterJNI( 7000): Sending viewport metrics to the engine.
+D/FlutterJNI( 7000): Sending viewport metrics to the engine.
+I/flutter ( 7000): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+D/OplusScrollToTopManager( 7000): com.example.earanyak/io.flutter.embedding.android.FlutterActivity,This com.android.internal.policy.DecorView{aef0c9a V.E...... R....... 0,0-1080,2373 aid=0 alpha=1.0 viewInfo = }[FlutterActivity] change focus to true
+Syncing files to device CPH2737 (wireless)...                   
+D/WindowOnBackDispatcher( 7000):  predictive settings is disabled for ApplicationInfo{a528ce9 com.example.earanyak}
+W/WindowOnBackDispatcher( 7000): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher( 7000): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/libc    ( 7000): Access denied finding property "vendor.debug.stagefright.mediacodec.trace"
+D/IAtlas  ( 7000): IAtlas::init CallingPid 7000
+D/IAtlas  ( 7000): IAtlas::init this 0xb400006f9e9c87a0
+D/ListServiceUtils( 7000): mListServiceUtils::init CallingPid 7000
+D/ListServiceUtils( 7000): mListServiceUtils::init this 0xb400006fa2dbc640
+I/ApexCodecsLazy( 7000): Failed to load libcom.android.media.swcodec.apexcodecs.so: dlopen failed: library "libcom.android.media.swcodec.apexcodecs.so" not found
+I/Codec2Client( 7000): Available Codec2 services: "default" "software"
+D/CCodecConfig( 7000): read media type: audio/mpeg
+D/ReflectedParamUpdater( 7000): extent() != 1 for single value type: algo.buffers.max-count.values
+D/ReflectedParamUpdater( 7000): extent() != 1 for single value type: output.subscribed-indices.values
+D/ReflectedParamUpdater( 7000): extent() != 1 for single value type: input.buffers.allocator-ids.values
+D/ReflectedParamUpdater( 7000): extent() != 1 for single value type: output.buffers.allocator-ids.values
+D/ReflectedParamUpdater( 7000): extent() != 1 for single value type: algo.buffers.allocator-ids.values
+D/ReflectedParamUpdater( 7000): extent() != 1 for single value type: output.buffers.pool-ids.values
+D/ReflectedParamUpdater( 7000): extent() != 1 for single value type: algo.buffers.pool-ids.values
+I/CCodecConfig( 7000): query failed after returning 8 values (BAD_INDEX)
+D/OplusAtlasMapsUtil( 7000): [registerAllList:273]
+D/OplusAtlasMapsUtil( 7000): [doParser:67]ctype:1,platform:2,uid:10044,pid:7000,pkg:com.example.earanyak
+D/OplusAtlasMapsUtil( 7000): OplusAtlasMapsUtil parse success, output size:1
+D/OplusMediaMonitor( 7000): codecSessionKey: -5476376667477075712, codecSessionInfo: b400006f9c6d3800
+W/Codec2Client( 7000): query -- param skipped: index = 1107298332.
+I/CCodecConfig( 7000): query failed after returning 8 values (BAD_INDEX)
+E/xample.earanyak( 7000): Failed to query component interface for required system resources: 6
+W/Codec2Client( 7000): query -- param skipped: index = 1342179345.
+W/Codec2Client( 7000): query -- param skipped: index = 2415921170.
+D/C2Store ( 7000): Using DMABUF Heaps
+D/CCodecBuffers( 7000): [c2.android.mp3.decoder#469:1D-Output.Impl[N]] converted 0 buffers to array mode of 4
+I/DMABUFHEAPS( 7000): Using DMA-BUF heap named: mtk_mm
+D/SoundPool::Sound( 7000): begin to decode(fd=237)
+D/CCodecBuffers( 7000): [c2.android.mp3.decoder#469:1D-Input.Impl[N]] converted 4 buffers to array mode of 4
+D/PipelineWatcher( 7000): [0xb400006fa65b8708] pipelineFull: too many frames in pipeline (4)
+D/PipelineWatcher( 7000): [0xb400006fa65b8708] pipelineFull: too many frames in pipeline (4)
+D/PipelineWatcher( 7000): [0xb400006fa65b8708] pipelineFull: too many frames in pipeline (4)
+D/SoundPool::Sound( 7000): end to decode (fd=237)
+I/hw-BpHwBinder( 7000): onLastStrongRef automatically unlinking death recipients
+D/OplusAtlasMapsUtil( 7000): [~OplusAtlasMapsUtil][45]
+D/AtlasEventUploadUtils( 7000): setEvent event:atlas_event_video_monitor_network_switch
+I/AudioTrack( 7000): set(): type=audio,case=1,attributes=1,content_type=2,usage=1,source=0,flags=0x900
+D/AudioTrackExtImpl( 7000): AudioTrackExtImpl init
+D/ExtensionsLoader( 7000): createInstance(64bit) : createExtendedFactory
+D/ExtensionsLoader( 7000): Opened libSchedAssistExtImpl.so
+D/AudioTrack( 7000): set(): streamType -1, sampleRate 24000, format 0x1, channelMask 0x3, frameCount 0, flags #0, notificationFrames 0, sessionId 0, transferType 0, uid -1, pid -1
+I/AudioTrack( 7000): set(): 0xb400006fa18e5a00, Create AudioTrackThread, tid = 13134
+D/AudioSystem( 7000): onNewServiceWithAdapter: media.audio_flinger service obtained 0xb400006fa2dc0f00
+D/AudioSystem( 7000): getService: IAudioFlingerService retrieved: 0xb400006f9c72b040  IAudioFlinger cached: 0xb400006fa2dc0f00
+D/AudioDetectPulse( 7000): setDetectPulse, mIsDetectPulse 0, 0x71d3c0d108
+D/AudioTrackExtImpl( 7000): doSchedBoost, set audioapp task boost, pid=7000, tid=13133, enable=1, ret=0
+D/AudioTrack( 7000): createTrack state 0 output.outputId=29
+D/AudioSystem( 7000): onNewService: media.audio_policy service obtained 0xb400006f9e8f0000
+D/AudioSystem( 7000): getService: IAudioPolicyService retrieved: 0xb400006f9e8f0000  cached: 0xb400006f9e8f0000
+I/AudioTrack( 7000): createTrack_l(3097) on outputId(29) : 0xb400006fa18e5a00, mCblk = 0x71e019e000,  mLatency = 10964, mAfLatency = 42, frameCount = 262144, mSampleRate = 24000, mFlags = 0, mReqFrameCount = 262144, mNotificationFramesAct = 0
+D/AudioTrackExtImpl( 7000): doSchedBoost, set audioapp task boost, pid=7000, tid=13133, enable=0, ret=0
+E/AudioTrackExtImpl( 7000): get fade type, but return null, pid 7000, uid 10044
+D/AudioTrack( 7000): set: pop_optimize mIsPopOptimizeSupport:0, mIsPopOptimizeFlush:0
+D/AudioTrack( 7000): setVolume(3097) left 1.000 right 1.000 , callingPid 7000
+D/AudioTrack( 7000): start(3097): prior state:STATE_STOPPED output 29 stream 3 session 21185
+D/ProfileInstaller( 7000): Installing profile for com.example.earanyak
+Syncing files to device CPH2737 (wireless)...                       3.5s
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on CPH2737 is available at: http://127.0.0.1:64100/CX30ZBL9VnA=/
+The Flutter DevTools debugger and profiler on CPH2737 is available at: http://127.0.0.1:64100/CX30ZBL9VnA=/devtools/?uri=ws://127.0.0.1:64100/CX30ZBL9VnA=/ws
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80452760, mIsMoving = true, mUpdated = true
+D/ViewExtract( 7000): [OplusViewExtractManager] OplusViewExtractManager init com.example.earanyak
+I/PowerHalMgrImpl( 7000): perfLockAcq is supported. 
+I/PowerHalWrapper( 7000): PowerHalWrapper.getInstance 
+E/xample.earanyak( 7000): legacy_receive_flag: 1
+D/xample.earanyak( 7000): /proc/perfmgr_sbe/sbe_ioctl not exists: No such file or directory
+I/PowerHalMgrImpl( 7000): hdl:33444, pid:7000 
+D/OplusInputMethodManagerInternal( 7000): get inputMethodManager extension: com.android.internal.view.IInputMethodManager$Stub$Proxy@92c89f1
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80452929, mIsMoving = false, mUpdated = true
+I/VelocityTracker( 7000): LSQ2 speed rezero
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/VelocityTracker( 7000): LSQ2 speed rezero
+I/ScrollIdentify( 7000): on fling
+I/VelocityTracker( 7000): LSQ2 speed rezero
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/PowerHalWrapper( 7000): PowerHalWrapper.getInstance 
+W/FinalizerDaemon( 7000): type=1400 audit(0.0:9334): avc:  denied  { getopt } for  path="/dev/socket/usap_pool_primary" scontext=u:r:untrusted_app:s0:c44,c256,c512,c768 tcontext=u:r:zygote:s0 tclass=unix_stream_socket permissive=0 app=com.example.earanyak
+I/PowerHalMgrImpl( 7000): hdl:33447, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80454222, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33449, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80454427, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+D/BufferPoolAccessor2.0( 7000): bufferpool2 0xb400006fc8c32028 : 0(0 size) total buffers - 0(0 size) used buffers - 0/5 (recycle/alloc) - 4/920 (fetch/transfer)
+D/BufferPoolAccessor2.0( 7000): evictor expired: 1, evicted: 1
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80454910, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33452, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80455225, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80455773, mIsMoving = true, mUpdated = true
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80455838, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80456592, mIsMoving = true, mUpdated = true
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80456624, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/PowerHalMgrImpl( 7000): hdl:33453, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80459256, mIsMoving = true, mUpdated = true
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80459316, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80460150, mIsMoving = true, mUpdated = true
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80460182, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+D/AudioTrack( 7000): setVolume(3097) left 0.000 right 0.000 , callingPid 7000
+D/AudioTrack( 7000): [oplusAudioFade]stop mState STATE_ACTIVE, mIsTrackSupportFade 1
+D/AudioTrack( 7000): stop(3097): prior state:STATE_ACTIVE output 29 stream 3 session 21185
+I/AudioTrack( 7000): stop(3097): 0xb400006fa18e5a00 stop done
+I/PowerHalMgrImpl( 7000): hdl:33455, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80462550, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33459, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80462698, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80463251, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33462, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80463392, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80463820, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33465, pid:7000 
+I/PowerHalMgrImpl( 7000): hdl:33466, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80465372, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80466347, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33469, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80466527, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/PowerHalMgrImpl( 7000): hdl:33472, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80467786, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33474, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80467909, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+D/HWUI    ( 7000): --- Failed to create image decoder with message 'unimplemented'
+E/FlutterImageDecoderImplDefault( 7000): Failed to decode image
+E/FlutterImageDecoderImplDefault( 7000): android.graphics.ImageDecoder$DecodeException: Failed to create image decoder with message 'unimplemented'Input contained an error.
+E/FlutterImageDecoderImplDefault( 7000): 	at android.graphics.ImageDecoder.nCreate(Native Method)
+E/FlutterImageDecoderImplDefault( 7000): 	at android.graphics.ImageDecoder.-$$Nest$smnCreate(ImageDecoder.java:0)
+E/FlutterImageDecoderImplDefault( 7000): 	at android.graphics.ImageDecoder$ByteBufferSource.createImageDecoder(ImageDecoder.java:262)
+E/FlutterImageDecoderImplDefault( 7000): 	at android.graphics.ImageDecoder.decodeBitmapImpl(ImageDecoder.java:1975)
+E/FlutterImageDecoderImplDefault( 7000): 	at android.graphics.ImageDecoder.decodeBitmap(ImageDecoder.java:1967)
+E/FlutterImageDecoderImplDefault( 7000): 	at io.flutter.embedding.engine.image.ImageDecoderDefaultImpl.decodeImage(ImageDecoderDefaultImpl.java:44)
+E/FlutterImageDecoderImplDefault( 7000): 	at io.flutter.embedding.engine.image.FlutterImageDecoder.decodeImage(FlutterImageDecoder.java:60)
+E/FlutterImageDecoderImplDefault( 7000): 	at io.flutter.embedding.engine.FlutterJNI.decodeImage(FlutterJNI.java:577)
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80468491, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33477, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80468572, mIsMoving = false, mUpdated = true
+I/VelocityTracker( 7000): LSQ2 speed rezero
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/VelocityTracker( 7000): LSQ2 speed rezero
+I/ScrollIdentify( 7000): on fling
+I/VelocityTracker( 7000): LSQ2 speed rezero
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80468894, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33480, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80468941, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/PowerHalMgrImpl( 7000): hdl:33482, pid:7000 
+D/BufferPoolAccessor2.0( 7000): bufferpool2 0xb400006fc8c32028 : 0(0 size) total buffers - 0(0 size) used buffers - 0/5 (recycle/alloc) - 4/920 (fetch/transfer)
+D/BufferPoolAccessor2.0( 7000): Destruction - bufferpool2 0xb400006fc8c32028 cached: 0/0M, 0/0% in use; allocs: 5, 0% recycled; transfers: 920, 100% unfetched
+D/BufferPoolAccessor2.0( 7000): evictor expired: 1, evicted: 0
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80554755, mIsMoving = true, mUpdated = true
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80554797, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/PowerHalMgrImpl( 7000): hdl:33485, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80556743, mIsMoving = true, mUpdated = true
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80556774, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/PowerHalMgrImpl( 7000): hdl:33487, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 0, mVsyncTime = 80558835, mIsMoving = true, mUpdated = true
+I/PowerHalMgrImpl( 7000): hdl:33491, pid:7000 
+I/DynamicFramerate [AnimationSpeedAware]( 7000): onEventHandled: info: InputEventInfo: mX = 0, mY = 0, mAction = 1, mVsyncTime = 80559370, mIsMoving = false, mUpdated = true
+D/OplusViewDragTouchViewHelper( 7000): dispatchTouchView action = 1
+I/ScrollIdentify( 7000): on fling
+D/ViewRootImplExtImpl( 7000): the up motion event handled by client, just return
+I/PowerHalMgrImpl( 7000): hdl:33494, pid:7000 
+D/VRI[FlutterActivity]( 7000): onFocusEvent false
+W/VRI[FlutterActivity]( 7000): handleResized abandoned!
+D/OplusScrollToTopManager( 7000): com.example.earanyak/io.flutter.embedding.android.FlutterActivity,This com.android.internal.policy.DecorView{aef0c9a V.E...... R....... 0,0-1080,2373 aid=0 alpha=1.0 viewInfo = }[FlutterActivity] change focus to false
+D/VRI[FlutterActivity]( 7000): onFocusEvent true
+D/InsetsController( 7000): hide(ime(), fromIme=false)
+I/ImeTracker( 7000): com.example.earanyak:d809e61d: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+W/VRI[FlutterActivity]( 7000): handleResized abandoned!
+D/OplusScrollToTopManager( 7000): com.example.earanyak/io.flutter.embedding.android.FlutterActivity,This com.android.internal.policy.DecorView{aef0c9a V.E...... R....... 0,0-1080,2373 aid=0 alpha=1.0 viewInfo = }[FlutterActivity] change focus to true
+D/VRI[FlutterActivity]( 7000): onFocusEvent false
+D/OplusGraphicsEvent( 7000): FRTC type change to 1, rate: 20, info: false
+I/GuiUtils( 7000): VRR [FRTC] s client update frtcType from 0 to 1
+I/GuiUtils( 7000): VRR [FRTC] s client update frtcRate from 0 to 20
+I/GuiUtils( 7000): VRR [FRTC] s client update frtcInfo from  to false
+D/OplusGraphicsEvent( 7000): FRTC type change to 1, rate: 20, info: false
+D/OplusGraphicsEvent( 7000): FRTC type change to 1, rate: 20, info: false
+D/OplusGraphicsEvent( 7000): FRTC type change to 0, rate: 0, info: false
+I/GuiUtils( 7000): VRR [FRTC] s client update frtcType from 1 to 0
+I/GuiUtils( 7000): VRR [FRTC] s client update frtcRate from 20 to 0
+D/VRI[FlutterActivity]( 7000): dispatchAppVisibility visible:false mUpcomingWindowFocus:false
+D/VRI[FlutterActivity]( 7000): visibilityChanged oldVisibility=true newVisibility=false
+I/SurfaceView( 7000): 152776441 surfaceDestroyed
+D/BLASTBufferQueue( 7000): [91b2ef9 SurfaceView[com.example.earanyak/io.flutter.embedding.android.FlutterActivity]#1](f:0,a:2) destructor()
+D/BufferQueueConsumer( 7000): [91b2ef9 SurfaceView[com.example.earanyak/io.flutter.embedding.android.FlutterActivity]#1(BLAST Consumer)1](id:1b5800000001,api:0,p:-1,c:7000) disconnect
+I/DynamicFramerate [AnimationInfoManager]( 7000): onWindowVisibilityChanged: viewRoot-android.view.ViewRootImpl@f215866 visibility changes to 8
+D/SurfaceView( 7000): 135486437positionLost mSurfaceControl is null return;
+D/HWUI    ( 7000): RenderProxy::destroy: this=0xb400006ff2266d00, mContext=0xb400006fccab09c0
+D/HWUI    ( 7000): SkiaOpenGLPipeline::setSurface: this=0xb4000070e1c91280, surface=NULL
+D/ViewRootImplExtImpl( 7000): wrapConfigInfoIntoFlags rotation=0, smallestScreenWidthDp=360, isAutolayoutSwdpModified=false, residentWS=false, scenario=0, bounds=Rect(0, 0 - 1080, 2373), isFirstDraw=false, relayoutAsync=false, flags=0, newFlags=1244146944, title=com.example.earanyak/io.flutter.embedding.android.FlutterActivity
+D/VRI[FlutterActivity]( 7000): relayoutWindow result, sizeChanged:false, surfaceControlChanged:true, transformHintChanged:false, mSurfaceSize:Point(1080, 2373), mLastSurfaceSize:Point(1080, 2373), mWidth:1080, mHeight:2373, requestedWidth:1080, requestedHeight:2373, transformHint:0, installOrientation:0, displayRotation:0, isSurfaceValid:false, attr.flag:-2122252032, tmpFrames:ClientWindowFrames{frame=[0,0][1080,2373] display=[0,0][1080,2373] parentFrame=[0,0][0,0]}, relayoutResult:2, relayoutAsync:false, mSyncSeqId:0
+D/BLASTBufferQueue( 7000): [VRI[FlutterActivity]#0](f:0,a:1) destructor()
+D/BufferQueueConsumer( 7000): [VRI[FlutterActivity]#0(BLAST Consumer)0](id:1b5800000000,api:0,p:-1,c:7000) disconnect
+D/VRI[FlutterActivity]( 7000): setWindowStopped stopped:true
+D/OplusScrollToTopManager( 7000): com.example.earanyak/io.flutter.embedding.android.FlutterActivity,This com.android.internal.policy.DecorView{aef0c9a I.E...... R.....ID 0,0-1080,2373 aid=0 alpha=1.0 viewInfo = }[FlutterActivity] change focus to false
+Lost connection to device.
