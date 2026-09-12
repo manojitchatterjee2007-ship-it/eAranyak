@@ -430,6 +430,17 @@ verify_jwt = false
 import_map = "./functions/refresh-wildlife-news/deno.json"
 entrypoint = "./functions/refresh-wildlife-news/index.ts"
 
+[functions.reprocess-all-news]
+enabled = true
+verify_jwt = false
+import_map = "./functions/reprocess-all-news/deno.json"
+entrypoint = "./functions/reprocess-all-news/index.ts"
+
+[functions.notify-news-published]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/notify-news-published/index.ts"
+
 [functions.bengali-news-editor]
 enabled = true
 verify_jwt = false

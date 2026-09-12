@@ -106,6 +106,74 @@ select cron.schedule(
   $$
 );
 
+-- -------------------------------------------------------------
+-- 4. USER PROFILES
+-- -------------------------------------------------------------
+create table if not exists public.profiles (
+  id uuid references auth.users on delete cascade not null primary key,
+  full_name text,
+  mobile_number text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+drop policy if exists "Public profiles are viewable by everyone." on public.profiles;
+create policy "Public profiles are viewable by everyone."
+  on public.profiles for select using (true);
+
+drop policy if exists "Users can insert their own profile." on public.profiles;
+create policy "Users can insert their own profile."
+  on public.profiles for insert with check (auth.uid() = id);
+
+drop policy if exists "Users can update own profile." on public.profiles;
+create policy "Users can update own profile."
+  on public.profiles for update using (auth.uid() = id);
+
+-- -------------------------------------------------------------
+-- 5. MAGAZINES & PAGES
+-- -------------------------------------------------------------
+create table if not exists public.magazines (
+  id uuid not null default gen_random_uuid() primary key,
+  title text not null,
+  issue_date text not null,
+  total_pages int not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.magazine_pages (
+  id uuid not null default gen_random_uuid() primary key,
+  magazine_id uuid references public.magazines on delete cascade,
+  page_number int not null,
+  storage_path text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.magazines enable row level security;
+alter table public.magazine_pages enable row level security;
+
+drop policy if exists "Anyone can read magazines" on public.magazines;
+create policy "Anyone can read magazines" on public.magazines for select using (true);
+
+drop policy if exists "Anyone can read magazine pages" on public.magazine_pages;
+create policy "Anyone can read magazine pages" on public.magazine_pages for select using (true);
+
+-- -------------------------------------------------------------
+-- 6. WILDLIFE GALLERY
+-- -------------------------------------------------------------
+create table if not exists public.wildlife_gallery (
+  id uuid not null default gen_random_uuid() primary key,
+  title text,
+  caption text,
+  storage_path text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.wildlife_gallery enable row level security;
+
+drop policy if exists "Anyone can read gallery" on public.wildlife_gallery;
+create policy "Anyone can read gallery" on public.wildlife_gallery for select using (true);
+
 -- Verify schedules with:
 --   select jobname, schedule, active from cron.job;
 -- Check recent run results with:

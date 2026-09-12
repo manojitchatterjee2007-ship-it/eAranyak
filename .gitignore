@@ -52,3 +52,33 @@ _sa_b64.txt
 # Local Codemagic credentials (never commit!)
 .codemagic_token
 codemagic.token
+
+# eAranyak local / generated files
+.artifacts/
+.wrangler/
+node_modules/
+*.tmp
+
+# Local build/test output
+build_web_test.txt
+build_web_test_err.txt
+analyze_*.txt
+
+# Generated installers / APKs
+dist/
+*.apk
+*.aab
+*.exe
+
+# Generated Android native resources
+android/app/src/main/res/raw/
+
+# Local IDE/runtime files
+.flutter-plugins
+
+# OS/editor temporary files
+*.bak
+*.orig
+
+# Generated Gradle reports
+android/build/reports/

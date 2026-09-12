@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.earanyak.app",
+      "sha256_cert_fingerprints": [
+        "5F:DB:69:C6:9C:B7:E3:AB:2C:8B:A3:21:0E:25:AF:B7:9E:35:A9:B3:5E:C8:5E:FE:22:0C:48:E2:26:92:A0:8B"
+      ]
+    }
+  }
+]

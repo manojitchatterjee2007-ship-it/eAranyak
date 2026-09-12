@@ -2,7 +2,7 @@
 
 #define MyAppName "এখন আরণ্যক"
 #define MyAppEnglishName "Ekhon Aranyak"
-#define MyAppVersion "1.0"
+#define MyAppVersion "2.1"
 #define MyAppPublisher "Manojit Chatterjee"
 #define MyAppExeName "earanyak.exe"
 #define SourceDir "build\windows\x64\runner\Release"

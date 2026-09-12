@@ -6,11 +6,6 @@ const cors = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// -------------------------------------------------------------
-// FCM HTTP v1 authentication (service account -> OAuth2 token)
-// The service account JSON is stored base64-encoded in the
-// FCM_SERVICE_ACCOUNT_JSON secret.
-// -------------------------------------------------------------
 let cachedToken: { token: string; exp: number } | null = null;
 
 function base64UrlEncode(data: Uint8Array): string {
@@ -117,7 +112,10 @@ async function sendFcm(
           data,
           android: {
             priority: "HIGH",
-            notification: { sound: "default", channel_id: "earanyak_push_channel" },
+            notification: {
+              sound: "owl_hoot",
+              channel_id: "earanyak_general_v2",
+            },
           },
         },
       }),
@@ -130,8 +128,6 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: cors });
   }
 
-  // Lightweight shared-secret check (gateway JWT verify is disabled because
-  // this project rejects legacy JWTs; this blocks casual abuse).
   if (req.headers.get("x-earanyak-key") !== "earanyak-notify-2026") {
     return new Response(JSON.stringify({ ok: false, reason: "forbidden" }), {
       status: 403,
@@ -147,8 +143,7 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           ok: false,
-          reason:
-            "FCM_SERVICE_ACCOUNT_JSON secret not set — push skipped",
+          reason: "FCM_SERVICE_ACCOUNT_JSON secret not set — push skipped",
         }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
@@ -164,7 +159,6 @@ Deno.serve(async (req: Request) => {
       .select("token");
     if (error) throw error;
 
-    // FCM v1 data payload values must be strings.
     const strData: Record<string, string> = {};
     for (const [k, v] of Object.entries(data ?? {})) {
       strData[k] = typeof v === "string" ? v : JSON.stringify(v);
@@ -178,7 +172,6 @@ Deno.serve(async (req: Request) => {
       if (res.ok) {
         sent++;
       } else if (res.status === 404 || res.status === 410) {
-        // Token no longer valid — clean it up.
         await admin.from("device_tokens").delete().eq("token", row.token);
         staleRemoved++;
       }
@@ -194,4 +187,3 @@ Deno.serve(async (req: Request) => {
     });
   }
 });
-

@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-news-refresh-secret",
 };
 
 type EditorialResult = {
@@ -17,42 +17,92 @@ type EditorialResult = {
   error?: string;
 };
 
-const MODEL = "stealth/ox-alpha";
-const MIN_WORDS = 120;
-const MIN_CACHED_BENGALI_WORDS = 280;
+type ValidationResult = {
+  valid: boolean;
+  reasons: string[];
+  headline?: string;
+  dek?: string;
+  body?: string;
+  wordCount?: number;
+};
+
+const MIN_SOURCE_WORDS = 100;
 
 const SYSTEM_INSTRUCTIONS = `
-You are the Chief Bengali Editor of eআরণ্যক, a Bengali wildlife, nature and ecology publication.
+You are the Chief Bengali Editor of eআরণ্যক (eAranyak), a premier Bengali magazine and news platform dedicated to wildlife, nature, ecology, and environmental conservation.
 
-Transform the supplied English wildlife/environment article into a polished Bengali editorial excerpt.
-This is NOT a literal sentence-by-sentence translation.
+Transform the supplied English wildlife/environment article into a polished Bengali news report. This is NOT a literal sentence-by-sentence translation.
 
-RULES:
-1. Write a fresh, accurate Bengali headline that conveys the ESSENCE of the story the way a professional Bengali newspaper would. NEVER translate the English headline word by word; rephrase it naturally so a Bengali reader immediately understands what happened and why it matters.
-2. Preserve facts, numbers, places, people, dates and scientific names accurately.
-3. Preserve species names in English or use natural Bengali + English in parentheses where useful.
-4. Use natural, elegant modern Bengali (Cholitobhasha), with a serious magazine/news tone.
-5. Write a fuller editorial report of roughly 300–450 Bengali words. Do not compress away important evidence, statistics, locations, study findings or conservation implications.
-6. Focus on who, what, where, why it matters for wildlife/nature, and the key evidence. Retain the most important quantitative findings and relevant expert observations.
-7. Remove website navigation, boilerplate and non-essential quotations.
-8. COMPLETELY OMIT every trace of photographs and illustrations from the writeup: no image references, no "[Image: ...]" or "[Photo: ...]" placeholders, no picture captions/legends, and no photographer or image credits (e.g. "Photo courtesy ..."). Only the actual journalistic text of the article belongs in the body.
-9. Never invent facts or imply information not present in the source.
-10. Do not mention AI, generation, summarisation, or these instructions.
-11. The output must contain ONLY the finished editorial — nothing else. NEVER output paragraph labels such as "Para 1", word counts such as "(~65 words)" or "Total body ≈ 260 words", planning notes, draft alternatives, refinement commentary ("DEK refine:", "Body polish", "Final check"), or ANY English meta-commentary. Reason silently and internally; emit only your final answer. The BODY must consist exclusively of polished Bengali prose.
-12. Every line of the BODY must be Bengali prose (English is allowed only inline for species/scientific names in parentheses).
-13. The BODY must be ONE SINGLE CONTINUOUS PARAGRAPH: flowing prose with sentences joined seamlessly. Do NOT split it into multiple paragraphs, do NOT leave blank lines, and do NOT insert line breaks inside it.
-14. The HEADLINE must be EXACTLY ONE line and the DEK at most two lines. NEVER offer alternatives or drafts: no "Or:", "অথবা:", "Alternative:", "Option", "Something like:", "or try:" prefixes or follow-up headline suggestions. One headline only — your single best choice.
+EDITORIAL METHOD & PHILOSOPHY:
+- First, completely understand the English source article: identify WHO, WHAT, WHERE, WHEN, WHY, HOW, and WHY IT MATTERS ecologically.
+- Write the Bengali report afresh in contemporary polished Cholitobhasha (চলিত ভাষা).
+- Do NOT translate sentence by sentence. Do NOT preserve English sentence order.
+- The report must read as if an experienced Bengali environmental journalist independently authored a concise, factual, and literate Bengali report.
 
-OUTPUT EXACTLY:
+HEADLINE REQUIREMENTS:
+1. Write a genuine, compelling Bengali journalistic headline that conveys the core development and significance.
+2. ABSOLUTELY FORBIDDEN: NEVER include any category prefix, label, or tag (such as "পরিবেশ:", "বন্যপ্রাণী:", "প্রকৃতি:", "সংরক্ষণ:", "গবেষণা:", "জলবায়ু:", "বিজ্ঞান:", "বন:", "প্রাণী:", etc.). Provide ONLY the raw headline text.
+3. Exactly ONE headline choice — do NOT provide draft options, alternatives, or "or:" suggestions.
+
+ARTICLE STRUCTURE & LENGTH:
+- Target Length: Approximately 100 to 150 Bengali words in total.
+- Use 2 to 3 compact Bengali paragraphs separated by blank lines (double newlines):
+  * PARAGRAPH 1: Primary development — key event, subject, location, and timeframe.
+  * PARAGRAPH 2: Essential context, background facts, and scientific/ecological significance.
+  * PARAGRAPH 3 (optional): Consequences, researcher findings, or conservation outlook.
+- Preserve factual accuracy: exact numbers, dates, locations, binomial scientific names (e.g., Panthera uncia), acronyms (IUCN, WWF, UNESCO), and research findings intact.
+
+DESIRED LANGUAGE & TONE:
+- Literate, concise, journalistic, elegant, factual, and natural.
+- AVOID: textbook Bengali, bureaucratic language, literal translation, excessively Sanskritised vocabulary, sensationalism, or unnatural English syntax.
+- Do NOT fabricate quotes.
+
+BENGALI LANGUAGE AND EDITORIAL STANDARD:
+
+All generated Bengali must use প্রমিত আধুনিক ভারতীয় বাংলা (West Bengal / Indian Bengali editorial standard).
+
+The writing must be natural, fluent, grammatically correct, professional, readable, and suitable for Bengali readers in West Bengal and across India. It should read as original editorial writing, not literal translation.
+
+VOCABULARY PREFERENCES:
+Prefer modern Indian Bengali vocabulary where contextually appropriate:
+- জল, জলের, জলাভূমি, পানীয় জল, বন দপ্তর, রাজ্য সরকার, কেন্দ্রীয় সরকার, পরিবেশ, বন্যপ্রাণী, প্রাণী, সংরক্ষণ, আবাসস্থল, জীববৈচিত্র্য
+
+For example, prefer জল over পানি in normal editorial contexts (নদীর জল, জলাভূমি), and use পানীয় জল where "drinking water" is meant.
+
+CRITICAL CONTEXTUAL RULE:
+Do NOT perform mechanical global word substitutions. The model must choose vocabulary naturally according to context:
+- পানীয় জল is appropriate for "drinking water"
+- জলাভূমি is preferred for "wetland"
+- নদীর জল is preferred in normal editorial writing
+- Quoted source text must not be artificially altered
+- Scientific terminology must remain accurate
+- Proper nouns and official programme names must remain unchanged
+
+AVOID UNNECESSARILY REGIONAL BANGLADESHI PHRASING:
+Where a natural Indian Bengali equivalent exists, avoid unnecessarily using vocabulary or constructions strongly associated with Bangladesh-specific official or journalistic phrasing. This is not about treating Bangladeshi Bengali as incorrect — it is about maintaining a consistent Indian Bengali editorial voice for this application.
+
+NATURALNESS RULE:
+Context, grammar, scientific accuracy, and readability always take priority over mechanical vocabulary substitution. Do not create unnatural constructions merely to avoid a particular word.
+
+IMPORTANT EXECUTION RULES:
+- Return ONLY the final editorial output in the exact format below.
+- Do NOT explain your reasoning, planning, analysis, translation method, or word-count calculation.
+- Do NOT use <think> tags or any hidden/reasoning-style text.
+- Start immediately with HEADLINE: and finish the BODY with a complete Bengali sentence.
+
+OUTPUT FORMAT (STRICT):
 HEADLINE:
-<one meaningful Bengali headline>
+<Bengali headline without category prefix>
 
 DEK:
-<1–2 sentence Bengali summary>
+<1-sentence Bengali summary highlighting story significance>
 
 BODY:
-<ONE single continuous paragraph of polished Bengali, approximately 300–450 Bengali words>
+<2-3 compact Bengali paragraphs, total 100-150 words>
 `;
+
+const BENGALI_CHAR = /[\u0980-\u09FF]/;
+const CATEGORY_PREFIX_RE = /^[\s\u00a0]*(?:পরিবেশ|বন্যপ্রাণী|প্রকৃতি|সংরক্ষণ|গবেষণা|জলবায়ু|বিজ্ঞান|প্রযুক্ত|বন|প্রাণী)\s*[:|—\-–\/]\s*/iu;
 
 function clean(text: string): string {
   return text
@@ -63,77 +113,90 @@ function clean(text: string): string {
     .trim();
 }
 
-const BENGALI_CHAR = /[\u0980-\u09FF]/;
+function countWords(text: string): number {
+  if (!text) return 0;
+  const cleanText = text
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/[।.,\/#!$%\^&\*;:{}=\-_`~()?"'’“”-]/g, " ");
+  return cleanText.trim().split(/\s+/).filter((w) => w.length > 0).length;
+}
 
-/// Reasoning models sometimes emit <think> blocks inside the content.
+function sanitizeBengaliHeadline(headline: string): string {
+  if (!headline) return "";
+  let cleanStr = headline.trim().replace(/^[\s\u00a0]*\*\*|\*\*\s*$/g, "").trim();
+  while (true) {
+    const prev = cleanStr;
+    cleanStr = cleanStr.replace(CATEGORY_PREFIX_RE, "").trim();
+    if (cleanStr === prev) break;
+  }
+  return cleanStr;
+}
+
 function stripThinkBlocks(text: string): string {
   return text
     .replace(/<think>[\s\S]*?<\/think>/gi, "")
     .replace(/<think>[\s\S]*$/i, "");
 }
 
-/// Removes any line that carries no Bengali script. This drops AI drafting
-/// scaffolding that occasionally leaks into the output, e.g. "Para 1 (~65
-/// words):" labels or English word-count / planning notes, while keeping
-/// normal Bengali paragraphs (English appears only inline for species names).
-function stripNonBengaliLines(text: string): string {
-  return text
-    .split("\n")
-    .filter((line) => {
-      const t = line.trim();
-      return t === "" || BENGALI_CHAR.test(t);
-    })
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-/// Some reasoning models draft *in English around* Bengali sentences, so a
-/// script filter alone cannot remove leaked planning notes such as:
-///   Para 1: / Para 2 (~90 words): / ~90 words.
-///   DEK refine: / Body polish — make it ... / Final check on word count ...
-///   I'll go with: ... / Let me count carefully: ...
-///   Or: "..." / অথবা: "..." (leaked alternative headlines)
-///   Something like: ... (leaked draft deks)
-/// These lines often CONTAIN Bengali quotes, so drop them by pattern instead.
-const SCAFFOLD_LINE_RE =
-  /^\s*(?:\(?para(?:graph)?\s*\d+\)?\s*[:.]|[~≈]?\s*\d+\s*words?\s*[.:]*$|dek\s+(?:refine|alternative)|headline\s+(?:refine|alternative|options?)|or\s*:|অথবা\s*:|something\s+like|alternative\s*(?:headline|dek)?\s*\d*\s*:|body\s+polish|polish\b.*:|final\s+check\b|word\s+count\s*(?:for|check)|i'?ll\s+(?:go|use|pick|write)|let'?s\s|let me\s+(?:count|refine|polish|check)|draft\s*\d+\s*[:.]|option\s*\d+\s*[:.]|note\s+to\s+self)/im;
-
-/// Anywhere-in-text markers that unambiguously betray drafting commentary.
-const SCAFFOLD_ANYWHERE_RE = /\bhmm\b|\balternative\s*:|\brefine\b|\boff-tone\b/i;
-
-const INLINE_WORDCOUNT_RE = /\s*\(\s*[~≈]?\s*\d+\s*(?:bengali\s+)?words?\s*[.:]?\s*\)/gi;
+const SCAFFOLD_PATTERNS = [
+  /^\s*(?:\(?para(?:graph)?\s*\d+\)?\s*[:.]?)/im,
+  /^\s*(?:draft|option|alternative)\s*\d*\s*[:.]?/im,
+  /^\s*(?:headline|dek|body)\s+(?:options?|refine|alternative|draft|polish)/im,
+  /\b(let'?s\s+(?:refine|check|polish|go|write|start)|let\s+me\s+(?:check|refine|count|polish))/i,
+  /\b(word\s+count|final\s+check|note\s+to\s+self|model\s+drafting)\b/i,
+  /\b(headline\s+options|alternative\s+headline|or\s*:|অথবা\s*:)\b/i,
+  /\b(hmm|off-tone|body\s+polish)\b/i,
+  /\(\s*[~≈]?\s*\d+\s*(?:bengali\s+)?words?\s*\)/i,
+  /^\s*[~≈]?\s*\d+\s*(?:bengali\s+)?words?\s*[:.]?$/im,
+];
 
 function hasScaffolding(text: string): boolean {
-  const t = text ?? "";
-  if (SCAFFOLD_LINE_RE.test(t)) return true;
-  if (SCAFFOLD_ANYWHERE_RE.test(t)) return true;
-  if (/^\s*(?:para(?:graph)?\s*\d+|\d+\s*words?\b)/im.test(t)) return true;
-  return /\(\s*[~≈]?\s*\d+\s*words?\s*\)/i.test(t);
+  if (!text) return false;
+  return SCAFFOLD_PATTERNS.some((pattern) => pattern.test(text));
 }
 
-function stripScaffolding(text: string): string {
-  return text
-    .split("\n")
-    .filter((line) => {
-      const t = line.trim();
-      if (t === "") return true;
-      // Never drop real content lines: only drop a scaffolding-pattern line
-      // when it is short-ish meta commentary (not a full paragraph).
-      const isMeta =
-        (SCAFFOLD_LINE_RE.test(t) || SCAFFOLD_ANYWHERE_RE.test(t)) &&
-        t.length <= 220;
-      return !isMeta;
-    })
-    .join("\n")
-    .replace(INLINE_WORDCOUNT_RE, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+function checkEnglishContamination(text: string): string | null {
+  const bengaliChars = (text.match(/[\u0980-\u09FF]/g) || []).length;
+  const englishChars = (text.match(/[a-zA-Z]/g) || []).length;
+  const totalLetters = bengaliChars + englishChars;
+
+  if (totalLetters > 0 && bengaliChars / totalLetters < 0.75) {
+    const engPct = Math.round((englishChars / totalLetters) * 100);
+    return `Excessive English prose contamination (${engPct}% English characters)`;
+  }
+
+  const paragraphs = text.split(/\n{2,}/);
+  for (let i = 0; i < paragraphs.length; i++) {
+    const p = paragraphs[i].trim();
+    if (!p) continue;
+    const pBengali = (p.match(/[\u0980-\u09FF]/g) || []).length;
+    const pEnglish = (p.match(/[a-zA-Z]/g) || []).length;
+    if (pEnglish > 15 && pEnglish > pBengali) {
+      return `Paragraph ${i + 1} contains predominantly English prose`;
+    }
+  }
+
+  return null;
 }
 
-/// True when a cached/generated body still carries visible drafting
-/// scaffolding after cleaning — such an edition must not be served.
-/// (Detected by hasScaffolding() above; stripScaffolding() cleans it.)
+function checkEndingCompleteness(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return "Empty text";
+
+  const lastChar = trimmed.slice(-1);
+  const badTrailingChars = [",", ":", ";", "-", "—", "–", "(", "[", "{", "/", "\\", "‘", "“", "'", '"'];
+  if (badTrailingChars.includes(lastChar)) {
+    return `Abrupt ending with trailing character '${lastChar}'`;
+  }
+
+  const validEndingPattern = /[।?!.][”"'’\)\}\]]*$/;
+  if (!validEndingPattern.test(trimmed)) {
+    return "Body does not end with complete sentence terminal punctuation";
+  }
+
+  return null;
+}
 
 function section(text: string, start: string, end: string | null): string {
   const upper = text.toUpperCase();
@@ -144,29 +207,158 @@ function section(text: string, start: string, end: string | null): string {
   return text.substring(from, e >= 0 ? e : text.length).trim();
 }
 
-/// Collapses a body into ONE single continuous paragraph: every line break /
-/// blank line becomes a single space so the editorial reads as one flowing
-/// paragraph. Guards against models that still emit multi-paragraph bodies.
-function toSingleParagraph(text: string): string {
+function formatBengaliBody(text: string): string {
+  const cleaned = text
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\u00a0/g, " ")
+    .replace(/^\s*\**BODY:\**\s*/i, "");
+
+  const paragraphs = cleaned
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/\s+/g, " ").trim())
+    .filter((p) => p.length > 0);
+
+  return paragraphs.join("\n\n").trim();
+}
+
+function formatDek(text: string): string {
   return text
     .replace(/<br\s*\/?>/gi, " ")
-    .replace(/\s*\n+\s*/g, " ")
+    .replace(/^\s*\**DEK:\**\s*/i, "")
+    .replace(/\s+/g, " ")
     .replace(/\u00a0/g, " ")
-    .replace(/[ \t]{2,}/g, " ")
     .trim();
 }
+
+function validateEditorialOutput(
+  rawText: string,
+  finishReason: string | null
+): ValidationResult {
+  const reasons: string[] = [];
+
+  // 1. Truncation check
+  if (finishReason === "length") {
+    reasons.push("Output truncated (finish_reason=length)");
+  }
+
+  // 2. Reasoning / think leakage check
+  if (/<think>/i.test(rawText) || /<\/think>/i.test(rawText)) {
+    reasons.push("Contains <think> or reasoning tags");
+  }
+
+  // 3. Raw text scaffolding check
+  if (hasScaffolding(rawText)) {
+    reasons.push("Contains drafting scaffolding or metadata commentary");
+  }
+
+  // 4. Extract required sections
+  const rawHeadline = section(rawText, "HEADLINE:", "DEK:");
+  const rawDek = section(rawText, "DEK:", "BODY:");
+  const rawBody = section(rawText, "BODY:", null);
+
+  if (!rawHeadline) {
+    reasons.push("Missing or malformed HEADLINE section tag");
+  }
+  if (!rawDek) {
+    reasons.push("Missing or malformed DEK section tag");
+  }
+  if (!rawBody) {
+    reasons.push("Missing or malformed BODY section tag");
+  }
+
+  // Headline validation
+  let headline = sanitizeBengaliHeadline(rawHeadline);
+  headline = headline.replace(/^HEADLINE:\s*/i, "").trim();
+
+  if (headline) {
+    if (headline.includes("\n")) {
+      reasons.push("Headline contains newline/multiple options");
+    }
+    if (/\b(?:or|option|alternative|অথবা)\b/i.test(headline)) {
+      reasons.push("Headline contains alternative options or choices");
+    }
+    if (!BENGALI_CHAR.test(headline)) {
+      reasons.push("Headline contains no Bengali text");
+    }
+    if (hasScaffolding(headline)) {
+      reasons.push("Headline contains scaffolding or drafting commentary");
+    }
+    const hWords = countWords(headline);
+    if (hWords < 3 || hWords > 30) {
+      reasons.push(`Headline word count out of bounds (${hWords} words)`);
+    }
+  }
+
+  // Dek validation
+  let dek = formatDek(rawDek);
+  dek = dek.replace(/^DEK:\s*/i, "").trim();
+  if (dek) {
+    if (!BENGALI_CHAR.test(dek)) {
+      reasons.push("DEK contains no Bengali text");
+    }
+    if (hasScaffolding(dek)) {
+      reasons.push("DEK contains scaffolding");
+    }
+  }
+
+  // Body validation
+  let body = formatBengaliBody(rawBody);
+  body = body.replace(/^BODY:\s*/i, "").trim();
+
+  let bodyWords = 0;
+  if (body) {
+    if (!BENGALI_CHAR.test(body)) {
+      reasons.push("Body contains no Bengali text");
+    }
+
+    if (hasScaffolding(body)) {
+      reasons.push("Body contains scaffolding or drafting commentary");
+    }
+
+    const engError = checkEnglishContamination(body);
+    if (engError) {
+      reasons.push(engError);
+    }
+
+    bodyWords = countWords(body);
+    if (bodyWords < 85) {
+      reasons.push(`Body word count too low (${bodyWords} words; minimum 85)`);
+    } else if (bodyWords > 175) {
+      reasons.push(`Body word count too high (${bodyWords} words; maximum 175)`);
+    }
+
+    const endingError = checkEndingCompleteness(body);
+    if (endingError) {
+      reasons.push(endingError);
+    }
+  }
+
+  const valid = reasons.length === 0;
+
+  return {
+    valid,
+    reasons,
+    headline: valid ? headline : undefined,
+    dek: valid ? dek : undefined,
+    body: valid ? body : undefined,
+    wordCount: bodyWords,
+  };
+}
+
+// OpenRouter's official free router dynamically selects from the currently
+// available compatible free-model pool, avoiding permanent dependence on
+// a hard-coded model list.
+const OPENROUTER_FREE_ROUTER = "openrouter/free";
+const MAX_FREE_ROUTER_ATTEMPTS = 2;
+const FREE_ROUTER_ATTEMPT_TIMEOUT_MS = 18000;
 
 function authorized(req: Request): boolean {
   const expected = Deno.env.get("NEWS_REFRESH_SECRET");
   const got = req.headers.get("x-news-refresh-secret") ?? "";
   if (expected && got.length > 0 && got === expected) return true;
 
-  // Mobile-app path: also accept a bearer token issued for THIS project
-  // (the app's anon/publishable key or a signed-in user's access token).
-  // Two Supabase JWT shapes exist:
-  //   - API keys:      {"iss":"supabase","ref":"<project-ref>","role":"anon"}
-  //   - user tokens:   {"iss":"<SUPABASE_URL>/auth/v1", ...}
-  // Matching either pins the token to our project without the JWT secret.
   const auth = req.headers.get("Authorization") ?? "";
   const m = /^Bearer\s+(.+)$/i.exec(auth);
   if (!m) return false;
@@ -197,16 +389,17 @@ serve(async (req) => {
     const sourceTitle = typeof body?.sourceTitle === "string" ? body.sourceTitle.trim() : "";
     const sourceUrl = typeof body?.sourceUrl === "string" ? body.sourceUrl.trim() : "";
     const articleText = typeof body?.articleText === "string" ? body.articleText.trim() : "";
+    const force = Boolean(body?.force);
 
     if (!sourceUrl || !articleText) {
       throw new Error("sourceUrl and articleText are required.");
     }
 
     const words = articleText.split(/\s+/).filter(Boolean);
-    if (words.length < MIN_WORDS) {
+    if (words.length < MIN_SOURCE_WORDS) {
       return new Response(JSON.stringify({
         success: false,
-        error: `Source article is too short (${words.length} words; minimum ${MIN_WORDS}).`,
+        error: `Source article is too short (${words.length} words; minimum ${MIN_SOURCE_WORDS}).`,
       }), {
         status: 422,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -221,156 +414,210 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { data: existing, error: cacheError } = await supabase
-      .from("wildlife_news_translations")
-      .select("source_url, headline, dek, body")
-      .eq("source_url", sourceUrl)
-      .maybeSingle();
+    if (!force) {
+      const { data: existing, error: cacheError } = await supabase
+        .from("wildlife_news_translations")
+        .select("source_url, headline, dek, body")
+        .eq("source_url", sourceUrl)
+        .maybeSingle();
 
-    if (cacheError) throw new Error(`Translation cache lookup failed: ${cacheError.message}`);
+      if (cacheError) throw new Error(`Translation cache lookup failed: ${cacheError.message}`);
 
-    const cachedBodyWords = String(existing?.body ?? "").split(/\s+/).filter(Boolean).length;
-    const cachedClean =
-      !!existing?.headline && !!existing?.body &&
-      cachedBodyWords >= MIN_CACHED_BENGALI_WORDS &&
-      !hasScaffolding(String(existing.body)) &&
-      !hasScaffolding(String(existing.headline ?? ""));
-    if (cachedClean) {
-      return new Response(JSON.stringify({
-        success: true,
-        cached: true,
-        headline: existing.headline,
-        dek: existing.dek,
-        // Normalize legacy multi-paragraph bodies into one flowing paragraph.
-        body: toSingleParagraph(String(existing.body)),
-        sourceTitle: sourceTitle || null,
-        sourceUrl,
-      } satisfies EditorialResult), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
-      });
+      if (existing && existing.headline && existing.body) {
+        const cachedHeadline = sanitizeBengaliHeadline(String(existing.headline));
+        const cachedBody = formatBengaliBody(String(existing.body));
+        const cachedDek = formatDek(String(existing.dek ?? ""));
+
+        const bodyWords = countWords(cachedBody);
+        const isClean =
+          BENGALI_CHAR.test(cachedHeadline) &&
+          BENGALI_CHAR.test(cachedBody) &&
+          bodyWords >= 85 &&
+          !hasScaffolding(cachedHeadline) &&
+          !hasScaffolding(cachedBody) &&
+          checkEnglishContamination(cachedBody) === null &&
+          checkEndingCompleteness(cachedBody) === null;
+
+        if (isClean) {
+          return new Response(JSON.stringify({
+            success: true,
+            cached: true,
+            headline: cachedHeadline,
+            dek: cachedDek || null,
+            body: cachedBody,
+            sourceTitle: sourceTitle || null,
+            sourceUrl,
+          } satisfies EditorialResult), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
+          });
+        }
+      }
     }
 
     const userPrompt = `SOURCE TITLE:\n${sourceTitle || "(not available)"}\n\nSOURCE URL:\n${sourceUrl}\n\nCOMPLETE SOURCE ARTICLE:\n${articleText}`;
 
-    const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://earanyak.app",
-        // NOTE: HTTP header values must be ByteStrings (Latin-1). Bengali text
-        // here made Deno throw "Failed to construct 'Request': 'headers' ...
-        // is not a valid ByteString" and every editorial request returned 500.
-        "X-Title": "eAranyak Bengali News Editor",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_INSTRUCTIONS },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.25,
-        // Generous budget: reasoning models spend tokens thinking before they
-        // emit the editorial; 3000 was exhausted before any content appeared,
-        // yielding finish_reason=length and empty text.
-        max_tokens: 16000,
-        stream: false,
-      }),
-    });
+    const attemptLogs: string[] = [];
+    let successfulEditorial: { headline: string; dek: string | null; body: string } | null = null;
 
-    const responseText = await aiResponse.text();
-    if (!aiResponse.ok) {
-      throw new Error(`OpenRouter ${aiResponse.status}: ${responseText.slice(0, 1200)}`);
+    // Keep retries tightly bounded. Each request goes through OpenRouter's official
+    // free router, which selects from the currently available compatible free pool.
+    for (let attempt = 1; attempt <= MAX_FREE_ROUTER_ATTEMPTS; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), FREE_ROUTER_ATTEMPT_TIMEOUT_MS);
+
+        const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": "https://earanyak.app",
+            "X-Title": "eAranyak Bengali News Editor",
+          },
+          body: JSON.stringify({
+            model: OPENROUTER_FREE_ROUTER,
+            messages: [
+              { role: "system", content: SYSTEM_INSTRUCTIONS },
+              { role: "user", content: userPrompt },
+            ],
+            temperature: 0.2,
+            max_tokens: 2200,
+            stream: false,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        const responseText = await aiResponse.text();
+
+        if (!aiResponse.ok) {
+          if (aiResponse.status === 402) {
+            attemptLogs.push(`free-router attempt ${attempt}: HTTP 402 (payment/in-flight budget required)`);
+          } else if (aiResponse.status === 429) {
+            attemptLogs.push(`free-router attempt ${attempt}: HTTP 429 (rate limit)`);
+          } else {
+            attemptLogs.push(
+              `free-router attempt ${attempt}: HTTP ${aiResponse.status} (${responseText.slice(0, 140)})`
+            );
+          }
+          continue;
+        }
+
+        let aiJson: Record<string, unknown>;
+        try {
+          aiJson = JSON.parse(responseText);
+        } catch (_) {
+          attemptLogs.push(`free-router attempt ${attempt}: Invalid JSON response`);
+          continue;
+        }
+
+        const routedModel =
+          typeof aiJson.model === "string" && aiJson.model.trim()
+            ? aiJson.model.trim()
+            : OPENROUTER_FREE_ROUTER;
+
+        const choices = aiJson.choices;
+        if (!Array.isArray(choices) || choices.length === 0) {
+          attemptLogs.push(`free-router attempt ${attempt} (${routedModel}): No choices returned in JSON`);
+          continue;
+        }
+
+        const choice = choices[0] as Record<string, unknown>;
+        const finishReason = typeof choice.finish_reason === "string" ? choice.finish_reason : null;
+        const message = choice.message as Record<string, unknown> | undefined;
+
+        let generated = typeof message?.content === "string" ? message.content : "";
+        if (!generated && Array.isArray(message?.content)) {
+          generated = (message?.content as unknown[])
+            .map((part) => (
+              typeof part === "string"
+                ? part
+                : ((part as Record<string, unknown>)?.text ?? "")
+            ))
+            .join("");
+        }
+
+        if (!generated && typeof message?.reasoning === "string" && message.reasoning.trim()) {
+          const reasoningText = clean(stripThinkBlocks(message.reasoning));
+          if (/HEADLINE:/i.test(reasoningText)) generated = stripThinkBlocks(reasoningText);
+        }
+
+        generated = clean(generated);
+        if (!generated) {
+          attemptLogs.push(
+            `free-router attempt ${attempt} (${routedModel}): Empty output (finish_reason=${finishReason})`
+          );
+          continue;
+        }
+
+        const validation = validateEditorialOutput(generated, finishReason);
+        if (validation.valid && validation.headline && validation.body) {
+          successfulEditorial = {
+            headline: validation.headline,
+            dek: validation.dek || null,
+            body: validation.body,
+          };
+          break;
+        }
+
+        attemptLogs.push(
+          `free-router attempt ${attempt} (${routedModel}): Validation failed [${validation.reasons.join("; ")}]`
+        );
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        attemptLogs.push(`free-router attempt ${attempt}: Request error (${errMsg})`);
+      }
     }
 
-    const aiJson = JSON.parse(responseText) as Record<string, unknown>;
-    const choices = aiJson.choices;
-    if (!Array.isArray(choices) || choices.length === 0) throw new Error("OpenRouter returned no choices.");
-
-    const choice = choices[0] as Record<string, unknown>;
-    const message = choice.message as Record<string, unknown> | undefined;
-    let generated = typeof message?.content === "string" ? message.content : "";
-
-    // Some reasoning models can expose structured content as an array of parts.
-    if (!generated && Array.isArray(message?.content)) {
-      generated = (message?.content as unknown[])
-        .map((part) => typeof part === "string" ? part : ((part as Record<string, unknown>)?.text ?? ""))
-        .join("");
-    }
-
-    // Reasoning models sometimes place the final prose in the `reasoning`
-    // field and leave `content` empty (especially under tight token budgets).
-    if (!generated && typeof message?.reasoning === "string" && message.reasoning.trim()) {
-      const r = clean(stripThinkBlocks(message.reasoning));
-      // Only fall back when the reasoning block itself looks like finished
-      // prose containing the required section markers.
-      if (/HEADLINE:/i.test(r)) generated = stripThinkBlocks(r);
-    }
-
-    generated = clean(stripThinkBlocks(generated));
-    if (!generated) {
-      const finish = typeof choice.finish_reason === "string" ? choice.finish_reason : "unknown";
-      throw new Error(
-        `OpenRouter returned empty editorial text (finish_reason=${finish}).`
-      );
-    }
-    // Remove leaked planning notes BEFORE splitting into sections so that
-    // stray commentary never lands inside HEADLINE / DEK / BODY.
-    generated = stripScaffolding(generated);
-    if (!generated) throw new Error("OpenRouter returned empty editorial text.");
-
-    let headline = section(generated, "HEADLINE:", "DEK:");
-    let dek = section(generated, "DEK:", "BODY:");
-    let editorialBody = section(generated, "BODY:", null);
-
-    if (!headline) {
-      headline = generated.split("\n").map((x) => x.trim()).find((x) => BENGALI_CHAR.test(x)) ?? sourceTitle;
-    }
-    if (!editorialBody) editorialBody = generated.replace(/^HEADLINE:[\s\S]*?DEK:/i, "").trim();
-
-    headline = stripNonBengaliLines(stripScaffolding(headline.replace(/^HEADLINE:\s*/i, "")));
-    // A headline is exactly ONE line: keep only the first non-empty line so a
-    // leaked alternative ("Or: ...") can never reach readers.
-    headline = headline.split("\n").map((x) => x.trim()).firstWhere((x) => x.isNotEmpty, orElse: () => "");
-    dek = stripNonBengaliLines(stripScaffolding(dek.replace(/^DEK:\s*/i, "")));
-    editorialBody = stripNonBengaliLines(stripScaffolding(editorialBody.replace(/^BODY:\s*/i, "")));
-    // The body must read as ONE long paragraph — collapse any residual line
-    // breaks the model may still have emitted despite the instructions.
-    editorialBody = toSingleParagraph(editorialBody);
-    dek = toSingleParagraph(dek);
-
-    if (!headline || !editorialBody) throw new Error("The AI response could not be parsed into headline/body.");
-    // Never cache scaffolding / untranslated English output as an edition.
-    if (!BENGALI_CHAR.test(editorialBody)) {
-      throw new Error("Editorial body contained no Bengali text; refusing to cache.");
-    }
-    if (hasScaffolding(editorialBody) || hasScaffolding(headline)) {
-      throw new Error("Editorial output still contained drafting scaffolding; refusing to cache.");
+    if (!successfulEditorial) {
+      return new Response(JSON.stringify({
+        success: false,
+        headline: null,
+        dek: null,
+        body: null,
+        sourceTitle: sourceTitle || null,
+        sourceUrl: sourceUrl || null,
+        error: `No free-router attempt produced valid Bengali editorial output. Tried ${attemptLogs.length} attempts: ${attemptLogs.join(" | ")}`,
+      } satisfies EditorialResult), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { error: upsertError } = await supabase
       .from("wildlife_news_translations")
       .upsert({
         source_url: sourceUrl,
-        headline,
-        dek: dek || null,
-        body: editorialBody,
+        headline: successfulEditorial.headline,
+        dek: successfulEditorial.dek,
+        body: successfulEditorial.body,
       }, { onConflict: "source_url" });
 
-    if (upsertError) throw new Error(`Translation cache write failed: ${upsertError.message}`);
+    // The editorial result is authoritative. Cache persistence is an optimization
+    // and must never turn a successfully generated editorial into a failed request.
+    // This is especially important for direct/manual editor tests where the source
+    // article may not yet exist in wildlife_news and the FK therefore cannot resolve.
+    const cacheWarning = upsertError
+      ? `Translation cache write skipped: ${upsertError.message}`
+      : undefined;
+
+    if (upsertError) {
+      console.warn(cacheWarning);
+    }
 
     const result: EditorialResult = {
       success: true,
       cached: false,
-      headline,
-      dek: dek || null,
-      body: editorialBody,
+      headline: successfulEditorial.headline,
+      dek: successfulEditorial.dek,
+      body: successfulEditorial.body,
       sourceTitle: sourceTitle || null,
       sourceUrl,
+      ...(cacheWarning ? { error: cacheWarning } : {}),
     };
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify({ ...result, success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
     });

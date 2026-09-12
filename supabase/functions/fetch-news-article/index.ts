@@ -27,12 +27,6 @@ function authorized(req: Request): boolean {
     if (got === expected) return true;
   }
 
-  // Mobile-app path: also accept a bearer token issued for THIS project
-  // (the app's anon/publishable key or a signed-in user's access token).
-  // Two Supabase JWT shapes exist:
-  //   - API keys:      {"iss":"supabase","ref":"<project-ref>","role":"anon"}
-  //   - user tokens:   {"iss":"<SUPABASE_URL>/auth/v1", ...}
-  // Matching either pins the token to our project without the JWT secret.
   const auth = req.headers.get("Authorization") ?? "";
   const m = /^Bearer\s+(.+)$/i.exec(auth);
   if (!m) return false;
@@ -167,6 +161,21 @@ function removeNoise(html: string): string {
     .replace(/<!--[\s\S]*?-->/g, " ");
 }
 
+const BOILERPLATE_PATTERNS = [
+  /^in this issue of/i,
+  /^subscribe to/i,
+  /^read more/i,
+  /^sign up for/i,
+  /^follow us on/i,
+  /^related stories/i,
+  /^recommended articles/i,
+  /^leave a reply/i,
+  /^share this article/i,
+  /^click here to/i,
+  /^copyright ©/i,
+  /^all rights reserved/i,
+];
+
 function extractArticleText(html: string): string {
   const cleaned = removeNoise(html);
   const article = [...cleaned.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/gi)].map((m) => m[1]).join("\n\n");
@@ -177,12 +186,21 @@ function extractArticleText(html: string): string {
   if (source.length < 1200) {
     source = [...cleaned.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => m[1]).join("\n");
   }
-  return cleanText(source
+  const rawText = cleanText(source
     .replace(/<br\s*\/?>(?=.)/gi, "\n")
     .replace(/<\/p>/gi, "\n")
     .replace(/<\/div>/gi, "\n")
     .replace(/<\/section>/gi, "\n")
     .replace(/<[^>]+>/g, " "));
+
+  // Strip lines matching common site boilerplate
+  const filteredLines = rawText.split("\n").filter((line) => {
+    const t = line.trim();
+    if (!t) return false;
+    return !BOILERPLATE_PATTERNS.some((pattern) => pattern.test(t));
+  });
+
+  return filteredLines.join("\n\n");
 }
 
 function looksBlocked(title: string | null, text: string): boolean {

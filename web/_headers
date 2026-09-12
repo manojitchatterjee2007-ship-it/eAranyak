@@ -1,0 +1,8 @@
+# Cloudflare Pages response headers for the app-link verification files.
+
+# Apple requires application/json for the extension-less association file.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+
+/.well-known/assetlinks.json
+  Content-Type: application/json
