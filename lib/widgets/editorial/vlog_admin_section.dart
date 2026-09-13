@@ -374,7 +374,7 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                             final durationSec = int.tryParse(durationCtrl.text.trim());
 
                             if (isEditing) {
-                              await _vlogService.updateVlog(
+                              final updated = await _vlogService.updateVlog(
                                 id: existingItem.id,
                                 title: titleCtrl.text.trim(),
                                 description: descCtrl.text.trim(),
@@ -389,8 +389,19 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                                 isPublished: isPublished,
                                 oldStoragePath: existingItem.storagePath,
                               );
+
+                              // Trigger notification ONLY if transitioned from draft -> published
+                              if (!existingItem.isPublished && isPublished) {
+                                await AppNotifier.notify(
+                                  title: '▶️ নতুন প্রকৃতির ভিডিও ব্লগ: ${updated.title}',
+                                  body: updated.snippet?.isNotEmpty == true
+                                      ? updated.snippet!
+                                      : 'প্রকৃতি ও বন্যপ্রাণীর নতুন ভিডিও ব্লগ প্রকাশিত হয়েছে।',
+                                  data: {'type': 'vlog', 'id': updated.id},
+                                );
+                              }
                             } else {
-                              await _vlogService.createVlog(
+                              final created = await _vlogService.createVlog(
                                 title: titleCtrl.text.trim(),
                                 description: descCtrl.text.trim(),
                                 snippet: snippetCtrl.text.trim(),
@@ -403,6 +414,17 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                                 isFeatured: isFeatured,
                                 isPublished: isPublished,
                               );
+
+                              // Trigger notification ONLY if created directly in published state
+                              if (isPublished) {
+                                await AppNotifier.notify(
+                                  title: '▶️ নতুন প্রকৃতির ভিডিও ব্লগ: ${created.title}',
+                                  body: created.snippet?.isNotEmpty == true
+                                      ? created.snippet!
+                                      : 'প্রকৃতি ও বন্যপ্রাণীর নতুন ভিডিও ব্লগ প্রকাশিত হয়েছে।',
+                                  data: {'type': 'vlog', 'id': created.id},
+                                );
+                              }
                             }
 
                             if (ctx.mounted) Navigator.pop(ctx);

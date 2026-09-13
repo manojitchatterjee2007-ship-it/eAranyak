@@ -9,6 +9,8 @@ class WildlifeGalleryItem {
   final int editorialPriority;
   final bool isFeatured;
   final bool isPublished;
+  final DateTime? scheduledPublishAt;
+  final DateTime? expiresAt;
   final DateTime? publishedAt;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -26,6 +28,8 @@ class WildlifeGalleryItem {
     this.editorialPriority = 10,
     this.isFeatured = false,
     this.isPublished = true,
+    this.scheduledPublishAt,
+    this.expiresAt,
     this.publishedAt,
     required this.createdAt,
     this.updatedAt,
@@ -45,6 +49,12 @@ class WildlifeGalleryItem {
       editorialPriority: (json['editorial_priority'] as num?)?.toInt() ?? 10,
       isFeatured: json['is_featured'] == true,
       isPublished: json['is_published'] != false,
+      scheduledPublishAt: json['scheduled_publish_at'] != null
+          ? DateTime.tryParse(json['scheduled_publish_at'].toString())
+          : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.tryParse(json['expires_at'].toString())
+          : null,
       publishedAt: json['published_at'] != null
           ? DateTime.tryParse(json['published_at'].toString())
           : null,
@@ -70,6 +80,8 @@ class WildlifeGalleryItem {
       'editorial_priority': editorialPriority,
       'is_featured': isFeatured,
       'is_published': isPublished,
+      if (scheduledPublishAt != null) 'scheduled_publish_at': scheduledPublishAt!.toIso8601String(),
+      if (expiresAt != null) 'expires_at': expiresAt!.toIso8601String(),
       if (publishedAt != null) 'published_at': publishedAt!.toIso8601String(),
       'storage_path': storagePath,
       if (createdBy != null) 'created_by': createdBy,

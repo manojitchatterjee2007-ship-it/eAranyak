@@ -25,6 +25,57 @@ class TutorialService {
     }
   }
 
+  /// Fetch published tutorials for public UI
+  Future<List<Tutorial>> fetchPublishedTutorials() async {
+    final res = await _supabase
+        .from('tutorials')
+        .select()
+        .eq('is_published', true)
+        .order('editorial_priority', ascending: false)
+        .order('published_at', ascending: false)
+        .order('created_at', ascending: false);
+
+    final list = (res as List).map((e) => Tutorial.fromJson(e)).toList();
+    final now = DateTime.now().toUtc();
+
+    return list.where((t) {
+      if (!t.isPublished) return false;
+      if (t.scheduledPublishAt != null && t.scheduledPublishAt!.isAfter(now)) {
+        return false;
+      }
+      if (t.expiresAt != null && !t.expiresAt!.isAfter(now)) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  /// Fetch a single published tutorial by ID
+  Future<Tutorial?> fetchTutorialById(String id) async {
+    try {
+      final res = await _supabase
+          .from('tutorials')
+          .select()
+          .eq('id', id)
+          .eq('is_published', true)
+          .maybeSingle();
+
+      if (res == null) return null;
+      final tutorial = Tutorial.fromJson(res);
+      final now = DateTime.now().toUtc();
+
+      if (tutorial.scheduledPublishAt != null && tutorial.scheduledPublishAt!.isAfter(now)) {
+        return null;
+      }
+      if (tutorial.expiresAt != null && !tutorial.expiresAt!.isAfter(now)) {
+        return null;
+      }
+      return tutorial;
+    } catch (_) {
+      return null;
+    }
+  }
+
   String _getContentType(String ext, {required String resourceType}) {
     final cleanExt = ext.toLowerCase();
     if (resourceType == 'pdf') return 'application/pdf';

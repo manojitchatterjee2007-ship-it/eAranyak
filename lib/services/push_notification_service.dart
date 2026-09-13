@@ -12,8 +12,9 @@ import '../screens/wildlife_gallery_screen.dart';
 import '../screens/nature_games_screen.dart';
 import '../screens/notification_detail_screen.dart';
 import '../screens/community_article_reader_screen.dart';
-import '../screens/coming_soon_screen.dart';
 import '../screens/podcast_screen.dart';
+import '../screens/vlog_screen.dart';
+import '../screens/tutorial_screen.dart';
 import '../services/app_notification_service.dart';
 import '../services/writing_submission_service.dart';
 
@@ -144,20 +145,16 @@ Future<void> routeToContent(Map<String, dynamic> data) async {
                 initialPodcastId: podcastId.isNotEmpty ? podcastId : null,
               )));
     } else if (type == 'vlog') {
+      final vlogId = (data['id'] ?? '').toString();
       nav.push(MaterialPageRoute(
-          builder: (_) => const ComingSoonScreen(
-                title: 'Nature Vlogs',
-                titleBengali: 'প্রকৃতি ভিডিও ব্লগ',
-                descriptionBengali: 'সুন্দরবন ও বনাঞ্চলের প্রকৃতির ভিডিওচিত্র ও নেচার ব্লগ শীঘ্রই আসছে।',
-                icon: Icons.movie_rounded,
+          builder: (_) => VlogScreen(
+                initialVlogId: vlogId.isNotEmpty ? vlogId : null,
               )));
     } else if (type == 'tutorial') {
+      final tutorialId = (data['id'] ?? '').toString();
       nav.push(MaterialPageRoute(
-          builder: (_) => const ComingSoonScreen(
-                title: 'Nature Tutorials',
-                titleBengali: 'প্রকৃতি নির্দেশিকা ও টিউটোরিয়াল',
-                descriptionBengali: 'বন্যপ্রাণী পর্যবেক্ষণ ও ফটোগ্রাফি বিষয়ক টিউটোরিয়াল সিরিজ শীঘ্রই আসছে।',
-                icon: Icons.school_rounded,
+          builder: (_) => TutorialScreen(
+                initialTutorialId: tutorialId.isNotEmpty ? tutorialId : null,
               )));
     }
   } catch (_) {}

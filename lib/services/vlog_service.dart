@@ -23,6 +23,57 @@ class VlogService {
     }
   }
 
+  /// Fetch published vlogs for public UI
+  Future<List<Vlog>> fetchPublishedVlogs() async {
+    final res = await _supabase
+        .from('vlogs')
+        .select()
+        .eq('is_published', true)
+        .order('editorial_priority', ascending: false)
+        .order('published_at', ascending: false)
+        .order('created_at', ascending: false);
+
+    final list = (res as List).map((e) => Vlog.fromJson(e)).toList();
+    final now = DateTime.now().toUtc();
+
+    return list.where((v) {
+      if (!v.isPublished) return false;
+      if (v.scheduledPublishAt != null && v.scheduledPublishAt!.isAfter(now)) {
+        return false;
+      }
+      if (v.expiresAt != null && !v.expiresAt!.isAfter(now)) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  /// Fetch a single published vlog by ID
+  Future<Vlog?> fetchVlogById(String id) async {
+    try {
+      final res = await _supabase
+          .from('vlogs')
+          .select()
+          .eq('id', id)
+          .eq('is_published', true)
+          .maybeSingle();
+
+      if (res == null) return null;
+      final vlog = Vlog.fromJson(res);
+      final now = DateTime.now().toUtc();
+
+      if (vlog.scheduledPublishAt != null && vlog.scheduledPublishAt!.isAfter(now)) {
+        return null;
+      }
+      if (vlog.expiresAt != null && !vlog.expiresAt!.isAfter(now)) {
+        return null;
+      }
+      return vlog;
+    } catch (_) {
+      return null;
+    }
+  }
+
   String _getContentType(String ext, {bool isVideo = false}) {
     final cleanExt = ext.toLowerCase();
     if (isVideo) {

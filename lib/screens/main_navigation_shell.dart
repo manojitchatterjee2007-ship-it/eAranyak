@@ -16,8 +16,9 @@ import 'nature_games_screen.dart';
 import 'wildlife_gallery_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'online_book_store_screen.dart';
-import 'coming_soon_screen.dart';
 import 'podcast_screen.dart';
+import 'vlog_screen.dart';
+import 'tutorial_screen.dart';
 
 class MainNavigationShell extends StatefulWidget {
   final String userEmail;
@@ -674,13 +675,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const ComingSoonScreen(
-                          title: 'Nature Vlogs',
-                          titleBengali: '▶️ প্রকৃতির দর্পণ',
-                          descriptionBengali: 'প্রকৃতি ও বন্যপ্রাণের ভিডিও ভ্লগ, অভিজ্ঞতা ও দৃশ্যপট নিয়ে নতুন কিছু আসছে।',
-                          icon: Icons.play_circle_fill_rounded,
-                          assetPath: 'assets/images/nature_log.png',
-                        ),
+                        builder: (_) => const VlogScreen(),
                       ),
                     );
                   },
@@ -695,13 +690,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const ComingSoonScreen(
-                          title: 'Tutorials',
-                          titleBengali: '🎓 টিউটোরিয়াল',
-                          descriptionBengali: 'প্রকৃতি, জীববৈচিত্র্য ও পরিবেশ সম্পর্কে সহজ ও আকর্ষণীয় শেখার নতুন বিভাগ আসছে।',
-                          icon: Icons.school_rounded,
-                          assetPath: 'assets/images/tutorials.png',
-                        ),
+                        builder: (_) => const TutorialScreen(),
                       ),
                     );
                   },

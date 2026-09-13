@@ -1206,6 +1206,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Navigator.pop(ctx);
                 try {
                   await _writingSubmissionService.publishSubmission(sub, priority: priority);
+                  unawaited(AppNotifier.notify(
+                    title: '✍️ নতুন নিবন্ধ প্রকাশিত: ${sub.title}',
+                    body: sub.excerpt?.isNotEmpty == true
+                        ? sub.excerpt!
+                        : 'পাঠকের নতুন নিবন্ধ পড়তে ট্যাপ করুন।',
+                    data: {'type': 'community_article', 'id': sub.id},
+                  ));
                   messenger.showSnackBar(
                     const SnackBar(content: Text('লেখাটি সফলভাবে অ্যাপে প্রকাশ করা হয়েছে!')),
                   );
@@ -3202,7 +3209,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Navigator.pop(ctx);
 
     try {
-      await _notificationService.createNotification(
+      final createdNotif = await _notificationService.createNotification(
         title: title,
         snippet: snippetCtrl.text.trim(),
         content: contentCtrl.text.trim(),
@@ -3218,6 +3225,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         contactInfo: contactInfo,
         isFeatured: isFeatured,
       );
+
+      if (publishNow) {
+        unawaited(AppNotifier.notify(
+          title: createdNotif.isEvent ? '📅 ${createdNotif.title}' : '📢 ${createdNotif.title}',
+          body: createdNotif.displaySnippet,
+          data: {'type': 'app_notification', 'id': createdNotif.id},
+        ));
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3498,6 +3513,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               ),
                               onPressed: () async {
                                 await _notificationService.publishNotification(notif.id);
+                                unawaited(AppNotifier.notify(
+                                  title: notif.isEvent ? '📅 ${notif.title}' : '📢 ${notif.title}',
+                                  body: notif.displaySnippet,
+                                  data: {'type': 'app_notification', 'id': notif.id},
+                                ));
                                 _loadAdminNotifications();
                                 widget.onUploadComplete();
                               },

@@ -389,7 +389,7 @@ class _PodcastAdminSectionState extends State<PodcastAdminSection> {
                             final durationSec = int.tryParse(durationCtrl.text.trim());
 
                             if (isEditing) {
-                              await _podcastService.updatePodcast(
+                              final updated = await _podcastService.updatePodcast(
                                 id: existingItem.id,
                                 title: titleCtrl.text.trim(),
                                 episodeNumber: epNum,
@@ -405,8 +405,19 @@ class _PodcastAdminSectionState extends State<PodcastAdminSection> {
                                 isPublished: isPublished,
                                 oldStoragePath: existingItem.storagePath,
                               );
+
+                              // Trigger notification ONLY if transitioned from draft -> published
+                              if (!existingItem.isPublished && isPublished) {
+                                await AppNotifier.notify(
+                                  title: '🎙️ নতুন পডকাস্ট পর্ব: ${updated.title}',
+                                  body: updated.snippet?.isNotEmpty == true
+                                      ? updated.snippet!
+                                      : 'আরণ্যক পডকাস্টের নতুন পর্ব শুনতে ট্যাপ করুন।',
+                                  data: {'type': 'podcast', 'id': updated.id},
+                                );
+                              }
                             } else {
-                              await _podcastService.createPodcast(
+                              final created = await _podcastService.createPodcast(
                                 title: titleCtrl.text.trim(),
                                 episodeNumber: epNum,
                                 description: descCtrl.text.trim(),
@@ -420,6 +431,17 @@ class _PodcastAdminSectionState extends State<PodcastAdminSection> {
                                 isFeatured: isFeatured,
                                 isPublished: isPublished,
                               );
+
+                              // Trigger notification ONLY if created directly in published state
+                              if (isPublished) {
+                                await AppNotifier.notify(
+                                  title: '🎙️ নতুন পডকাস্ট পর্ব: ${created.title}',
+                                  body: created.snippet?.isNotEmpty == true
+                                      ? created.snippet!
+                                      : 'আরণ্যক পডকাস্টের নতুন পর্ব শুনতে ট্যাপ করুন।',
+                                  data: {'type': 'podcast', 'id': created.id},
+                                );
+                              }
                             }
 
                             if (ctx.mounted) Navigator.pop(ctx);

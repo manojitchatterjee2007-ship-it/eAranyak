@@ -372,7 +372,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                             }
 
                             if (isEditing) {
-                              await _galleryService.updateGalleryItem(
+                              final updated = await _galleryService.updateGalleryItem(
                                 id: existingItem.id,
                                 title: titleCtrl.text.trim(),
                                 description: descriptionCtrl.text.trim(),
@@ -385,8 +385,19 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                 newStoragePath: newPath,
                                 oldStoragePath: existingItem.storagePath,
                               );
+
+                              // Trigger notification ONLY if transitioned from draft -> published
+                              if (!existingItem.isPublished && isPublished) {
+                                await AppNotifier.notify(
+                                  title: '📸 নতুন গ্যালারি চিত্র: ${updated.displayTitle}',
+                                  body: updated.caption?.isNotEmpty == true
+                                      ? updated.caption!
+                                      : 'আরণ্যক গ্যালারিতে নতুন বন্যপ্রাণীর ছবি দেখুন।',
+                                  data: {'type': 'gallery', 'id': updated.id},
+                                );
+                              }
                             } else {
-                              await _galleryService.createGalleryItem(
+                              final created = await _galleryService.createGalleryItem(
                                 title: titleCtrl.text.trim(),
                                 description: descriptionCtrl.text.trim(),
                                 location: locationCtrl.text.trim(),
@@ -397,6 +408,17 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                 isPublished: isPublished,
                                 storagePath: newPath!,
                               );
+
+                              // Trigger notification ONLY if created directly in published state
+                              if (isPublished) {
+                                await AppNotifier.notify(
+                                  title: '📸 নতুন গ্যালারি চিত্র: ${created.displayTitle}',
+                                  body: created.caption?.isNotEmpty == true
+                                      ? created.caption!
+                                      : 'আরণ্যক গ্যালারিতে নতুন বন্যপ্রাণীর ছবি দেখুন।',
+                                  data: {'type': 'gallery', 'id': created.id},
+                                );
+                              }
                             }
 
                             if (ctx.mounted) Navigator.pop(ctx);

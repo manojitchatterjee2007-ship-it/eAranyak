@@ -1,32 +1,31 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
-import '../services/push_notification_service.dart';
+import '../models/wildlife_gallery_item.dart';
 import '../widgets/keyboard_press_effect.dart';
+import '../widgets/scientific_text.dart';
 
 class WildlifeGalleryScreen extends StatefulWidget {
   final String userEmail;
   final bool isAdmin;
   final String? initialStoragePath;
 
-  const WildlifeGalleryScreen(
-      {super.key,
-        required this.userEmail,
-        required this.isAdmin,
-        this.initialStoragePath});
+  const WildlifeGalleryScreen({
+    super.key,
+    required this.userEmail,
+    required this.isAdmin,
+    this.initialStoragePath,
+  });
 
   @override
   State<WildlifeGalleryScreen> createState() => WildlifeGalleryScreenState();
 }
 
 class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
-  final _titleCtrl = TextEditingController();
-  final _captionCtrl = TextEditingController();
-  List<Map<String, dynamic>> _photos = [];
+  List<WildlifeGalleryItem> _items = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -34,40 +33,61 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
     loadPhotos();
   }
 
-  @override
-  void dispose() {
-    _titleCtrl.dispose();
-    _captionCtrl.dispose();
-    super.dispose();
-  }
-
   void _openInitialPhoto() {
-    final path = widget.initialStoragePath;
-    if (path == null || path.isEmpty || !mounted) return;
-    final index = _photos.indexWhere((p) =>
-        (p['storage_path'] ?? '').toString() == path);
+    final pathOrId = widget.initialStoragePath;
+    if (pathOrId == null || pathOrId.isEmpty || !mounted) return;
+    final index = _items.indexWhere((p) =>
+        p.storagePath == pathOrId || p.id == pathOrId);
     if (index < 0) return;
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => FullscreenProtectedImageViewer(
-                photos: _photos,
-                initialIndex: index,
-                userEmail: widget.userEmail)));
+      context,
+      MaterialPageRoute(
+        builder: (_) => FullscreenProtectedImageViewer(
+          items: _items,
+          initialIndex: index,
+          userEmail: widget.userEmail,
+        ),
+      ),
+    );
   }
 
   Future<void> loadPhotos() async {
+    setState(() => _isLoading = true);
     try {
-      final res = await supabase
-          .from('wildlife_gallery')
-          .select()
+      var query = supabase.from('wildlife_gallery').select();
+      if (!widget.isAdmin) {
+        query = query.eq('is_published', true);
+      }
+      final res = await query
+          .order('editorial_priority', ascending: false)
           .order('created_at', ascending: false);
+
       if (mounted) {
+        final rawList = (res as List).map((e) => WildlifeGalleryItem.fromJson(e)).toList();
+        final now = DateTime.now().toUtc();
+
+        final filteredList = widget.isAdmin
+            ? rawList
+            : rawList.where((item) {
+                if (!item.isPublished) return false;
+                if (item.scheduledPublishAt != null && item.scheduledPublishAt!.isAfter(now)) {
+                  return false;
+                }
+                if (item.expiresAt != null && !item.expiresAt!.isAfter(now)) {
+                  return false;
+                }
+                return true;
+              }).toList();
+
         setState(() {
-          _photos = List<Map<String, dynamic>>.from(res);
+          _items = filteredList;
+          _isLoading = false;
         });
       }
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+
     if (widget.initialStoragePath != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _openInitialPhoto();
@@ -75,44 +95,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
     }
   }
 
-  Future<void> _pickAndUploadPhoto() async {
-    final result = await FilePicker.platform
-        .pickFiles(type: FileType.image, withData: true);
-    if (result == null || result.files.single.bytes == null) {
-      return;
-    }
-
-    try {
-      final fileBytes = result.files.single.bytes!;
-      final filename =
-          '${DateTime.now().millisecondsSinceEpoch}_${result.files.single.name}';
-      final storagePath = 'photos/$filename';
-
-      await supabase.storage.from('wildlife_gallery').uploadBinary(
-          storagePath, fileBytes,
-          fileOptions:
-          const FileOptions(contentType: 'image/jpeg', upsert: true));
-      await supabase.from('wildlife_gallery').insert({
-        'title': _titleCtrl.text.trim(),
-        'caption': _captionCtrl.text.trim(),
-        'storage_path': storagePath
-      });
-
-      unawaited(AppNotifier.notify(
-        title: 'নতুন ছবি যোগ হয়েছে! (New Gallery Photo)',
-        body: _titleCtrl.text.trim().isNotEmpty
-            ? '${_titleCtrl.text.trim()} — দেখতে ট্যাপ করুন।'
-            : 'বন্যপ্রাণের নতুন ছবি এসেছে — দেখতে ট্যাপ করুন।',
-        data: {'type': 'gallery', 'id': storagePath},
-      ));
-
-      _titleCtrl.clear();
-      _captionCtrl.clear();
-      loadPhotos();
-    } catch (_) {}
-  }
-
-  Future<void> _deletePhoto(Map<String, dynamic> photo) async {
+  Future<void> _deletePhoto(WildlifeGalleryItem item) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -121,7 +104,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Delete Photo'),
+            Text('Delete Photo', style: TextStyle(color: Colors.white)),
             Text('(ছবিটি মুছে ফেলা নিশ্চিত করুন)',
                 style: TextStyle(fontSize: 11, color: Colors.grey)),
           ],
@@ -130,44 +113,35 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
             'Are you sure you want to completely delete this gallery photo from servers?\n(আপনি কি নিশ্চিত যে ছবিটি সম্পূর্ণভাবে মুছে ফেলতে চান?)'),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(ctx, false);
-            },
-            child: const Text('Cancel (বাতিল)',
-                style: TextStyle(color: Colors.white70)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel (বাতিল)', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
-              Navigator.pop(ctx, true);
-            },
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete (মুছে ফেলুন)'),
           ),
         ],
       ),
     );
 
-    if (confirm != true) {
-      return;
-    }
+    if (confirm != true) return;
 
     try {
-      final storagePath = (photo['storage_path'] ?? '').toString();
-      if (storagePath.isNotEmpty) {
+      if (item.storagePath.isNotEmpty) {
         await supabase.storage
             .from('wildlife_gallery')
-            .remove([storagePath]);
+            .remove([item.storagePath]);
       }
       await supabase
           .from('wildlife_gallery')
           .delete()
-          .eq('id', photo['id']);
+          .eq('id', item.id);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text(
-                  'Photo deleted successfully / ছবিটি মুছে ফেলা হয়েছে।')),
+              content: Text('Photo deleted successfully / ছবিটি মুছে ফেলা হয়েছে।')),
         );
         loadPhotos();
       }
@@ -191,10 +165,10 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
             parent: BouncingScrollPhysics()),
         padding: const EdgeInsets.all(18),
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Wildlife Gallery',
@@ -206,91 +180,185 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                       style: TextStyle(color: Color(0xFF81C784), fontSize: 12)),
                 ],
               ),
-              if (widget.isAdmin)
-                KeyboardPressEffect(
-                  onTap: _pickAndUploadPhoto,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00E676),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add_a_photo, size: 18, color: Colors.black),
-                        SizedBox(width: 8),
-                        Text('Add Photo (ছবি যোগ করুন)',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                                color: Colors.black)),
-                      ],
-                    ),
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: 20),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                childAspectRatio: 0.82),
-            itemCount: _photos.length,
-            itemBuilder: (context, index) {
-              final photo = _photos[index];
-              final signedUrl = supabase.storage
-                  .from('wildlife_gallery')
-                  .getPublicUrl(photo['storage_path']);
 
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    KeyboardPressEffect(
-                      onTap: () {
-                        Navigator.push(
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(child: CircularProgressIndicator(color: Color(0xFF00E676))),
+            )
+          else if (_items.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF18221B),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: const Column(
+                children: [
+                  Icon(Icons.photo_library_outlined, color: Color(0xFF00E676), size: 48),
+                  SizedBox(height: 12),
+                  Text(
+                    'চিত্রশালায় বর্তমানে কোনো ছবি উপলব্ধ নেই।',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                  childAspectRatio: 0.8),
+              itemCount: _items.length,
+              itemBuilder: (context, index) {
+                final item = _items[index];
+                final publicUrl = supabase.storage
+                    .from('wildlife_gallery')
+                    .getPublicUrl(item.storagePath);
+
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Image Card
+                      KeyboardPressEffect(
+                        onTap: () {
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => FullscreenProtectedImageViewer(
-                                    photos: _photos,
-                                    initialIndex: index,
-                                    userEmail: widget.userEmail)));
-                      },
-                      child: CachedNetworkImage(
-                          imageUrl: signedUrl, fit: BoxFit.cover),
-                    ),
-                    if (widget.isAdmin)
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: KeyboardPressEffect(
-                          onTap: () => _deletePhoto(photo),
-                          depth: 2,
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.55),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.redAccent),
+                              builder: (_) => FullscreenProtectedImageViewer(
+                                items: _items,
+                                initialIndex: index,
+                                userEmail: widget.userEmail,
+                              ),
                             ),
-                            child: const Icon(Icons.delete_forever_rounded,
-                                color: Colors.redAccent, size: 17),
+                          );
+                        },
+                        child: CachedNetworkImage(
+                          imageUrl: publicUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF00E676),
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => const Center(
+                            child: Icon(Icons.broken_image, color: Colors.white38),
                           ),
                         ),
                       ),
-                  ],
-                ),
-              );
-            },
-          ),
+
+                      // Gradient Bottom Overlay for Text Metadata
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.85),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                item.displayTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              if (item.photographerCredit != null &&
+                                  item.photographerCredit!.isNotEmpty)
+                                Text(
+                                  '📷 ${item.photographerCredit}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFF81C784),
+                                    fontSize: 10,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Featured Badge
+                      if (item.isFeatured)
+                        Positioned(
+                          top: 6,
+                          left: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFFFD54F)),
+                            ),
+                            child: const Text(
+                              '★ বিশেষ',
+                              style: TextStyle(
+                                color: Color(0xFFFFD54F),
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Admin Delete Overlay Button
+                      if (widget.isAdmin)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: KeyboardPressEffect(
+                            onTap: () => _deletePhoto(item),
+                            depth: 2,
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.55),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.redAccent),
+                              ),
+                              child: const Icon(Icons.delete_forever_rounded,
+                                  color: Colors.redAccent, size: 17),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -298,13 +366,13 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
 }
 
 class FullscreenProtectedImageViewer extends StatefulWidget {
-  final List<Map<String, dynamic>> photos;
+  final List<WildlifeGalleryItem> items;
   final int initialIndex;
   final String userEmail;
 
   const FullscreenProtectedImageViewer({
     super.key,
-    required this.photos,
+    required this.items,
     required this.initialIndex,
     required this.userEmail,
   });
@@ -317,6 +385,7 @@ class FullscreenProtectedImageViewer extends StatefulWidget {
 class _FullscreenProtectedImageViewerState
     extends State<FullscreenProtectedImageViewer> {
   late int _currentIndex;
+  bool _showDetails = true;
 
   @override
   void initState() {
@@ -325,7 +394,7 @@ class _FullscreenProtectedImageViewerState
   }
 
   void _nextPhoto() {
-    if (_currentIndex < widget.photos.length - 1) {
+    if (_currentIndex < widget.items.length - 1) {
       setState(() {
         _currentIndex++;
       });
@@ -340,28 +409,59 @@ class _FullscreenProtectedImageViewerState
     }
   }
 
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '';
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final year = dt.year.toString();
+    return '$day/$month/$year';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final photo = widget.photos[_currentIndex];
-    final signedUrl = supabase.storage
+    final item = widget.items[_currentIndex];
+    final publicUrl = supabase.storage
         .from('wildlife_gallery')
-        .getPublicUrl(photo['storage_path']);
+        .getPublicUrl(item.storagePath);
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black87,
+        elevation: 0,
         title: Text(
-            '${photo['title'] ?? 'Gallery'} (${_currentIndex + 1}/${widget.photos.length})'),
+          '${item.displayTitle} (${_currentIndex + 1}/${widget.items.length})',
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _showDetails ? Icons.info : Icons.info_outline,
+              color: const Color(0xFF00E676),
+            ),
+            tooltip: 'বিবরণ দেখুন/লুকান',
+            onPressed: () {
+              setState(() => _showDetails = !_showDetails);
+            },
+          ),
+        ],
       ),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          PhotoView(
-            imageProvider: CachedNetworkImageProvider(signedUrl),
-            minScale: PhotoViewComputedScale.contained,
-            maxScale: PhotoViewComputedScale.contained * 2.5,
+          // Zoomable Photo View
+          GestureDetector(
+            onTap: () {
+              setState(() => _showDetails = !_showDetails);
+            },
+            child: PhotoView(
+              imageProvider: CachedNetworkImageProvider(publicUrl),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.contained * 3.0,
+            ),
           ),
+
+          // Previous Navigation Button
           if (_currentIndex > 0)
             Positioned(
               left: 14,
@@ -378,7 +478,9 @@ class _FullscreenProtectedImageViewerState
                 ),
               ),
             ),
-          if (_currentIndex < widget.photos.length - 1)
+
+          // Next Navigation Button
+          if (_currentIndex < widget.items.length - 1)
             Positioned(
               right: 14,
               top: 0,
@@ -390,6 +492,106 @@ class _FullscreenProtectedImageViewerState
                     icon: const Icon(Icons.arrow_forward_ios_rounded,
                         color: Colors.white, size: 20),
                     onPressed: _nextPhoto,
+                  ),
+                ),
+              ),
+            ),
+
+          // Bottom Metadata Drawer / Overlay
+          if (_showDetails)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF142419).withValues(alpha: 0.92),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      ScientificText(
+                        item.displayTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Metadata Row (Photographer, Location, Category, Date)
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 6,
+                        children: [
+                          if (item.photographerCredit != null &&
+                              item.photographerCredit!.isNotEmpty)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.camera_alt_rounded,
+                                    size: 13, color: Color(0xFF00E676)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  item.photographerCredit!,
+                                  style: const TextStyle(
+                                      color: Color(0xFF00E676),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          if (item.location != null && item.location!.isNotEmpty)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.location_on_rounded,
+                                    size: 13, color: Color(0xFF81C784)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  item.location!,
+                                  style: const TextStyle(
+                                      color: Color(0xFF81C784), fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          if (item.category != null && item.category!.isNotEmpty)
+                            Text(
+                              '📁 ${item.category}',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 12),
+                            ),
+                          Text(
+                            '📅 ${_formatDate(item.publishedAt ?? item.createdAt)}',
+                            style: const TextStyle(
+                                color: Colors.white38, fontSize: 12),
+                          ),
+                        ],
+                      ),
+
+                      // Description / Caption
+                      if (item.displayDescription.isNotEmpty &&
+                          item.displayDescription != item.displayTitle) ...[
+                        const SizedBox(height: 8),
+                        ScientificText(
+                          item.displayDescription,
+                          selectable: true,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),

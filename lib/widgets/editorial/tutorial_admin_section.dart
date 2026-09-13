@@ -437,7 +437,7 @@ class _TutorialAdminSectionState extends State<TutorialAdminSection> {
                             final durationMin = int.tryParse(durationCtrl.text.trim());
 
                             if (isEditing) {
-                              await _tutorialService.updateTutorial(
+                              final updated = await _tutorialService.updateTutorial(
                                 id: existingItem.id,
                                 title: titleCtrl.text.trim(),
                                 description: descCtrl.text.trim(),
@@ -454,8 +454,19 @@ class _TutorialAdminSectionState extends State<TutorialAdminSection> {
                                 isPublished: isPublished,
                                 oldStoragePath: existingItem.storagePath,
                               );
+
+                              // Trigger notification ONLY if transitioned from draft -> published
+                              if (!existingItem.isPublished && isPublished) {
+                                await AppNotifier.notify(
+                                  title: '📚 নতুন টিউটোরিয়াল প্রকাশিত: ${updated.title}',
+                                  body: updated.snippet?.isNotEmpty == true
+                                      ? updated.snippet!
+                                      : 'বন্যপ্রাণী ও প্রকৃতি বিষয়ক নতুন নির্দেশিকা দেখুন।',
+                                  data: {'type': 'tutorial', 'id': updated.id},
+                                );
+                              }
                             } else {
-                              await _tutorialService.createTutorial(
+                              final created = await _tutorialService.createTutorial(
                                 title: titleCtrl.text.trim(),
                                 description: descCtrl.text.trim(),
                                 snippet: snippetCtrl.text.trim(),
@@ -470,6 +481,17 @@ class _TutorialAdminSectionState extends State<TutorialAdminSection> {
                                 isFeatured: isFeatured,
                                 isPublished: isPublished,
                               );
+
+                              // Trigger notification ONLY if created directly in published state
+                              if (isPublished) {
+                                await AppNotifier.notify(
+                                  title: '📚 নতুন টিউটোরিয়াল প্রকাশিত: ${created.title}',
+                                  body: created.snippet?.isNotEmpty == true
+                                      ? created.snippet!
+                                      : 'বন্যপ্রাণী ও প্রকৃতি বিষয়ক নতুন নির্দেশিকা দেখুন।',
+                                  data: {'type': 'tutorial', 'id': created.id},
+                                );
+                              }
                             }
 
                             if (ctx.mounted) Navigator.pop(ctx);
