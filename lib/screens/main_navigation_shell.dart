@@ -17,6 +17,7 @@ import 'wildlife_gallery_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'online_book_store_screen.dart';
 import 'coming_soon_screen.dart';
+import 'podcast_screen.dart';
 
 class MainNavigationShell extends StatefulWidget {
   final String userEmail;
@@ -658,13 +659,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const ComingSoonScreen(
-                          title: 'Podcast',
-                          titleBengali: '🎙️ পডকাস্ট',
-                          descriptionBengali: 'প্রকৃতি, পরিবেশ ও বন্যপ্রাণ নিয়ে রোমাঞ্চকর অডিও সাক্ষাৎকার ও আলোচনা আসছে।',
-                          icon: Icons.mic_rounded,
-                          assetPath: 'assets/images/podcast.png',
-                        ),
+                        builder: (_) => const PodcastScreen(),
                       ),
                     );
                   },

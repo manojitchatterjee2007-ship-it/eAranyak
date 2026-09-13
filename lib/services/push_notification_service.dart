@@ -13,6 +13,7 @@ import '../screens/nature_games_screen.dart';
 import '../screens/notification_detail_screen.dart';
 import '../screens/community_article_reader_screen.dart';
 import '../screens/coming_soon_screen.dart';
+import '../screens/podcast_screen.dart';
 import '../services/app_notification_service.dart';
 import '../services/writing_submission_service.dart';
 
@@ -137,12 +138,10 @@ Future<void> routeToContent(Map<String, dynamic> data) async {
         } catch (_) {}
       }
     } else if (type == 'podcast') {
+      final podcastId = (data['id'] ?? '').toString();
       nav.push(MaterialPageRoute(
-          builder: (_) => const ComingSoonScreen(
-                title: 'eAranyak Podcast',
-                titleBengali: 'আরণ্যক পডকাস্ট',
-                descriptionBengali: 'বন্যপ্রাণী ও প্রকৃতি নিয়ে বিশেষ অডিও পডকাস্ট সিরিজ শীঘ্রই আসছে।',
-                icon: Icons.podcasts_rounded,
+          builder: (_) => PodcastScreen(
+                initialPodcastId: podcastId.isNotEmpty ? podcastId : null,
               )));
     } else if (type == 'vlog') {
       nav.push(MaterialPageRoute(

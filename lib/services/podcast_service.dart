@@ -23,6 +23,57 @@ class PodcastService {
     }
   }
 
+  /// Fetch published podcasts for public UI
+  Future<List<Podcast>> fetchPublishedPodcasts() async {
+    final res = await _supabase
+        .from('podcasts')
+        .select()
+        .eq('is_published', true)
+        .order('editorial_priority', ascending: false)
+        .order('published_at', ascending: false)
+        .order('created_at', ascending: false);
+
+    final list = (res as List).map((e) => Podcast.fromJson(e)).toList();
+    final now = DateTime.now().toUtc();
+
+    return list.where((p) {
+      if (!p.isPublished) return false;
+      if (p.scheduledPublishAt != null && p.scheduledPublishAt!.isAfter(now)) {
+        return false;
+      }
+      if (p.expiresAt != null && !p.expiresAt!.isAfter(now)) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  /// Fetch a single published podcast episode by ID
+  Future<Podcast?> fetchPodcastById(String id) async {
+    try {
+      final res = await _supabase
+          .from('podcasts')
+          .select()
+          .eq('id', id)
+          .eq('is_published', true)
+          .maybeSingle();
+
+      if (res == null) return null;
+      final podcast = Podcast.fromJson(res);
+      final now = DateTime.now().toUtc();
+
+      if (podcast.scheduledPublishAt != null && podcast.scheduledPublishAt!.isAfter(now)) {
+        return null;
+      }
+      if (podcast.expiresAt != null && !podcast.expiresAt!.isAfter(now)) {
+        return null;
+      }
+      return podcast;
+    } catch (_) {
+      return null;
+    }
+  }
+
   String _getContentType(String ext, {bool isAudio = false}) {
     final cleanExt = ext.toLowerCase();
     if (isAudio) {
