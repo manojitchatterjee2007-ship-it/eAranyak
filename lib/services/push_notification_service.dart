@@ -12,6 +12,7 @@ import '../screens/wildlife_gallery_screen.dart';
 import '../screens/nature_games_screen.dart';
 import '../screens/notification_detail_screen.dart';
 import '../screens/community_article_reader_screen.dart';
+import '../screens/coming_soon_screen.dart';
 import '../services/app_notification_service.dart';
 import '../services/writing_submission_service.dart';
 
@@ -135,6 +136,30 @@ Future<void> routeToContent(Map<String, dynamic> data) async {
           }
         } catch (_) {}
       }
+    } else if (type == 'podcast') {
+      nav.push(MaterialPageRoute(
+          builder: (_) => const ComingSoonScreen(
+                title: 'eAranyak Podcast',
+                titleBengali: 'আরণ্যক পডকাস্ট',
+                descriptionBengali: 'বন্যপ্রাণী ও প্রকৃতি নিয়ে বিশেষ অডিও পডকাস্ট সিরিজ শীঘ্রই আসছে।',
+                icon: Icons.podcasts_rounded,
+              )));
+    } else if (type == 'vlog') {
+      nav.push(MaterialPageRoute(
+          builder: (_) => const ComingSoonScreen(
+                title: 'Nature Vlogs',
+                titleBengali: 'প্রকৃতি ভিডিও ব্লগ',
+                descriptionBengali: 'সুন্দরবন ও বনাঞ্চলের প্রকৃতির ভিডিওচিত্র ও নেচার ব্লগ শীঘ্রই আসছে।',
+                icon: Icons.movie_rounded,
+              )));
+    } else if (type == 'tutorial') {
+      nav.push(MaterialPageRoute(
+          builder: (_) => const ComingSoonScreen(
+                title: 'Nature Tutorials',
+                titleBengali: 'প্রকৃতি নির্দেশিকা ও টিউটোরিয়াল',
+                descriptionBengali: 'বন্যপ্রাণী পর্যবেক্ষণ ও ফটোগ্রাফি বিষয়ক টিউটোরিয়াল সিরিজ শীঘ্রই আসছে।',
+                icon: Icons.school_rounded,
+              )));
     }
   } catch (_) {}
 }
@@ -227,6 +252,18 @@ class PushNotificationService {
       } else if (type == 'community_article') {
         channelId = 'earanyak_community_v3';
         channelName = '✍️ Community Articles';
+        soundName = 'deer_call';
+      } else if (type == 'podcast') {
+        channelId = 'earanyak_podcast_v3';
+        channelName = '🎙️ Podcast Episodes';
+        soundName = 'owl_hoot';
+      } else if (type == 'vlog') {
+        channelId = 'earanyak_vlog_v3';
+        channelName = '🎬 Nature Vlogs';
+        soundName = 'owl_hoot';
+      } else if (type == 'tutorial') {
+        channelId = 'earanyak_tutorial_v3';
+        channelName = '📚 Tutorials & Guides';
         soundName = 'deer_call';
       }
 

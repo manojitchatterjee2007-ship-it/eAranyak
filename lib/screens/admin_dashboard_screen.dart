@@ -20,6 +20,10 @@ import '../models/app_notification.dart';
 import '../widgets/scientific_text.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../screens/notification_detail_screen.dart';
+import '../widgets/editorial/gallery_admin_section.dart';
+import '../widgets/editorial/podcast_admin_section.dart';
+import '../widgets/editorial/vlog_admin_section.dart';
+import '../widgets/editorial/tutorial_admin_section.dart';
 
 class UploadTask {
   final String id;
@@ -2731,6 +2735,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         // PART 3: NOTIFICATION MANAGEMENT SECTION
         // -------------------------------------------------------------
         _buildNotificationAdminSection(),
+
+        // NEW Phase 7B-2 Editorial Control Centre Sections
+        GalleryAdminSection(onUploadComplete: widget.onUploadComplete),
+        PodcastAdminSection(onUploadComplete: widget.onUploadComplete),
+        VlogAdminSection(onUploadComplete: widget.onUploadComplete),
+        TutorialAdminSection(onUploadComplete: widget.onUploadComplete),
       ],
     );
   }
@@ -2761,7 +2771,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final titleCtrl = TextEditingController();
     final snippetCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
+    final venueCtrl = TextEditingController();
+    final regUrlCtrl = TextEditingController();
+    final contactCtrl = TextEditingController();
+
     String notificationType = 'text'; // 'text', 'image', 'pdf'
+    String category = 'General'; // General, Announcement, Event, Magazine, Community, Other
+    DateTime? eventDate;
+    bool isFeatured = false;
     int priority = 10;
     List<PlatformFile> selectedImageFiles = [];
     PlatformFile? selectedPdfFile;
@@ -2771,6 +2788,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDlgState) {
+          final isEvent = category == 'Event';
+
           return AlertDialog(
             backgroundColor: const Color(0xFF18221B),
             title: const Row(
@@ -2787,34 +2806,185 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('১. বিজ্ঞপ্তির ধরন (Notification Type) *',
-                      style: TextStyle(color: Color(0xFF81C784), fontWeight: FontWeight.bold, fontSize: 13)),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF121B12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white24),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: notificationType,
-                        dropdownColor: const Color(0xFF18221B),
-                        isExpanded: true,
-                        style: const TextStyle(color: Colors.white, fontSize: 13.5),
-                        items: const [
-                          DropdownMenuItem(value: 'text', child: Text('📝 Text Notification (সাধারণ লেখা)')),
-                          DropdownMenuItem(value: 'image', child: Text('📷 Image Notification (ছবি ও লেখা)')),
-                          DropdownMenuItem(value: 'pdf', child: Text('📄 PDF Document (অফিশিয়াল সার্কুলার/PDF)')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setDlgState(() => notificationType = val);
-                        },
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('১. বিজ্ঞপ্তির ধরন (Type) *',
+                                style: TextStyle(color: Color(0xFF81C784), fontWeight: FontWeight.bold, fontSize: 13)),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF121B12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white24),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: notificationType,
+                                  dropdownColor: const Color(0xFF18221B),
+                                  isExpanded: true,
+                                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                                  items: const [
+                                    DropdownMenuItem(value: 'text', child: Text('📝 Text')),
+                                    DropdownMenuItem(value: 'image', child: Text('📷 Image')),
+                                    DropdownMenuItem(value: 'pdf', child: Text('📄 PDF')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) setDlgState(() => notificationType = val);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('ক্যাটাগরি (Category)',
+                                style: TextStyle(color: Color(0xFF81C784), fontWeight: FontWeight.bold, fontSize: 13)),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF121B12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white24),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: category,
+                                  dropdownColor: const Color(0xFF18221B),
+                                  isExpanded: true,
+                                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                                  items: const [
+                                    DropdownMenuItem(value: 'General', child: Text('General')),
+                                    DropdownMenuItem(value: 'Announcement', child: Text('Announcement')),
+                                    DropdownMenuItem(value: 'Event', child: Text('📅 Event')),
+                                    DropdownMenuItem(value: 'Magazine', child: Text('Magazine')),
+                                    DropdownMenuItem(value: 'Community', child: Text('Community')),
+                                    DropdownMenuItem(value: 'Other', child: Text('Other')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) setDlgState(() => category = val);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
+
+                  if (isEvent) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF121B12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.4)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('📅 ইভেন্ট বিস্তারিত তথ্য (Event Metadata)',
+                              style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    side: const BorderSide(color: Colors.white38),
+                                  ),
+                                  onPressed: () async {
+                                    final pickedDate = await showDatePicker(
+                                      context: context,
+                                      initialDate: eventDate ?? DateTime.now().add(const Duration(days: 1)),
+                                      firstDate: DateTime.now(),
+                                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                                    );
+                                    if (pickedDate != null && context.mounted) {
+                                      final pickedTime = await showTimePicker(
+                                        context: context,
+                                        initialTime: TimeOfDay.now(),
+                                      );
+                                      if (pickedTime != null) {
+                                        setDlgState(() {
+                                          eventDate = DateTime(
+                                            pickedDate.year,
+                                            pickedDate.month,
+                                            pickedDate.day,
+                                            pickedTime.hour,
+                                            pickedTime.minute,
+                                          );
+                                        });
+                                      }
+                                    }
+                                  },
+                                  icon: const Icon(Icons.event_rounded, size: 18),
+                                  label: Text(
+                                    eventDate != null
+                                        ? '${eventDate!.day}/${eventDate!.month}/${eventDate!.year} ${eventDate!.hour}:${eventDate!.minute.toString().padLeft(2, '0')}'
+                                        : 'Select Event Date & Time *',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: venueCtrl,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: const InputDecoration(
+                              labelText: 'Venue / স্থান',
+                              labelStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: regUrlCtrl,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: const InputDecoration(
+                              labelText: 'Registration Link (নিবন্ধন ইউআরএল)',
+                              labelStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: contactCtrl,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: const InputDecoration(
+                              labelText: 'Contact Info / যোগাযোগ',
+                              labelStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          SwitchListTile(
+                            value: isFeatured,
+                            contentPadding: EdgeInsets.zero,
+                            activeTrackColor: const Color(0xFF00E676),
+                            title: const Text('Featured Event (বিশেষ ইভেন্ট)', style: TextStyle(color: Colors.white, fontSize: 12)),
+                            onChanged: (v) => setDlgState(() => isFeatured = v),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   const Text('২. শিরোনাম (Title) *',
                       style: TextStyle(color: Color(0xFF81C784), fontWeight: FontWeight.bold, fontSize: 13)),
@@ -2958,6 +3128,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   selectedImageFiles: selectedImageFiles,
                   selectedPdfFile: selectedPdfFile,
                   publishNow: false,
+                  category: category,
+                  eventDate: eventDate,
+                  venue: venueCtrl.text.trim(),
+                  registrationUrl: regUrlCtrl.text.trim(),
+                  contactInfo: contactCtrl.text.trim(),
+                  isFeatured: isFeatured,
                 ),
                 icon: const Icon(Icons.save_outlined, size: 16),
                 label: const Text('💾 Save Draft', style: TextStyle(color: Colors.white)),
@@ -2974,6 +3150,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   selectedImageFiles: selectedImageFiles,
                   selectedPdfFile: selectedPdfFile,
                   publishNow: true,
+                  category: category,
+                  eventDate: eventDate,
+                  venue: venueCtrl.text.trim(),
+                  registrationUrl: regUrlCtrl.text.trim(),
+                  contactInfo: contactCtrl.text.trim(),
+                  isFeatured: isFeatured,
                 ),
                 icon: const Icon(Icons.publish_rounded, size: 16),
                 label: const Text('📢 Publish Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -2995,6 +3177,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required List<PlatformFile> selectedImageFiles,
     required PlatformFile? selectedPdfFile,
     required bool publishNow,
+    String category = 'General',
+    DateTime? eventDate,
+    String? venue,
+    String? registrationUrl,
+    String? contactInfo,
+    bool isFeatured = false,
   }) async {
     final title = titleCtrl.text.trim();
     if (title.isEmpty) {
@@ -3023,6 +3211,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         pdfFile: selectedPdfFile,
         priority: priority,
         publishNow: publishNow,
+        category: category,
+        eventDate: eventDate,
+        venue: venue,
+        registrationUrl: registrationUrl,
+        contactInfo: contactInfo,
+        isFeatured: isFeatured,
       );
 
       if (mounted) {
@@ -3094,6 +3288,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               {'id': 'all', 'label': 'সবগুলো'},
               {'id': 'published', 'label': 'প্রকাশিত'},
               {'id': 'draft', 'label': 'খসড়া'},
+              {'id': 'event', 'label': '📅 Event'},
               {'id': 'text', 'label': '📝 Text'},
               {'id': 'image', 'label': '📷 Image'},
               {'id': 'pdf', 'label': '📄 PDF'},
@@ -3235,6 +3430,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                         style: const TextStyle(fontSize: 10, color: Color(0xFF00E676)),
                                       ),
                                     ),
+                                    if (notif.category != 'General')
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.purple.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          'Cat: ${notif.category}',
+                                          style: const TextStyle(fontSize: 10, color: Colors.purpleAccent),
+                                        ),
+                                      ),
+                                    if (notif.isEvent && notif.eventDate != null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          '📅 ${notif.eventDate!.day}/${notif.eventDate!.month}/${notif.eventDate!.year}',
+                                          style: const TextStyle(fontSize: 10, color: Colors.lightBlueAccent),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ],

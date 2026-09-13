@@ -110,6 +110,8 @@ class AppNotificationService {
           query = query.eq('is_published', true);
         } else if (filter == 'draft') {
           query = query.eq('is_published', false);
+        } else if (filter == 'event') {
+          query = query.eq('category', 'Event');
         } else if (['text', 'image', 'pdf'].contains(filter)) {
           query = query.eq('notification_type', filter);
         }
@@ -125,6 +127,8 @@ class AppNotificationService {
           query = query.eq('is_published', true);
         } else if (filter == 'draft') {
           query = query.eq('is_published', false);
+        } else if (filter == 'event') {
+          query = query.eq('category', 'Event');
         } else if (['text', 'image', 'pdf'].contains(filter)) {
           query = query.eq('notification_type', filter);
         }
@@ -145,6 +149,12 @@ class AppNotificationService {
     PlatformFile? pdfFile,
     int priority = 10,
     bool publishNow = false,
+    String category = 'General',
+    DateTime? eventDate,
+    String? venue,
+    String? registrationUrl,
+    String? contactInfo,
+    bool isFeatured = false,
   }) async {
     final user = _supabase.auth.currentUser;
     final now = DateTime.now().toUtc();
@@ -161,6 +171,12 @@ class AppNotificationService {
       'updated_at': now.toIso8601String(),
       if (publishNow) 'published_at': now.toIso8601String(),
       if (user != null) 'created_by': user.id,
+      'category': category.trim(),
+      if (eventDate != null) 'event_date': eventDate.toUtc().toIso8601String(),
+      if (venue != null) 'venue': venue.trim(),
+      if (registrationUrl != null) 'registration_url': registrationUrl.trim(),
+      if (contactInfo != null) 'contact_info': contactInfo.trim(),
+      'is_featured': isFeatured,
     };
 
     final res = await _supabase

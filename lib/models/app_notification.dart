@@ -57,6 +57,14 @@ class AppNotificationItem {
   final DateTime? publishedAt;
   final List<AppNotificationImage> images;
 
+  // Phase 7B-1 fields:
+  final String category;
+  final DateTime? eventDate;
+  final String? venue;
+  final String? registrationUrl;
+  final String? contactInfo;
+  final bool isFeatured;
+
   AppNotificationItem({
     required this.id,
     required this.title,
@@ -71,6 +79,12 @@ class AppNotificationItem {
     required this.updatedAt,
     this.publishedAt,
     this.images = const [],
+    this.category = 'General',
+    this.eventDate,
+    this.venue,
+    this.registrationUrl,
+    this.contactInfo,
+    this.isFeatured = false,
   });
 
   factory AppNotificationItem.fromJson(Map<String, dynamic> json) {
@@ -99,6 +113,14 @@ class AppNotificationItem {
           ? DateTime.tryParse(json['published_at'].toString())
           : null,
       images: parsedImages,
+      category: (json['category'] ?? 'General').toString(),
+      eventDate: json['event_date'] != null
+          ? DateTime.tryParse(json['event_date'].toString())
+          : null,
+      venue: json['venue']?.toString(),
+      registrationUrl: json['registration_url']?.toString(),
+      contactInfo: json['contact_info']?.toString(),
+      isFeatured: json['is_featured'] == true,
     );
   }
 
@@ -113,6 +135,12 @@ class AppNotificationItem {
       'editorial_priority': editorialPriority,
       'is_published': isPublished,
       if (publishedAt != null) 'published_at': publishedAt!.toIso8601String(),
+      'category': category,
+      if (eventDate != null) 'event_date': eventDate!.toIso8601String(),
+      if (venue != null) 'venue': venue,
+      if (registrationUrl != null) 'registration_url': registrationUrl,
+      if (contactInfo != null) 'contact_info': contactInfo,
+      'is_featured': isFeatured,
     };
   }
 
@@ -147,7 +175,8 @@ class AppNotificationItem {
     }
     return title;
   }
+
+  bool get isEvent => category.toLowerCase() == 'event';
 }
 
 typedef AppNotification = AppNotificationItem;
-
