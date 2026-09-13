@@ -105,7 +105,7 @@ Future<void> routeToContent(Map<String, dynamic> data) async {
       nav.push(MaterialPageRoute(
           builder: (_) => ProtectedReaderScreen(
               magazineId: (data['id'] ?? '').toString(),
-              title: (data['title'] ?? 'eআরণ্যক').toString(),
+              title: formatMagazineTitle((data['title'] ?? 'এখন আরণ্যক').toString()),
               userEmail: email)));
     } else if (type == 'gallery') {
       final email = supabase.auth.currentUser?.email ?? 'guest';
@@ -223,44 +223,39 @@ class PushNotificationService {
 
       String channelId = 'earanyak_general_v3';
       String channelName = '🌿 General Updates';
-      String soundName = 'owl_hoot';
+
+      String soundName = (payloadData['sound_key'] ?? payloadData['sound'] ?? '').toString();
+      if (soundName.isEmpty || !NotificationSoundPool.notificationSounds.contains(soundName)) {
+        soundName = await NotificationSoundPool.getNextSound();
+      }
 
       if (type == 'news') {
         channelId = 'earanyak_news_v3';
         channelName = '📰 News Updates';
-        soundName = 'elephant_trumpet';
       } else if (type == 'gallery') {
         channelId = 'earanyak_gallery_v3';
         channelName = '📸 Wildlife Gallery';
-        soundName = 'owl_hoot';
       } else if (type == 'magazine') {
         channelId = 'earanyak_magazine_v3';
         channelName = '📖 Magazine Release';
-        soundName = 'tiger_roar';
       } else if (type == 'quiz' || type == 'game') {
         channelId = 'earanyak_quiz_v3';
         channelName = '🧩 Wildlife Quizzes';
-        soundName = 'cricket';
       } else if (type == 'app_notification') {
         channelId = 'earanyak_events_v3';
         channelName = '📢 Official Announcements';
-        soundName = 'cricket';
       } else if (type == 'community_article') {
         channelId = 'earanyak_community_v3';
         channelName = '✍️ Community Articles';
-        soundName = 'deer_call';
       } else if (type == 'podcast') {
         channelId = 'earanyak_podcast_v3';
         channelName = '🎙️ Podcast Episodes';
-        soundName = 'owl_hoot';
       } else if (type == 'vlog') {
         channelId = 'earanyak_vlog_v3';
         channelName = '🎬 Nature Vlogs';
-        soundName = 'owl_hoot';
       } else if (type == 'tutorial') {
         channelId = 'earanyak_tutorial_v3';
         channelName = '📚 Tutorials & Guides';
-        soundName = 'deer_call';
       }
 
       final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(

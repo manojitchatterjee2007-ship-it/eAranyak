@@ -11,6 +11,7 @@ import '../services/app_notification_service.dart';
 import '../models/app_notification.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/rotating_book_card.dart';
+import '../widgets/magazine_cover_image.dart';
 import 'magazine_reader_screen.dart';
 import 'news_detail_screen.dart';
 import 'expedition_tab.dart';
@@ -145,8 +146,6 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _issues = [];
   Timer? _autoShuffleTimer;
-  int _lastAnimalSoundIndex = -1;
-  final AudioPlayer _notificationAudioPlayer = AudioPlayer();
 
   String? _lastReadMagId;
   String? _lastReadTitle;
@@ -157,13 +156,6 @@ class HomeScreenState extends State<HomeScreen> {
   bool _travelContentVisible = false;
 
   final AppNotificationService _appNotificationService = AppNotificationService();
-
-  static const List<String> _animalAudioAssets = [
-    'audio/tiger_roar.mp3',
-    'audio/elephant_trumpet.mp3',
-    'audio/deer_call.mp3',
-    'audio/owl_hoot.mp3',
-  ];
 
   List<Map<String, dynamic>> _visibleNews = [];
   late final PageController _newsPageController;
@@ -184,9 +176,6 @@ class HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchLiveNews();
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) _triggerAnimalAcousticAlert();
-      });
     });
   }
 
@@ -194,7 +183,6 @@ class HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _autoShuffleTimer?.cancel();
     _newsPageController.dispose();
-    _notificationAudioPlayer.dispose();
     super.dispose();
   }
 
@@ -243,29 +231,11 @@ class HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
-  Future<void> _triggerAnimalAcousticAlert() async {
-    if (SoundService.isMuted) return;
-    try {
-      int newIndex;
-      do {
-        newIndex = math.Random().nextInt(_animalAudioAssets.length);
-      } while (
-          newIndex == _lastAnimalSoundIndex && _animalAudioAssets.length > 1);
-      _lastAnimalSoundIndex = newIndex;
-
-      await _notificationAudioPlayer.stop();
-      await _notificationAudioPlayer.setVolume(0.40);
-      await _notificationAudioPlayer
-          .play(AssetSource(_animalAudioAssets[newIndex]));
-    } catch (_) {}
-  }
-
   void _startAutoNewsShufflingTimer() {
     _autoShuffleTimer?.cancel();
     _autoShuffleTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
       if (!mounted) return;
       _refreshVisibleNewsWindow();
-      _triggerAnimalAcousticAlert();
     });
   }
 
@@ -1249,7 +1219,6 @@ class HomeScreenState extends State<HomeScreen> {
         onRefresh: () async {
           await loadData();
           _refreshVisibleNewsWindow();
-          await _triggerAnimalAcousticAlert();
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
@@ -1305,18 +1274,10 @@ class HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                           color: const Color(0xFF1E2E23),
                           borderRadius: BorderRadius.circular(6)),
-                      child: ClipRRect(
+                      child: MagazineCoverImage(
+                        magazineId: _lastReadMagId!,
+                        fit: BoxFit.cover,
                         borderRadius: BorderRadius.circular(5),
-                        child: CachedNetworkImage(
-                          imageUrl: supabase.storage
-                              .from('magazine_pages')
-                              .getPublicUrl('$_lastReadMagId/page_1.jpg'),
-                          fit: BoxFit.cover,
-                          errorWidget: (c, u, e) => const Icon(
-                              Icons.menu_book_rounded,
-                              color: Color(0xFF00E676),
-                              size: 26),
-                        ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -1324,7 +1285,7 @@ class HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_lastReadTitle ?? 'eআরণ্যক',
+                          Text(formatMagazineTitle(_lastReadTitle),
                               style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -1359,7 +1320,7 @@ class HomeScreenState extends State<HomeScreen> {
                           MaterialPageRoute(
                             builder: (_) => ProtectedReaderScreen(
                                 magazineId: _lastReadMagId!,
-                                title: _lastReadTitle ?? 'eআরণ্যক',
+                                title: formatMagazineTitle(_lastReadTitle),
                                 userEmail: widget.userEmail,
                                 initialPage: _lastReadPage),
                           ),
@@ -1662,34 +1623,18 @@ class HomeScreenState extends State<HomeScreen> {
                         decoration: BoxDecoration(
                             color: const Color(0xFF1E2E23),
                             borderRadius: BorderRadius.circular(8)),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(7),
-                          child: CachedNetworkImage(
-                            imageUrl: supabase.storage
-                                .from('magazine_pages')
-                                .getPublicUrl(
-                                '${_issues.first['id']}/page_1.jpg'),
-                            fit: BoxFit.cover,
-                            placeholder: (c, u) => const Center(
-                                child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Color(0xFF00E676)))),
-                            errorWidget: (c, u, e) => const Icon(
-                                Icons.menu_book_rounded,
-                                color: Color(0xFF00E676),
-                                size: 42),
-                          ),
-                        ),
+                        child: MagazineCoverImage(
+                        magazineId: _issues.first['id'].toString(),
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
                       ),
                       const SizedBox(width: 20),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_issues.first['title'] ?? 'eআরণ্যক',
+                            Text(formatMagazineTitle(_issues.first['title']),
                                 style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,

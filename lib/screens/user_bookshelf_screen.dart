@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
+import '../widgets/magazine_cover_image.dart';
 import 'magazine_reader_screen.dart';
 import 'library_screen.dart';
 
@@ -211,12 +212,9 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: shelfItems.map((mag) {
                               final id = mag['id'].toString();
-                              final title = mag['title']?.toString() ?? 'Untitled';
+                              final title = formatMagazineTitle(mag['title']?.toString());
                               final issueDate = mag['issue_date']?.toString() ?? '';
                               final totalPages = mag['total_pages']?.toString() ?? '';
-                              final coverUrl = _supabase.storage
-                                  .from('magazine_pages')
-                                  .getPublicUrl('$id/page_1.jpg');
                               final progress = _progressMap[id] ?? 0.0;
 
                               return KeyboardPressEffect(
@@ -264,23 +262,9 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
                                           child: Stack(
                                             fit: StackFit.expand,
                                             children: [
-                                              CachedNetworkImage(
-                                                imageUrl: coverUrl,
+                                              MagazineCoverImage(
+                                                magazineId: id,
                                                 fit: BoxFit.cover,
-                                                placeholder: (c, u) => const Center(
-                                                  child: SizedBox(
-                                                    width: 24,
-                                                    height: 24,
-                                                    child: CircularProgressIndicator(
-                                                      strokeWidth: 2.5,
-                                                      color: Color(0xFF00E676),
-                                                    ),
-                                                  ),
-                                                ),
-                                                errorWidget: (c, u, e) => const Icon(
-                                                    Icons.menu_book_rounded,
-                                                    color: Color(0xFF00E676),
-                                                    size: 36),
                                               ),
                                               Positioned(
                                                 top: 6,

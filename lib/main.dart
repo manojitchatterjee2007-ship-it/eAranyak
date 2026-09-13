@@ -39,8 +39,9 @@ void callbackDispatcher() {
 
         if (lastNotifiedId != currentId) {
           await prefs.setString('last_background_news_id', currentId);
+          final soundName = await NotificationSoundPool.getNextSound();
 
-          const AndroidNotificationDetails androidDetails =
+          final AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
             'earanyak_news_v3',
             '📰 News Updates',
@@ -48,11 +49,11 @@ void callbackDispatcher() {
             'Real-time wildlife happenings & environmental news',
             importance: Importance.max,
             priority: Priority.high,
-            sound: RawResourceAndroidNotificationSound('elephant_trumpet'),
+            sound: RawResourceAndroidNotificationSound(soundName),
             playSound: true,
           );
 
-          const NotificationDetails notifDetails =
+          final NotificationDetails notifDetails =
           NotificationDetails(android: androidDetails);
 
           final plugin = FlutterLocalNotificationsPlugin();

@@ -1,13 +1,13 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pdfx/pdfx.dart' as pdfx;
-import 'package:photo_view/photo_view.dart';
+import 'package:flutter_realistic_flipbook/flutter_realistic_flipbook.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/config.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 
@@ -35,52 +35,62 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   final FocusNode _focusNode = FocusNode();
   final AudioPlayer _pageFlipAudioPlayer = AudioPlayer();
   final SupabaseClient _supabase = Supabase.instance.client;
-  final PhotoViewController _photoController = PhotoViewController();
+  final FlipbookController _flipbookController = FlipbookController();
 
   List<String> _signedUrls = [];
+  List<FlipbookPage?> _flipbookPages = [];
   bool _isLoading = true;
   late int _currentPage;
   bool _showControls = true;
   bool _isZoomed = false;
 
-  late AnimationController _animController;
-  double _flipProgress = 0.0;
-  bool _isDragging = false;
+  /// Layout state: 'auto' (device orientation driven on mobile/tablet), 'spread' (force 2-page view), or 'single' (force 1-page view).
+  String _userLayoutPreference = 'auto';
 
-  bool _enablePageFlipAnimation = true;
   bool _enablePageFlipSound = true;
+
+  bool _isSinglePageMode(BuildContext context) {
+    if (_userLayoutPreference == 'single') return true;
+    if (_userLayoutPreference == 'spread') return false;
+
+    // Mobile & Tablet: driven by device orientation (portrait = single page, landscape = 2-page spread)
+    final isMobileOrTablet = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+
+    if (isMobileOrTablet) {
+      final orientation = MediaQuery.of(context).orientation;
+      return orientation == Orientation.portrait;
+    }
+
+    // Desktop & Laptop: defaults to single page if narrow (<700), or 2-page spread if wide
+    final width = MediaQuery.of(context).size.width;
+    return width < 700;
+  }
+
+  void _toggleLayoutMode() {
+    final currentSingle = _isSinglePageMode(context);
+    setState(() {
+      _userLayoutPreference = currentSingle ? 'spread' : 'single';
+    });
+    _saveReaderSettings();
+  }
 
   @override
   void initState() {
     super.initState();
     _currentPage = widget.initialPage;
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-      lowerBound: -1.0,
-      upperBound: 1.0,
-      value: 0.0,
-    );
-    _animController.addListener(() {
-      setState(() {
-        _flipProgress = _animController.value;
-      });
-    });
-
-    _photoController.outputStateStream.listen((state) {
-      final zoomed = (state.scale ?? 1.0) > 1.05;
-      if (zoomed != _isZoomed) {
-        setState(() {
-          _isZoomed = zoomed;
-        });
-      }
-    });
 
     _initAudioEngine();
     _fetchSignedPageUrls().then((_) {
       _saveReadingProgress(_currentPage);
     });
     _loadReaderSettings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
   }
 
   Future<void> _initAudioEngine() async {
@@ -93,8 +103,6 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
 
   @override
   void dispose() {
-    _photoController.dispose();
-    _animController.dispose();
     _thumbScrollController.dispose();
     _focusNode.dispose();
     _pageFlipAudioPlayer.dispose();
@@ -104,21 +112,21 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   Future<void> _loadReaderSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _enablePageFlipAnimation = prefs.getBool('pref_page_flip_anim') ?? true;
       _enablePageFlipSound = prefs.getBool('pref_page_flip_sound') ?? true;
+      _userLayoutPreference = prefs.getString('pref_reader_layout') ?? 'auto';
     });
   }
 
   Future<void> _saveReaderSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('pref_page_flip_anim', _enablePageFlipAnimation);
     await prefs.setBool('pref_page_flip_sound', _enablePageFlipSound);
+    await prefs.setString('pref_reader_layout', _userLayoutPreference);
   }
 
   Future<void> _saveReadingProgress(int page) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('last_read_mag_id', widget.magazineId);
-    await prefs.setString('last_read_title', widget.title);
+    await prefs.setString('last_read_title', formatMagazineTitle(widget.title));
     await prefs.setInt('last_read_page', page);
     await prefs.setInt('last_read_total_pages', _signedUrls.length);
     if (_signedUrls.isNotEmpty) {
@@ -141,15 +149,52 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
             .createSignedUrl(p['storage_path'], 120);
         urls.add(signedUrl);
       }
-      setState(() {
-        _signedUrls = urls;
-        _isLoading = false;
-      });
+      _signedUrls = urls;
+      _buildFlipbookPages();
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (_) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  /// Builds the flipbook page list ONCE from the short-lived signed URLs.
+  ///
+  /// The first entry is a `null` flyleaf so the package's odd/even spread
+  /// pairing matches the real printed magazine (page 1 sits on the right
+  /// side). Image mode is used because magazine pages are raster page
+  /// images; `NetworkImage` streams each URL lazily (the package preloads
+  /// only the few pages around the current one) so the whole issue is not
+  /// downloaded eagerly and no huge in-memory image cache is created.
+  void _buildFlipbookPages() {
+    final pages = <FlipbookPage?>[null];
+    for (final url in _signedUrls) {
+      final provider = NetworkImage(url);
+      pages.add(FlipbookPage(image: provider, hiResImage: provider));
+    }
+    _flipbookPages = pages;
+  }
+
+  /// Called whenever the flipbook settles on a page (flip end callbacks).
+  /// Keeps the page counter, thumbnails and saved progress in sync with the
+  /// package's authoritative page state (`FlipbookController.page`).
+  void _onPageSettled() {
+    final page = (_flipbookController.page - 1).clamp(0, _signedUrls.length - 1);
+    if (page == _currentPage) {
+      return;
+    }
+    setState(() {
+      _currentPage = page;
+    });
+    _saveReadingProgress(page);
+    _syncThumbnails();
   }
 
   Future<void> _playPageFlipSound() async {
@@ -162,58 +207,76 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   }
 
   void _turnNext() {
-    if (_isZoomed || _currentPage >= _signedUrls.length - 1 || _animController.isAnimating) {
-      return;
+    _focusNode.requestFocus();
+    if (_isZoomed) {
+      try {
+        _flipbookController.zoomOut();
+        _flipbookController.zoomOut();
+      } catch (_) {}
     }
     _playPageFlipSound();
-    if (!_enablePageFlipAnimation) {
-      setState(() {
-        _currentPage++;
-      });
-      _saveReadingProgress(_currentPage);
-      _syncThumbnails();
-      return;
-    }
-    setState(() {
-      _currentPage++;
-    });
-    _saveReadingProgress(_currentPage);
-    _syncThumbnails();
 
-    _animController.value = 1.0;
-    _animController.animateTo(0.0,
-        duration: const Duration(milliseconds: 500), curve: Curves.easeOutQuad);
+    if (_flipbookController.canFlipRight) {
+      try {
+        _flipbookController.flipRight();
+      } catch (_) {}
+    } else {
+      final step = _isSinglePageMode(context) ? 1 : 2;
+      final target =
+          (_flipbookController.page + step).clamp(1, _signedUrls.length);
+      _flipbookController.goToPage(target);
+      final newPage = (target - 1).clamp(0, _signedUrls.length - 1);
+      if (newPage != _currentPage) {
+        setState(() {
+          _currentPage = newPage;
+        });
+        _saveReadingProgress(newPage);
+        _syncThumbnails();
+      }
+    }
   }
 
   void _turnPrev() {
-    if (_isZoomed || _currentPage <= 0 || _animController.isAnimating) {
-      return;
+    _focusNode.requestFocus();
+    if (_isZoomed) {
+      try {
+        _flipbookController.zoomOut();
+        _flipbookController.zoomOut();
+      } catch (_) {}
     }
     _playPageFlipSound();
-    if (!_enablePageFlipAnimation) {
-      setState(() {
-        _currentPage--;
-      });
-      _saveReadingProgress(_currentPage);
-      _syncThumbnails();
-      return;
-    }
-    setState(() {
-      _currentPage--;
-    });
-    _saveReadingProgress(_currentPage);
-    _syncThumbnails();
 
-    _animController.value = -1.0;
-    _animController.animateTo(0.0,
-        duration: const Duration(milliseconds: 500), curve: Curves.easeOutQuad);
+    if (_flipbookController.canFlipLeft) {
+      try {
+        _flipbookController.flipLeft();
+      } catch (_) {}
+    } else {
+      final step = _isSinglePageMode(context) ? 1 : 2;
+      final target =
+          (_flipbookController.page - step).clamp(1, _signedUrls.length);
+      _flipbookController.goToPage(target);
+      final newPage = (target - 1).clamp(0, _signedUrls.length - 1);
+      if (newPage != _currentPage) {
+        setState(() {
+          _currentPage = newPage;
+        });
+        _saveReadingProgress(newPage);
+        _syncThumbnails();
+      }
+    }
   }
 
   void _jumpToPage(int index) {
-    if (index == _currentPage || _animController.isAnimating) {
+    if (index < 0 || index >= _signedUrls.length) {
+      return;
+    }
+    final target = index + 1;
+    if (target == _flipbookController.page) {
       return;
     }
     _playPageFlipSound();
+    _flipbookController.goToPage(target);
+    // goToPage jumps without animating, so page state is synced immediately.
     setState(() {
       _currentPage = index;
     });
@@ -231,34 +294,6 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
       );
-    }
-  }
-
-  void _handleHorizontalDragUpdate(
-      DragUpdateDetails details, double screenWidth) {
-    if (_isZoomed) return;
-    if (_isDragging && _signedUrls.length > 1) {
-      final delta = details.primaryDelta ?? 0.0;
-      setState(() {
-        _flipProgress -= (delta / screenWidth) * 1.35;
-        _flipProgress = _flipProgress.clamp(-1.0, 1.0);
-        _animController.value = _flipProgress;
-      });
-    }
-  }
-
-  void _handleHorizontalDragEnd(DragEndDetails details) {
-    if (_isZoomed) return;
-    _isDragging = false;
-    if (_flipProgress > 0.18 && _currentPage < _signedUrls.length - 1) {
-      _playPageFlipSound();
-      _turnNext();
-    } else if (_flipProgress < -0.18 && _currentPage > 0) {
-      _playPageFlipSound();
-      _turnPrev();
-    } else {
-      _animController.animateTo(0.0,
-          duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
     }
   }
 
@@ -299,27 +334,42 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              SwitchListTile(
-                activeThumbColor: const Color(0xFF00E676),
-                contentPadding: EdgeInsets.zero,
-                title: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('3D Book Curl Flip Animation'),
-                    Text('(কিন্ডল ৩ডি রিয়েল পেজ কার্ল)',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
-                  ],
-                ),
-                subtitle: const Text(
-                    'Realistic 3D spine and paper curling effect\n(বাস্তবধর্মী বইয়ের পাতার মতো স্পাইন বাঁক ও শেডিং)',
-                    style: TextStyle(fontSize: 11, color: Colors.grey)),
-                value: _enablePageFlipAnimation,
-                onChanged: (val) {
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Page Layout (পেজ লেআউট)',
+                      style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 4),
+                  Text(
+                      'Auto — single page on portrait phones, two-page spread '
+                      'on wide/landscape screens\n(অটো — পোর্ট্রেটে এক পাতা, '
+                      'ল্যান্ডস্কেপ/ট্যাবলেটে দুই পেজের স্প্রেড)\n'
+                      'Single — always show one page (সবসময় একটি পাতা)',
+                      style: TextStyle(fontSize: 11, color: Colors.grey)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment<String>(
+                      value: 'auto',
+                      label: Text('Auto'),
+                      tooltip: 'Auto (Recommended)'),
+                  ButtonSegment<String>(
+                      value: 'single',
+                      label: Text('Single'),
+                      tooltip: 'Force single page'),
+                ],
+                selected: {_readerLayout},
+                onSelectionChanged: (selection) {
+                  final value = selection.isEmpty ? null : selection.first;
+                  if (value == null) return;
                   setModalState(() {
-                    _enablePageFlipAnimation = val;
+                    _readerLayout = value;
                   });
                   setState(() {
-                    _enablePageFlipAnimation = val;
+                    _readerLayout = value;
                   });
                   _saveReaderSettings();
                 },
@@ -358,43 +408,196 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
     );
   }
 
-  Widget _buildSinglePageImage(int pageIndex) {
-    if (pageIndex < 0 || pageIndex >= _signedUrls.length) {
-      return const SizedBox.shrink();
-    }
-    final url = _signedUrls[pageIndex];
-
-    return PhotoView(
-      controller: pageIndex == _currentPage ? _photoController : null,
-      imageProvider: CachedNetworkImageProvider(url),
-      minScale: PhotoViewComputedScale.contained,
-      maxScale: PhotoViewComputedScale.covered * 3.0,
-      initialScale: PhotoViewComputedScale.contained,
-      heroAttributes: PhotoViewHeroAttributes(tag: 'mag_page_$pageIndex'),
-      backgroundDecoration: const BoxDecoration(color: Colors.black),
-      loadingBuilder: (context, event) => const Center(
+  Widget _flipbookLoadingBuilder(BuildContext context) => const Center(
         child: CircularProgressIndicator(color: Color(0xFF00E676)),
+      );
+
+  /// The real `flutter_realistic_flipbook` page-presentation layer.
+  ///
+  /// Configuration notes:
+  ///  - `singlePage: _readerLayout == 'single'` — otherwise the package uses
+  ///    its native responsive layout (1 page on portrait, 2-page spread on
+  ///    wide/landscape screens), which keeps the printed odd/even pairing
+  ///    (the leading `null` flyleaf puts page 1 on the right side).
+  ///  - `startPage` is the magazine page number to resume from: with the
+  ///    leading flyleaf the package reports `controller.page` as the
+  ///    1-based magazine page (here `initialPage` is a 0-based index).
+  ///  - Gestures: drag/swipe turns pages (dragToFlip), drag pans while
+  ///    zoomed (dragToScroll), wheel zooms on desktop. `tapToFlip` and
+  ///    `clickToZoom` stay OFF so plain taps keep toggling the reader
+  ///    controls (existing reader behaviour) without gesture-arena
+  ///    conflicts. 0.1.4 has no pinch handler, so zoom is driven by the
+  ///    on-screen zoom controls through FlipbookController.zoomIn/zoomOut.
+  ///  - Flip start/end callbacks drive the existing flip sound, page
+  ///    counter, thumbnails and reading-progress persistence.
+  Widget _buildFlipbook() {
+    return RealisticFlipbook(
+      controller: _flipbookController,
+      pages: _flipbookPages,
+      flipDuration: const Duration(milliseconds: 600),
+      zoomDuration: const Duration(milliseconds: 300),
+      singlePage: _readerLayout == 'single',
+      forwardDirection: FlipbookForwardDirection.right,
+      centering: true,
+      startPage: (widget.initialPage + 1)
+          .clamp(1, _flipbookPages.isEmpty ? 1 : _flipbookPages.length - 1),
+      tapToFlip: true,
+      clickToZoom: true,
+      dragToFlip: true,
+      dragToScroll: true,
+      wheel: FlipbookWheelMode.scroll,
+      clipToViewport: false,
+      nPolygons: 10,
+      perspective: 2000,
+      ambient: 0.8,
+      gloss: 0.15,
+      singlePageSpreadNavigation: true,
+      singlePageSlideDuration: const Duration(milliseconds: 250),
+      loadingBuilder: _flipbookLoadingBuilder,
+      onFlipLeftStart: (_) => _playPageFlipSound(),
+      onFlipRightStart: (_) => _playPageFlipSound(),
+      onFlipLeftEnd: (_) => _onPageSettled(),
+      onFlipRightEnd: (_) => _onPageSettled(),
+      onZoomStart: (zoom) {
+        final zoomed = zoom > 1.05;
+        if (zoomed != _isZoomed) {
+          setState(() {
+            _isZoomed = zoomed;
+          });
+        }
+      },
+      onZoomEnd: (zoom) {
+        final zoomed = zoom > 1.05;
+        if (zoomed != _isZoomed) {
+          setState(() {
+            _isZoomed = zoomed;
+          });
+        }
+      },
+    );
+  }
+
+  /// Compact zoom controls shown while the flipbook is zoomed in.
+  /// Zoom in/out drive the package controller; panning is handled by the
+  /// package's own drag-to-scroll, so no custom pan arrows are layered on.
+  Widget _buildZoomPanel() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF00E676), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.75), blurRadius: 12),
+        ],
       ),
-      errorBuilder: (context, error, stackTrace) => const Center(
-        child: Icon(Icons.broken_image, color: Colors.white38, size: 48),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.zoom_out_rounded,
+                color: Color(0xFF00E676), size: 26),
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(),
+            tooltip: 'Zoom out (জুম আউট)',
+            onPressed: () {
+              try {
+                _flipbookController.zoomOut();
+              } catch (_) {}
+            },
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00E676).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                  color: const Color(0xFF00E676).withValues(alpha: 0.5)),
+            ),
+            child: const Text(
+              'ZOOM',
+              style: TextStyle(
+                  color: Color(0xFF00E676),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 12),
+          IconButton(
+            icon: const Icon(Icons.zoom_in_rounded,
+                color: Color(0xFF00E676), size: 26),
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(),
+            tooltip: 'Zoom in (জুম ইন)',
+            onPressed: () {
+              try {
+                _flipbookController.zoomIn();
+              } catch (_) {}
+            },
+          ),
+          const SizedBox(width: 10),
+          IconButton(
+            icon: const Icon(Icons.fullscreen_exit_rounded,
+                color: Colors.white70, size: 22),
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(),
+            tooltip: 'Reset zoom (জুম বন্ধ করুন)',
+            onPressed: () {
+              try {
+                _flipbookController.zoomOut();
+                _flipbookController.zoomOut();
+              } catch (_) {}
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Error/empty view shown when the signed page list could not be loaded.
+  Widget _buildLoadErrorView() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.menu_book_rounded, color: Colors.redAccent, size: 52),
+            SizedBox(height: 12),
+            Text(
+              'Unable to load magazine pages.\nপত্রিকার পাতা লোড করা যায়নি।',
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Please check your connection and reopen.\nসংযোগ পরীক্ষা করে আবার খুলুন।',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white38, fontSize: 11),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return KeyboardListener(
       focusNode: _focusNode,
       autofocus: true,
       onKeyEvent: (event) {
         if (event is KeyDownEvent) {
           if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
-              event.logicalKey == LogicalKeyboardKey.pageDown) {
+              event.logicalKey == LogicalKeyboardKey.pageDown ||
+              event.logicalKey == LogicalKeyboardKey.space) {
             _turnNext();
           } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-              event.logicalKey == LogicalKeyboardKey.pageUp) {
+              event.logicalKey == LogicalKeyboardKey.pageUp ||
+              event.logicalKey == LogicalKeyboardKey.backspace) {
             _turnPrev();
           } else if (event.logicalKey == LogicalKeyboardKey.escape) {
             _toggleControls();
@@ -403,254 +606,121 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
       },
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF00E676)))
-            : GestureDetector(
-                onTap: _isZoomed ? null : _toggleControls,
-                onHorizontalDragStart: (_) {
-                  if (!_isZoomed) _isDragging = true;
-                },
-                onHorizontalDragUpdate: (details) {
-                  if (!_isZoomed) _handleHorizontalDragUpdate(details, screenWidth);
-                },
-                onHorizontalDragEnd: (details) {
-                  if (!_isZoomed) _handleHorizontalDragEnd(details);
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (_flipProgress > 0 &&
-                        _currentPage < _signedUrls.length - 1)
-                      _buildSinglePageImage(_currentPage + 1)
-                    else if (_flipProgress < 0 && _currentPage > 0)
-                      _buildSinglePageImage(_currentPage - 1)
-                    else
-                      _buildSinglePageImage(_currentPage),
-                    if (_flipProgress != 0.0 && _enablePageFlipAnimation && !_isZoomed) ...[
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: _flipProgress > 0
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                end: Alignment.center,
-                                colors: [
-                                  Colors.black.withValues(
-                                      alpha: (math.sin(_flipProgress.abs() *
-                                                  math.pi) *
-                                              0.28)
-                                          .clamp(0.0, 0.30)),
-                                  Colors.transparent,
-                                ],
-                                stops: const [0.0, 0.35],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Transform(
-                        alignment: _flipProgress > 0
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.0012)
-                          ..rotateY(-_flipProgress * (math.pi / 2.0)),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            _buildSinglePageImage(_currentPage),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: _flipProgress > 0
-                                      ? Alignment.centerRight
-                                      : Alignment.centerLeft,
-                                  end: _flipProgress > 0
-                                      ? Alignment.centerLeft
-                                      : Alignment.centerRight,
-                                  colors: [
-                                    Colors.black.withValues(
-                                        alpha: (_flipProgress.abs() * 0.12)
-                                            .clamp(0.0, 0.14)),
-                                    Colors.transparent,
-                                  ],
-                                  stops: const [0.0, 0.30],
-                                ),
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: _flipProgress > 0
-                                      ? Alignment.centerLeft
-                                      : Alignment.centerRight,
-                                  end: Alignment.center,
-                                  colors: [
-                                    Colors.white.withValues(
-                                        alpha: (math.sin(_flipProgress.abs() *
-                                                    math.pi) *
-                                                0.16)
-                                            .clamp(0.0, 0.18)),
-                                    Colors.black.withValues(
-                                        alpha: (math.sin(_flipProgress.abs() *
-                                                    math.pi) *
-                                                0.24)
-                                            .clamp(0.0, 0.26)),
-                                    Colors.transparent,
-                                  ],
-                                  stops: const [0.0, 0.055, 0.22],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    IgnorePointer(
-                      child: Center(
-                        child: Transform.rotate(
-                          angle: -0.45,
-                          child: Text(
-                            widget.userEmail,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white.withValues(alpha: 0.08),
-                              letterSpacing: 2,
-                            ),
+        body: _isLoading || _signedUrls.isEmpty
+            ? (_isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF00E676)))
+                : _buildLoadErrorView())
+            : Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Page Presentation Layer with Double-Tap & Pinch Gestures
+                  GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onDoubleTapDown: (details) {
+                      if (_isZoomed) {
+                        try {
+                          _flipbookController.zoomOut();
+                          _flipbookController.zoomOut();
+                        } catch (_) {}
+                      } else {
+                        try {
+                          _flipbookController.zoomIn(details.localPosition);
+                        } catch (_) {}
+                      }
+                    },
+                    onScaleUpdate: (details) {
+                      if (details.pointerCount >= 2) {
+                        if (details.scale > 1.12) {
+                          try {
+                            _flipbookController.zoomIn();
+                          } catch (_) {}
+                        } else if (details.scale < 0.88) {
+                          try {
+                            _flipbookController.zoomOut();
+                          } catch (_) {}
+                        }
+                      }
+                    },
+                    child: _buildFlipbook(),
+                  ),
+                  IgnorePointer(
+                    child: Center(
+                      child: Transform.rotate(
+                        angle: -0.45,
+                        child: Text(
+                          widget.userEmail,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withValues(alpha: 0.08),
+                            letterSpacing: 2,
                           ),
                         ),
                       ),
                     ),
-                    if (_showControls && _currentPage > 0 && !_isZoomed)
-                      Positioned(
-                        left: 14,
-                        top: 0,
-                        bottom: 0,
-                        child: Center(
-                          child: KeyboardPressEffect(
-                            onTap: _turnPrev,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.white, size: 20),
+                  ),
+                  if (_showControls && _currentPage > 0)
+                    Positioned(
+                      left: 14,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: KeyboardPressEffect(
+                          onTap: _turnPrev,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.black87,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: const Color(0xFF00E676), width: 1.5),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black54, blurRadius: 8),
+                              ],
                             ),
+                            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white, size: 20),
                           ),
                         ),
                       ),
-                    if (_showControls && _currentPage < _signedUrls.length - 1 && !_isZoomed)
-                      Positioned(
-                        right: 14,
-                        top: 0,
-                        bottom: 0,
-                        child: Center(
-                          child: KeyboardPressEffect(
-                            onTap: _turnNext,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  color: Colors.white,
-                                  size: 20),
+                    ),
+                  if (_showControls && _currentPage < _signedUrls.length - 1)
+                    Positioned(
+                      right: 14,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: KeyboardPressEffect(
+                          onTap: _turnNext,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.black87,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: const Color(0xFF00E676), width: 1.5),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black54, blurRadius: 8),
+                              ],
                             ),
+                            child: const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.white,
+                                size: 20),
                           ),
                         ),
                       ),
-                    // Zoomed state navigation overlay with miniature thumbnail & 4 direction arrows
-                    if (_isZoomed)
-                      Positioned(
-                        bottom: 90,
-                        right: 16,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.88),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFF00E676), width: 1.5),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.7), blurRadius: 10),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'Zoomed Navigation',
-                                style: TextStyle(color: Color(0xFF00E676), fontSize: 9.5, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                width: 50,
-                                height: 65,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.white38),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(3),
-                                  child: CachedNetworkImage(
-                                    imageUrl: _signedUrls[_currentPage],
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              IconButton(
-                                icon: const Icon(Icons.keyboard_arrow_up_rounded, color: Color(0xFF00E676), size: 22),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () {
-                                  _photoController.position = Offset(_photoController.position.dx, _photoController.position.dy + 80);
-                                },
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.keyboard_arrow_left_rounded, color: Color(0xFF00E676), size: 22),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: () {
-                                      _photoController.position = Offset(_photoController.position.dx + 80, _photoController.position.dy);
-                                    },
-                                  ),
-                                  const SizedBox(width: 20),
-                                  IconButton(
-                                    icon: const Icon(Icons.keyboard_arrow_right_rounded, color: Color(0xFF00E676), size: 22),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: () {
-                                      _photoController.position = Offset(_photoController.position.dx - 80, _photoController.position.dy);
-                                    },
-                                  ),
-                                ],
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF00E676), size: 22),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () {
-                                  _photoController.position = Offset(_photoController.position.dx, _photoController.position.dy - 80);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    ),
+                  // Zoom panel positioned ABOVE bottom thumbnail bar
+                  if (_isZoomed)
+                    Positioned(
+                      bottom: _showControls ? 120 : 20,
+                      right: 16,
+                      child: _buildZoomPanel(),
+                    ),
                     if (_showControls)
                       Positioned(
                         top: 0,
@@ -663,7 +733,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${widget.title} (Page ${_signedUrls.isEmpty ? 0 : _currentPage + 1}/${_signedUrls.length})',
+                                '${formatMagazineTitle(widget.title)} (Page ${_signedUrls.isEmpty ? 0 : _currentPage + 1}/${_signedUrls.length})',
                                 style: const TextStyle(fontSize: 15),
                               ),
                               Text(
@@ -790,7 +860,6 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                       ),
                   ],
                 ),
-              ),
       ),
     );
   }

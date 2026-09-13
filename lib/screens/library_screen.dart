@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config.dart';
 import '../services/sound_service.dart';
+import '../widgets/magazine_cover_image.dart';
 
 class LibraryScreen extends StatefulWidget {
   final String userEmail;
@@ -255,12 +256,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: rackItems.map((mag) {
                                     final id = mag['id'].toString();
-                                    final title = mag['title']?.toString() ?? 'Untitled';
+                                    final title = formatMagazineTitle(mag['title']?.toString());
                                     final issueDate = mag['issue_date']?.toString() ?? '';
                                     final totalPages = mag['total_pages']?.toString() ?? '';
-                                    final coverUrl = _supabase.storage
-                                        .from('magazine_pages')
-                                        .getPublicUrl('$id/page_1.jpg');
                                     final downloadState = _downloadStates[id] ?? 'none';
 
                                     return Container(
@@ -291,24 +289,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                               child: Stack(
                                                 fit: StackFit.expand,
                                                 children: [
-                                                  CachedNetworkImage(
-                                                    imageUrl: coverUrl,
+                                                  MagazineCoverImage(
+                                                    magazineId: id,
                                                     fit: BoxFit.cover,
-                                                    placeholder: (c, u) => const Center(
-                                                      child: SizedBox(
-                                                        width: 24,
-                                                        height: 24,
-                                                        child: CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                          color: Color(0xFF00E676),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    errorWidget: (c, u, e) => Container(
-                                                      color: const Color(0xFF1E2E23),
-                                                      child: const Icon(Icons.newspaper_rounded,
-                                                          color: Color(0xFF81C784), size: 40),
-                                                    ),
                                                   ),
                                                   Positioned(
                                                     top: 6,

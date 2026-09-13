@@ -2,6 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Central, authoritative pool for significant-update notification sounds.
+/// Contains all 5 animal/nature sounds and implements a shuffled-bag approach.
+class NotificationSoundPool {
+  static const List<String> notificationSounds = [
+    'tiger_roar',
+    'elephant_trumpet',
+    'deer_call',
+    'owl_hoot',
+    'cricket',
+  ];
+
+  static List<String> _bag = [];
+  static String? _lastConsumedSound;
+
+  /// Selects the next sound using a shuffled-bag approach, avoiding
+  /// immediate repetition across bag refills.
+  static Future<String> getNextSound() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _lastConsumedSound = prefs.getString('last_notif_sound');
+      final savedBag = prefs.getStringList('notif_sound_bag');
+
+      if (savedBag != null && savedBag.isNotEmpty) {
+        _bag = List<String>.from(savedBag);
+      }
+
+      if (_bag.isEmpty) {
+        _bag = List<String>.from(notificationSounds)..shuffle();
+        if (_bag.length > 1 && _bag.first == _lastConsumedSound) {
+          final first = _bag.first;
+          _bag[0] = _bag.last;
+          _bag[_bag.length - 1] = first;
+        }
+      }
+
+      final selected = _bag.removeAt(0);
+      _lastConsumedSound = selected;
+
+      await prefs.setString('last_notif_sound', selected);
+      await prefs.setStringList('notif_sound_bag', _bag);
+
+      return selected;
+    } catch (_) {
+      return notificationSounds.first;
+    }
+  }
+
+  static String soundToAssetPath(String soundName) => 'audio/$soundName.mp3';
+}
+
 class SoundService {
   static final AudioPlayer _player = AudioPlayer();
   static final ValueNotifier<bool> keyPressSoundNotifier =
@@ -46,5 +96,6 @@ class SoundService {
   static Future<void> playBirdCall() => playWildlifeSound('bird_call.mp3');
   static Future<void> playCricket() => playWildlifeSound('cricket.mp3');
   static Future<void> playDeerCall() => playWildlifeSound('deer_call.mp3');
-  static Future<void> playElephantTrumpet() => playWildlifeSound('elephant_trumpet.mp3');
+  static Future<void> playElephantTrumpet() =>
+      playWildlifeSound('elephant_trumpet.mp3');
 }

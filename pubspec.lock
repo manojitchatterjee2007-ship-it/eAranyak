@@ -422,6 +422,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.35"
+  flutter_realistic_flipbook:
+    dependency: "direct main"
+    description:
+      name: flutter_realistic_flipbook
+      sha256: "4aa5656824ed4040051a2cf070828aac2211d6fc3ed7f02700ffd15a5a867174"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.4"
   flutter_test:
     dependency: "direct dev"
     description: flutter

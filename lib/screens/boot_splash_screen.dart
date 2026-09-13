@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
 import '../widgets/animated_logo.dart';
@@ -14,12 +15,21 @@ class BootSplash extends StatefulWidget {
 }
 
 class _BootSplashState extends State<BootSplash>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _ctrl;
+
+  /// Local welcome-tone player. Kept strictly local to this screen so it can
+  /// never overlap podcast/background audio: the player is created here,
+  /// loops while the welcome screen is visible, and is stopped + disposed
+  /// the moment the screen is disposed (i.e. when navigating to Home).
+  AudioPlayer? _welcomePlayer;
+  bool _leaving = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startWelcomeTone();
     _ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1200));
     _ctrl.addStatusListener((status) {
@@ -38,8 +48,53 @@ class _BootSplashState extends State<BootSplash>
     _ctrl.forward();
   }
 
+  /// Starts the looping welcome tone. Wrapped in try/catch so an audio
+  /// failure can never block or delay app launch.
+  Future<void> _startWelcomeTone() async {
+    try {
+      final player = AudioPlayer();
+      _welcomePlayer = player;
+      await player.setPlayerMode(PlayerMode.mediaPlayer);
+      await player.setVolume(1.0);
+      await player.setReleaseMode(ReleaseMode.loop);
+      await player.play(AssetSource('audio/welcome_tone.mp3'));
+    } catch (e) {
+      debugPrint('Welcome tone error: $e');
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final player = _welcomePlayer;
+    if (player == null) return;
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      // App backgrounded while the welcome screen is visible: silence the
+      // tone; do not keep it running in the background.
+      try {
+        player.stop();
+      } catch (_) {}
+    } else if (state == AppLifecycleState.resumed) {
+      // Only resume if the welcome screen is still on screen.
+      if (mounted && !_leaving) {
+        try {
+          player.resume();
+        } catch (_) {}
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _leaving = true;
+    WidgetsBinding.instance.removeObserver(this);
+    // Disposing the player stops playback immediately — the welcome sound
+    // never continues into HomeScreen, and no player object is leaked.
+    try {
+      _welcomePlayer?.dispose();
+    } catch (_) {}
+    _welcomePlayer = null;
     _ctrl.dispose();
     super.dispose();
   }
@@ -57,7 +112,7 @@ class _BootSplashState extends State<BootSplash>
           const SizedBox(height: 28),
           // Line 1: brand name
           const Text(
-            'e আরণ্যক',
+            'এখন আরণ্যক',
             style: TextStyle(
               color: Colors.white,
               fontSize: 36,

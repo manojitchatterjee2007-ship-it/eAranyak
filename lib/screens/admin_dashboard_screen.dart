@@ -80,7 +80,7 @@ class UploadManager {
       final magRes = await supabase
           .from('magazines')
           .insert({
-        'title': 'eআরণ্যক',
+        'title': 'এখন আরণ্যক',
         'issue_date': task.issueString,
         'total_pages': totalPages,
       })
@@ -133,11 +133,11 @@ class UploadManager {
       // Notify all app users about the new magazine issue.
       unawaited(AppNotifier.notify(
         title: 'নতুন সংখ্যা প্রকাশিত! (New Issue Published)',
-        body: 'eআরণ্যক — ${task.issueString} এসেছে। পড়তে ট্যাপ করুন।',
+        body: 'এখন আরণ্যক — ${task.issueString} এসেছে। পড়তে ট্যাপ করুন।',
         data: {
           'type': 'magazine',
           'id': magId,
-          'title': 'eআরণ্যক — ${task.issueString}',
+          'title': 'এখন আরণ্যক — ${task.issueString}',
         },
       ));
     } catch (e) {
@@ -1799,7 +1799,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
         const Text('Publish Magazine Issues (2000 - 2030)',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const Text('(নতুন সংখ্যা প্রকাশনা - পত্রিকার নাম নির্দিষ্ট: "eআরণ্যক")',
+        const Text('(নতুন সংখ্যা প্রকাশনা - পত্রিকার নাম নির্দিষ্ট: "এখন আরণ্যক")',
             style: TextStyle(color: Color(0xFF81C784), fontSize: 12)),
         const SizedBox(height: 24),
         Container(
@@ -1949,7 +1949,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: ListTile(
                   leading: const Icon(Icons.menu_book_rounded,
                       color: Color(0xFF00E676)),
-                  title: Text('${mag['title']} (${mag['issue_date']})',
+                  title: Text('${formatMagazineTitle(mag['title']?.toString())} (${mag['issue_date']})',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
                       'Total Pages: ${mag['total_pages']} (মোট পৃষ্ঠা: ${mag['total_pages']} টি)'),
