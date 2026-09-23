@@ -1,0 +1,203 @@
+﻿SARVAM STAGE 1.5 BENGALI TRANSLATION TEST REPORT
+Test date/time : 2026-09-14 21:32:40
+Endpoint       : https://api.sarvam.ai/translate
+Model          : sarvam-translate:v1  (mode: formal - the only mode this model supports)
+Language pair  : en-IN -> bn-IN
+(API key is NOT included in this report)
+
+============================== PROBE ==============================
+Probe HTTP status : 200
+Response time     : 1.73 seconds
+Expected response field found : YES (translated_text)
+Raw probe translation : বন্য বাঘদের বেঁচে থাকার জন্য বিশাল বনাঞ্চলের প্রয়োজন।
+Probe result: SUCCESS
+
+------------------------------------------------------------------
+[SARVAM TEST - NEWS 1]
+------------------------------------------------------------------
+
+English source:
+
+TEST FIXTURE FOR TRANSLATION EVALUATION (NOT REAL PUBLISHED NEWS).
+
+Forest officials in the Sundarbans have recorded a significant increase in Royal Bengal Tiger (Panthera tigris tigris) movement along the forest fringe villages of Gosaba block during the past three months, according to camera-trap data reviewed this week.
+
+The monitoring exercise, carried out by the state forest department with support from a national conservation trust, deployed 240 camera traps across the mangrove landscape and generated more than 11,000 photographs. Researchers identified at least 38 individual tigers, including 12 cubs, a figure they describe as encouraging for the delta ecosystem.
+
+Conservationists say the findings underline the importance of protecting mangrove habitat, which shelters species such as the saltwater crocodile, the Gangetic river dolphin and the endangered northern river terrapin. The department has planned additional patrols during the winter tourist season and will expand community awareness programmes in villages adjoining the reserve.
+
+Officials added that the next full population estimate, due in two years, will follow the national protocol of the National Tiger Conservation Authority (NTCA) and the Wildlife Institute of India.
+
+(note: chunk 1 line count mismatch - sent 5 lines, received 9; raw output kept unsplit below)
+
+Sarvam Bengali (RAW - no polishing, no corrections):
+
+অনুবাদের মূল্যের জন্য পরীক্ষার ব্যবস্থা (প্রকৃত প্রকাশিত সংবাদ নয়)।
+
+সুন্দরবনের বন বিভাগের কর্মকর্তারা এই সপ্তাহে পর্যালোচিত ক্যামেরা-ফাঁদ ডেটা অনুসারে, গত তিন মাসে গোসাবা ব্লকের বনের প্রান্তিক গ্রামগুলোতে রয়েল বেঙ্গল টাইগার (Panthera tigris tigris)-এর চলাচল উল্লেখযোগ্যভাবে বৃদ্ধি পেয়েছে বলে রেকর্ড করেছেন।
+
+একটি জাতীয় সংরক্ষণ ট্রাস্টের সহায়তায় রাজ্য বন বিভাগ কর্তৃক পরিচালিত পর্যবেক্ষণ কার্যক্রমে ম্যানগ্রোভ ল্যান্ডস্কেপ জুড়ে 240টি ক্যামেরা ফাঁদ স্থাপন করা হয়েছে এবং 11,000-এর বেশি ছবি তোলা হয়েছে। গবেষকরা কমপক্ষে 38টি বাঘের সন্ধান পেয়েছেন, যার মধ্যে 12টি শাবক রয়েছে, যা তারা বদ্বীপ বাস্তুতন্ত্রের জন্য উৎসাহজনক বলে বর্ণনা করেছেন।
+
+সংরক্ষণবাদীরা বলছেন যে এই ফলাফল ম্যানগ্রোভ আবাসস্থল রক্ষার গুরুত্বের উপর জোর দেয়, যা লবণাক্ত কুমির, গাঙ্গেয় নদীর ডলফিন এবং বিপন্ন উত্তরাঞ্চলীয় নদীর কচ্ছপের মতো প্রজাতিকে আশ্রয় দেয়। বিভাগটি শীতকালীন পর্যটন মৌসুমে অতিরিক্ত টহল দেওয়ার পরিকল্পনা করেছে এবং রিজার্ভ সংলগ্ন গ্রামগুলোতে কমিউনিটি সচেতনতা কর্মসূচি প্রসারিত করবে।
+
+কর্মকর্তারা আরও জানান, আগামী দুই বছরে জনসংখ্যার পরবর্তী পূর্ণাঙ্গ প্রাক্কলন ন্যাশনাল টাইগার কনজারভেশন অথরিটি (NTCA) এবং ওয়াইল্ডলাইফ ইনস্টিটিউট অফ ইন্ডিয়ার জাতীয় প্রোটোকল অনুসরণ করে করা হবে।
+
+HTTP status   : 200
+Response time : 2.41 seconds
+Result        : SUCCESS
+Structure note: line-count mismatch above - verify heading/step structure manually.
+
+------------------------------------------------------------------
+[SARVAM TEST - NEWS 2]
+------------------------------------------------------------------
+
+English source:
+
+TEST FIXTURE FOR TRANSLATION EVALUATION (NOT REAL PUBLISHED NEWS).
+
+A three-year survey of the snow leopard (Panthera uncia) in the high-altitude landscape of Ladakh has estimated a stable population of about 477 individuals, researchers announced on 20 January this year.
+
+The study, conducted between 2022 and 2025 across an area of nearly 59,000 square kilometres, used occupancy modelling based on camera traps and field signs at 94 sampling units. The average elevation of confirmed detections was 4,180 metres above sea level.
+
+The species remains listed as Vulnerable on the IUCN Red List, with an estimated global population of fewer than 6,000 mature individuals. Scientists noted that climate change, expansion of pastoral settlements and free-ranging dogs are among the emerging threats to the cat and to its principal wild prey, the blue sheep (Pseudois nayaur) and the Himalayan ibex (Capra sibirica).
+
+The research team recommended that future conservation planning should prioritise village-level insurance schemes for livestock losses and a landscape-level corridor network connecting protected areas of the trans-Himalayan region.
+
+(note: chunk 1 line count mismatch - sent 5 lines, received 9; raw output kept unsplit below)
+
+Sarvam Bengali (RAW - no polishing, no corrections):
+
+অনুবাদ মূল্যায়নের জন্য পরীক্ষার কাঠামো (প্রকৃত প্রকাশিত সংবাদ নয়)।
+
+লাদাখের উচ্চ-ভূখণ্ডে তুষার চিতা (Panthera uncia)-র উপর তিন বছর ধরে চালানো একটি সমীক্ষায় প্রায় 477টি স্থিতিশীল চিতার সংখ্যা অনুমান করা হয়েছে, যা গবেষকরা এই বছরের 20 জানুয়ারি ঘোষণা করেছেন।
+
+প্রায় 59,000 বর্গকিলোমিটার এলাকা জুড়ে 2022 থেকে 2025 সালের মধ্যে পরিচালিত এই গবেষণাটিতে 94টি নমুনা ইউনিটে ক্যামেরা ট্র্যাপ এবং ফিল্ড চিহ্নের উপর ভিত্তি করে অকুপেন্সি মডেলিং ব্যবহার করা হয়েছে। নিশ্চিত সনাক্তকরণের গড় উচ্চতা ছিল সমুদ্রপৃষ্ঠ থেকে 4,180 মিটার উপরে।
+
+প্রজাতিটি আইইউসিএন রেড লিস্টে এখনও Vulnerable হিসাবে তালিকাভুক্ত, যেখানে আনুমানিক 6,000-এর কম পূর্ণবয়স্ক চিতা রয়েছে। বিজ্ঞানীরা উল্লেখ করেছেন যে জলবায়ু পরিবর্তন, পশুপালন বসতিগুলির বিস্তার এবং অবাধে ঘুরে বেড়ানো কুকুর এই বিড়াল এবং এর প্রধান বন্য শিকার, নীল ভেড়া (Pseudois nayaur) এবং হিমালয়ান আইবেক্স (Capra sibirica)-এর জন্য ক্রমবর্ধমান হুমকি।
+
+গবেষণা দল সুপারিশ করেছে যে ভবিষ্যতের সংরক্ষণ পরিকল্পনায় গবাদি পশুর ক্ষতির জন্য গ্রাম-স্তরের বীমা প্রকল্প এবং ট্রান্স-হিমালয়ান অঞ্চলের সুরক্ষিত এলাকাগুলিকে সংযোগকারী একটি ল্যান্ডস্কেপ-স্তরের করিডোর নেটওয়ার্ককে অগ্রাধিকার দেওয়া উচিত।
+
+HTTP status   : 200
+Response time : 2.47 seconds
+Result        : SUCCESS
+Structure note: line-count mismatch above - verify heading/step structure manually.
+
+------------------------------------------------------------------
+[SARVAM TEST - TUTORIAL 1]
+------------------------------------------------------------------
+
+English source:
+
+TEST FIXTURE FOR TRANSLATION EVALUATION (TUTORIAL SAMPLE).
+
+How to Set Up a Camera Trap for Wildlife Monitoring
+
+Camera traps are motion-activated cameras that let researchers and citizen scientists observe animals without disturbing them. This tutorial explains the basic steps for deploying a camera trap safely and collecting reliable data.
+
+What You Will Need:
+
+- A weatherproof camera trap (IP66 rating or better)
+
+- 8 AA lithium batteries and a 32 GB memory card
+
+- A mounting strap and a small level
+
+- A field notebook or a data-collection app
+
+Step 1: Choose the Right Location. Place the camera on an animal trail, near a water source, or at a scent-marking site. Avoid south-facing slopes at midday, because direct sunlight can trigger false photographs.
+
+Step 2: Set the Height. Mount the camera about 45 to 60 centimetres above the ground, angled slightly downward. For large mammals such as gaur or elephants, raise it to roughly 1 metre.
+
+Step 3: Configure the Settings. Use three photographs per trigger, a 5-second delay, and medium sensitivity. Record the date, GPS coordinates, habitat type and camera ID in your notebook.
+
+Step 4: Check and Retrieve. Visit the camera every 3 to 4 weeks. Later, identify each species, note the timestamp, and upload the records to a recognised biodiversity platform for analysis.
+
+With patience and consistent method, camera traps can reveal a hidden world of nocturnal and shy species.
+
+
+Sarvam Bengali (RAW - no polishing, no corrections):
+
+অনুবাদ মূল্যায়নের জন্য পরীক্ষার কাঠামো (টিউটোরিয়াল নমুনা)।
+বন্যপ্রাণী পর্যবেক্ষণের জন্য কীভাবে একটি ক্যামেরা ট্র্যাপ স্থাপন করবেন
+ক্যামেরা ট্র্যাপ হল গতি-সক্রিয় ক্যামেরা যা গবেষক এবং নাগরিক বিজ্ঞানীদের কোনো প্রাণী বিরক্ত না করে তাদের পর্যবেক্ষণ করতে দেয়। এই টিউটোরিয়ালটি নিরাপদে একটি ক্যামেরা ট্র্যাপ স্থাপন এবং নির্ভরযোগ্য ডেটা সংগ্রহের প্রাথমিক পদক্ষেপগুলি ব্যাখ্যা করে।
+আপনার যা যা লাগবে:
+- একটি আবহাওয়ারোধী ক্যামেরা ট্র্যাপ (IP66 রেটিং বা তার চেয়ে ভালো)
+- 8টি এএ লিথিয়াম ব্যাটারি এবং একটি 32 জিবি মেমরি কার্ড
+- একটি মাউন্টিং স্ট্র্যাপ এবং একটি ছোট লেভেল
+- একটি ফিল্ড নোটবুক বা ডেটা-সংগ্রহের অ্যাপ
+ধাপ 1: সঠিক স্থান নির্বাচন করুন। ক্যামেরাটিকে একটি প্রাণীর চলাচলের পথে, জলের উৎসের কাছে বা গন্ধ-চিহ্নিত করার স্থানে রাখুন। দুপুরে দক্ষিণমুখী ঢাল এড়িয়ে চলুন, কারণ সরাসরি সূর্যের আলো মিথ্যা ছবি তুলতে পারে।
+ধাপ 2: উচ্চতা নির্ধারণ করুন। ক্যামেরাটিকে মাটি থেকে প্রায় 45 থেকে 60 সেন্টিমিটার উপরে, সামান্য নিচের দিকে কোণ করে মাউন্ট করুন। বড় স্তন্যপায়ী প্রাণী যেমন গৌর বা হাতির জন্য, এটিকে প্রায় 1 মিটার পর্যন্ত উপরে তুলুন।
+ধাপ 3: সেটিংস কনফিগার করুন। প্রতিটি ট্রিগারে তিনটি ছবি, 5-সেকেন্ডের বিলম্ব এবং মাঝারি সংবেদনশীলতা ব্যবহার করুন। আপনার নোটবুকে তারিখ, জিপিএস স্থানাঙ্ক, আবাসস্থলের ধরন এবং ক্যামেরা আইডি রেকর্ড করুন।
+ধাপ 4: পরীক্ষা করুন এবং পুনরুদ্ধার করুন। প্রতি 3 থেকে 4 সপ্তাহে ক্যামেরাটি পরিদর্শন করুন। পরে, প্রতিটি প্রজাতি সনাক্ত করুন, টাইমস্ট্যাম্পটি নোট করুন এবং বিশ্লেষণের জন্য একটি স্বীকৃত জীববৈচিত্র্য প্ল্যাটফর্মে রেকর্ড আপলোড করুন।
+ধৈর্য এবং ধারাবাহিক পদ্ধতির মাধ্যমে, ক্যামেরা ট্র্যাপ নিশাচর এবং লাজুক প্রজাতির একটি লুকানো জগৎ প্রকাশ করতে পারে।
+
+HTTP status   : 200
+Response time : 3.15 seconds
+Result        : SUCCESS
+
+------------------------------------------------------------------
+[SARVAM TEST - TUTORIAL 2]
+------------------------------------------------------------------
+
+English source:
+
+TEST FIXTURE FOR TRANSLATION EVALUATION (TUTORIAL SAMPLE).
+
+Beginner Guide to Birdwatching in Indian Wetlands
+
+Wetlands are among the richest bird habitats in India, hosting resident species as well as thousands of migratory waterbirds that arrive from Central Asia every winter. This guide helps beginners start birdwatching responsibly.
+
+Step 1: Get Basic Equipment. A pair of 8x42 binoculars and a regional field guide are enough to begin. A notebook with a pencil works better than a phone on humid mornings.
+
+Step 2: Learn to Observe Slowly. Stand still near the water edge and watch for at least ten minutes. Note the size, bill shape, leg colour and flight pattern. Beginners often identify only herons and cormorants at first; with practice, you will separate the Purple Heron (Ardea purpurea) from the Grey Heron (Ardea cinerea) by its posture and neck shape.
+
+Step 3: Record What You See. Prepare a simple checklist: species name, number of individuals, time and habitat. Submit complete lists to a citizen-science database such as eBird so that your data supports real conservation research.
+
+Step 4: Follow Ethical Rules. Keep a minimum distance of 20 metres from nesting sites, never use recorded calls to attract rare birds, and avoid trampling aquatic vegetation that serves as nursery habitat for fish and amphibians.
+
+Recommended Reading: wetland ecology handbooks published by the Bombay Natural History Society (BNHS) offer excellent regional checklists for Indian wetlands.
+
+(note: chunk 1 line count mismatch - sent 8 lines, received 15; raw output kept unsplit below)
+
+Sarvam Bengali (RAW - no polishing, no corrections):
+
+এখানে অনুবাদের মূল্যের জন্য একটি পরীক্ষার কাঠামো (টিউটোরিয়াল নমুনা) দেওয়া হল।
+
+ভারতীয় জলাভূমিতে পাখি দেখার জন্য শিক্ষানবিসদের গাইড।
+
+ভারতের সবচেয়ে সমৃদ্ধ পাখি আবাসস্থলগুলোর মধ্যে জলাভূমি অন্যতম। এখানে স্থানীয় প্রজাতির পাখির পাশাপাশি প্রতি বছর শীতকালে মধ্য এশিয়া থেকে আসা হাজার হাজার পরিযায়ী জলচর পাখিও দেখা যায়। এই গাইডটি শিক্ষানবিসদের দায়িত্বের সাথে পাখি দেখা শুরু করতে সাহায্য করে।
+
+ধাপ 1: প্রাথমিক সরঞ্জাম সংগ্রহ করুন। শুরু করার জন্য একটি 8x42 দূরবীক্ষণ যন্ত্র এবং একটি আঞ্চলিক ফিল্ড গাইড যথেষ্ট। আর্দ্র সকালে ফোনের চেয়ে একটি পেন্সিলসহ নোটবুক বেশি কাজে দেয়।
+
+ধাপ 2: ধীরে ধীরে পর্যবেক্ষণ করতে শিখুন। জলের ধারে স্থির হয়ে দাঁড়ান এবং কমপক্ষে দশ মিনিট ধরে দেখুন। পাখির আকার, ঠোঁটের আকৃতি, পায়ের রঙ এবং উড্ডয়ন ধরণ লক্ষ্য করুন। শিক্ষানবিসরা প্রায়শই প্রথমে শুধুমাত্র বক এবং পানকৌড়ি শনাক্ত করে; অনুশীলনের মাধ্যমে, আপনি পার্পল হেরন (Ardea purpurea) এবং গ্রে হেরন (Ardea cinerea) এর মধ্যে পার্থক্য করতে পারবেন, শুধুমাত্র এদের ভঙ্গি এবং ঘাড়ের আকৃতির মাধ্যমে।
+
+ধাপ 3: যা দেখছেন তা লিপিবদ্ধ করুন। একটি সাধারণ চেকলিস্ট তৈরি করুন: প্রজাতির নাম, সদস্য সংখ্যা, সময় এবং আবাসস্থল। আপনার ডেটা যেন প্রকৃত সংরক্ষণ গবেষণাকে সমর্থন করে, তাই eBird-এর মতো একটি নাগরিক-বিজ্ঞান ডেটাবেসে সম্পূর্ণ তালিকা জমা দিন।
+
+ধাপ 4: নৈতিক নিয়ম অনুসরণ করুন। বাসা বাঁধার স্থান থেকে কমপক্ষে 20 মিটার দূরত্ব বজায় রাখুন, বিরল পাখিদের আকৃষ্ট করার জন্য রেকর্ড করা কল ব্যবহার করবেন না এবং জলজ উদ্ভিদ পদদলিত করা থেকে বিরত থাকুন, যা মাছ এবং উভচর প্রাণীদের জন্য নার্সারি আবাসস্থল হিসাবে কাজ করে।
+
+পরামর্শমূলক পঠন: বোম্বে ন্যাচারাল হিস্টোরি সোসাইটি (BNHS) দ্বারা প্রকাশিত ওয়েটল্যান্ড ইকোলজি হ্যান্ডবুক ভারতীয় জলাভূমির জন্য চমৎকার আঞ্চলিক চেকলিস্ট সরবরাহ করে।
+
+HTTP status   : 200
+Response time : 3.14 seconds
+Result        : SUCCESS
+Structure note: line-count mismatch above - verify heading/step structure manually.
+
+==================== SARVAM API TEST - TECHNICAL SUMMARY ====================
+API reachable              : YES
+Authentication             : SUCCESS
+Language pair              : en-IN -> bn-IN
+Model                      : sarvam-translate:v1 (mode: formal)
+Successful requests        : 5/5
+Failed requests            : 0/5
+HTTP 200 count             : 5
+HTTP 429 count             : 0
+Other errors               : 0
+Retries used (5xx/timeout) : 0
+HTTP statuses observed     : 200, 200, 200, 200, 200
+Total elapsed time         : 12.90 seconds
+Average success resp. time : 2.58 seconds
+
+NOTE: All Bengali output above is RAW Sarvam API output - no LLM polishing,
+no manual corrections. Quality assessment and Bhashini comparison are added
+separately after human review of this raw output.
+

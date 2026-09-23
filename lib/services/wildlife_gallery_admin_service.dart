@@ -39,8 +39,9 @@ class WildlifeGalleryAdminService {
 
   /// Upload image to wildlife_gallery bucket
   Future<Map<String, String>> uploadGalleryImage(PlatformFile file) async {
-    final bytes = file.bytes;
-    if (bytes == null || bytes.isEmpty) {
+    // file_picker 13.x removed `PlatformFile.bytes`; the bytes are read on demand.
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) {
       throw Exception('Image file is empty or missing bytes');
     }
 

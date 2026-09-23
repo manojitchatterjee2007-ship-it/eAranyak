@@ -83,23 +83,34 @@ class OnlineBookService {
     String? thumbnailUrl;
     String? storagePath;
 
-    if (coverFile != null && coverFile.bytes != null) {
-      final fileExt = coverFile.extension ?? 'jpg';
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_cover.$fileExt';
-      storagePath = 'books/covers/$fileName';
+    // file_picker 13.x removed `PlatformFile.bytes`; the cover bytes are read on
+    // demand. An unreadable file keeps the old null-bytes behaviour (no upload).
+    if (coverFile != null) {
+      Uint8List? coverBytes;
+      try {
+        coverBytes = await coverFile.readAsBytes();
+      } catch (_) {
+        coverBytes = null;
+      }
 
-      await _supabase.storage.from('online-books').uploadBinary(
-            storagePath,
-            coverFile.bytes!,
-            fileOptions: FileOptions(
-              contentType: 'image/$fileExt',
-              upsert: true,
-            ),
-          );
+      if (coverBytes != null && coverBytes.isNotEmpty) {
+        final fileExt = coverFile.extension ?? 'jpg';
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_cover.$fileExt';
+        storagePath = 'books/covers/$fileName';
 
-      thumbnailUrl = _supabase.storage
-          .from('online-books')
-          .getPublicUrl(storagePath);
+        await _supabase.storage.from('online-books').uploadBinary(
+              storagePath,
+              coverBytes,
+              fileOptions: FileOptions(
+                contentType: 'image/$fileExt',
+                upsert: true,
+              ),
+            );
+
+        thumbnailUrl = _supabase.storage
+            .from('online-books')
+            .getPublicUrl(storagePath);
+      }
     }
 
     final userId = _supabase.auth.currentUser?.id;
@@ -160,23 +171,34 @@ class OnlineBookService {
     String? thumbnailUrl = existingThumbnailUrl;
     String? storagePath = existingStoragePath;
 
-    if (newCoverFile != null && newCoverFile.bytes != null) {
-      final fileExt = newCoverFile.extension ?? 'jpg';
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_cover.$fileExt';
-      storagePath = 'books/covers/$fileName';
+    // file_picker 13.x removed `PlatformFile.bytes`; the cover bytes are read on
+    // demand. An unreadable file keeps the old null-bytes behaviour (no upload).
+    if (newCoverFile != null) {
+      Uint8List? coverBytes;
+      try {
+        coverBytes = await newCoverFile.readAsBytes();
+      } catch (_) {
+        coverBytes = null;
+      }
 
-      await _supabase.storage.from('online-books').uploadBinary(
-            storagePath,
-            newCoverFile.bytes!,
-            fileOptions: FileOptions(
-              contentType: 'image/$fileExt',
-              upsert: true,
-            ),
-          );
+      if (coverBytes != null && coverBytes.isNotEmpty) {
+        final fileExt = newCoverFile.extension ?? 'jpg';
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_cover.$fileExt';
+        storagePath = 'books/covers/$fileName';
 
-      thumbnailUrl = _supabase.storage
-          .from('online-books')
-          .getPublicUrl(storagePath);
+        await _supabase.storage.from('online-books').uploadBinary(
+              storagePath,
+              coverBytes,
+              fileOptions: FileOptions(
+                contentType: 'image/$fileExt',
+                upsert: true,
+              ),
+            );
+
+        thumbnailUrl = _supabase.storage
+            .from('online-books')
+            .getPublicUrl(storagePath);
+      }
     }
 
     final userId = _supabase.auth.currentUser?.id;

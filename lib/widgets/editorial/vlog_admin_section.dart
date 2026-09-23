@@ -253,12 +253,12 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                         onPressed: isUploading
                             ? null
                             : () async {
-                                final res = await FilePicker.platform.pickFiles(
+                                // file_picker 13.x: single-file pick, null = cancelled.
+                                final picked = await FilePicker.pickFile(
                                   type: FileType.video,
-                                  withData: true,
                                 );
-                                if (res != null && res.files.isNotEmpty) {
-                                  setDialogState(() => selectedVideo = res.files.first);
+                                if (picked != null) {
+                                  setDialogState(() => selectedVideo = picked);
                                 }
                               },
                         icon: const Icon(Icons.videocam, color: Colors.white),
@@ -277,12 +277,12 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                         onPressed: isUploading
                             ? null
                             : () async {
-                                final res = await FilePicker.platform.pickFiles(
+                                // file_picker 13.x: single-file pick, null = cancelled.
+                                final picked = await FilePicker.pickFile(
                                   type: FileType.image,
-                                  withData: true,
                                 );
-                                if (res != null && res.files.isNotEmpty) {
-                                  setDialogState(() => selectedThumbnail = res.files.first);
+                                if (picked != null) {
+                                  setDialogState(() => selectedThumbnail = picked);
                                 }
                               },
                         icon: const Icon(Icons.image, color: Colors.white),

@@ -110,8 +110,9 @@ class VlogService {
     required String subFolder,
     bool isVideo = false,
   }) async {
-    final bytes = file.bytes;
-    if (bytes == null || bytes.isEmpty) {
+    // file_picker 13.x removed `PlatformFile.bytes`; the bytes are read on demand.
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) {
       throw Exception('Selected file is empty or unreadable');
     }
 

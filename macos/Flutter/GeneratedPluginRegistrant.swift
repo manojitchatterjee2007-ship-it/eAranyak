@@ -8,7 +8,7 @@ import Foundation
 import app_links
 import audioplayers_darwin
 import device_info_plus
-import file_picker
+import file_picker_darwin
 import firebase_core
 import firebase_messaging
 import flutter_local_notifications

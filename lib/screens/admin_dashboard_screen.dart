@@ -73,7 +73,9 @@ class UploadManager {
       VoidCallback onAllCompleted,
       ) async {
     try {
-      final pdfBytes = file.bytes!;
+      // file_picker 13.x removed `PlatformFile.bytes`; the picked PDF bytes are
+      // now read on demand before rendering.
+      final pdfBytes = await file.readAsBytes();
       final doc = await pdfx.PdfDocument.openData(pdfBytes);
       final int totalPages = doc.pagesCount;
 
@@ -509,9 +511,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFF81C784), side: const BorderSide(color: Color(0xFF388E3C))),
                     onPressed: () async {
-                      final res = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
-                      if (res != null && res.files.isNotEmpty) {
-                        setDlgState(() => selectedCoverFile = res.files.first);
+                      // file_picker 13.x: `pickFile()` is the single-file API
+                      // and `withData` no longer exists.
+                      final picked = await FilePicker.pickFile(type: FileType.image);
+                      if (picked != null) {
+                        setDlgState(() => selectedCoverFile = picked);
                       }
                     },
                     icon: const Icon(Icons.image_search_rounded),
@@ -1669,17 +1673,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _pickAndUploadMultiplePdfs() async {
     final issueString = '$_startMonth - $_endMonth $_selectedYear';
-    final result = await FilePicker.platform.pickFiles(
+    // file_picker 13.x: `pickFiles()` itself returns the picked files (multiple
+    // selection is the default) and `withData`/`allowMultiple` were removed.
+    final selectedFiles = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
-        allowMultiple: true,
-        withData: true);
+        allowedExtensions: ['pdf']);
 
-    if (result == null || result.files.isEmpty) {
+    if (selectedFiles.isEmpty) {
       return;
     }
-
-    final selectedFiles = result.files.where((f) => f.bytes != null).toList();
 
     for (final file in selectedFiles) {
       UploadManager.instance.startUpload(
@@ -3056,14 +3058,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         side: const BorderSide(color: Color(0xFF388E3C)),
                       ),
                       onPressed: () async {
-                        final res = await FilePicker.platform.pickFiles(
+                        final picked = await FilePicker.pickFiles(
                           type: FileType.image,
-                          allowMultiple: true,
-                          withData: true,
                         );
-                        if (res != null && res.files.isNotEmpty) {
+                        if (picked.isNotEmpty) {
                           setDlgState(() {
-                            selectedImageFiles.addAll(res.files);
+                            selectedImageFiles.addAll(picked);
                           });
                         }
                       },
@@ -3087,14 +3087,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         side: const BorderSide(color: Color(0xFFFFB74D)),
                       ),
                       onPressed: () async {
-                        final res = await FilePicker.platform.pickFiles(
+                        final picked = await FilePicker.pickFile(
                           type: FileType.custom,
                           allowedExtensions: ['pdf'],
-                          withData: true,
                         );
-                        if (res != null && res.files.isNotEmpty) {
+                        if (picked != null) {
                           setDlgState(() {
-                            selectedPdfFile = res.files.first;
+                            selectedPdfFile = picked;
                           });
                         }
                       },

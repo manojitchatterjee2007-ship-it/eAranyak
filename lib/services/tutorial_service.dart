@@ -132,9 +132,10 @@ class TutorialService {
     required String subFolder,
     required String resourceType,
   }) async {
-    final bytes = file.bytes;
+    // file_picker 13.x removed `PlatformFile.bytes`; the bytes are read on demand.
+    final bytes = await file.readAsBytes();
 
-    if (bytes == null || bytes.isEmpty) {
+    if (bytes.isEmpty) {
       throw Exception('Selected file is empty or unreadable');
     }
 

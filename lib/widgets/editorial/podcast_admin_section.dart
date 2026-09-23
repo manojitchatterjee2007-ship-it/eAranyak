@@ -262,13 +262,13 @@ class _PodcastAdminSectionState extends State<PodcastAdminSection> {
                         onPressed: isUploading
                             ? null
                             : () async {
-                                final res = await FilePicker.platform.pickFiles(
+                                // file_picker 13.x: single-file pick, null = cancelled.
+                                final picked = await FilePicker.pickFile(
                                   type: FileType.custom,
                                   allowedExtensions: ['mp3', 'm4a', 'wav', 'aac', 'ogg'],
-                                  withData: true,
                                 );
-                                if (res != null && res.files.isNotEmpty) {
-                                  setDialogState(() => selectedAudio = res.files.first);
+                                if (picked != null) {
+                                  setDialogState(() => selectedAudio = picked);
                                 }
                               },
                         icon: const Icon(Icons.audiotrack, color: Colors.white),
@@ -287,12 +287,12 @@ class _PodcastAdminSectionState extends State<PodcastAdminSection> {
                         onPressed: isUploading
                             ? null
                             : () async {
-                                final res = await FilePicker.platform.pickFiles(
+                                // file_picker 13.x: single-file pick, null = cancelled.
+                                final picked = await FilePicker.pickFile(
                                   type: FileType.image,
-                                  withData: true,
                                 );
-                                if (res != null && res.files.isNotEmpty) {
-                                  setDialogState(() => selectedThumbnail = res.files.first);
+                                if (picked != null) {
+                                  setDialogState(() => selectedThumbnail = picked);
                                 }
                               },
                         icon: const Icon(Icons.image, color: Colors.white),

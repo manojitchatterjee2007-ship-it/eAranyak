@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/writing_submission.dart';
@@ -64,7 +66,14 @@ class WritingSubmissionService {
 
     for (int i = 0; i < files.length; i++) {
       final file = files[i];
-      final bytes = file.bytes;
+      // file_picker 13.x removed `PlatformFile.bytes`; read the bytes on demand
+      // and skip files the platform cannot read (same as the old null case).
+      Uint8List? bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (_) {
+        bytes = null;
+      }
       if (bytes == null || bytes.isEmpty) continue;
 
       final ext = file.extension?.toLowerCase() ?? 'jpg';

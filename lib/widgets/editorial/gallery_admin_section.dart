@@ -201,13 +201,13 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                         onPressed: isUploading
                             ? null
                             : () async {
-                                final res = await FilePicker.platform.pickFiles(
+                                // file_picker 13.x: single-file pick, null = cancelled.
+                                final picked = await FilePicker.pickFile(
                                   type: FileType.image,
-                                  withData: true,
                                 );
-                                if (res != null && res.files.isNotEmpty) {
+                                if (picked != null) {
                                   setDialogState(() {
-                                    selectedFile = res.files.first;
+                                    selectedFile = picked;
                                   });
                                 }
                               },

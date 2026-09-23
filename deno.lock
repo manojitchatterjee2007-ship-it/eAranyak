@@ -1,0 +1,160 @@
+{
+  "version": "5",
+  "specifiers": {
+    "npm:@supabase/supabase-js@2": "2.116.0",
+    "npm:supabase@^2.115.0": "2.117.0"
+  },
+  "npm": {
+    "@ecies/ciphers@0.2.6_@noble+ciphers@1.3.0": {
+      "integrity": "sha512-patgsRPKGkhhoBjETV4XxD0En4ui5fbX0hzayqI3M8tvNMGUoUvmyYAIWwlxBc1KX5cturfqByYdj5bYGRpN9g==",
+      "dependencies": [
+        "@noble/ciphers"
+      ]
+    },
+    "@noble/ciphers@1.3.0": {
+      "integrity": "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw=="
+    },
+    "@noble/curves@1.9.7": {
+      "integrity": "sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==",
+      "dependencies": [
+        "@noble/hashes"
+      ]
+    },
+    "@noble/hashes@1.8.0": {
+      "integrity": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="
+    },
+    "@supabase/auth-js@2.116.0": {
+      "integrity": "sha512-Cmosty12gyKGK9N3bQb+lMmuAFev5nmUzaR1AsmZHqKOAGzqX1VQzmp49CNPwOx/pw0H9Qqk4rs9yhwTlKpfDg==",
+      "dependencies": [
+        "tslib"
+      ]
+    },
+    "@supabase/cli-darwin-arm64@2.117.0": {
+      "integrity": "sha512-MQVIxL+B5/U9xiXcUtky0vJQ5Qe0qhGkK2JLGwi5BAo5XxcC+iP+KCsVB1/2zzYT+d+fOlZnKyTFFWYO6Ut1sw==",
+      "os": ["darwin"],
+      "cpu": ["arm64"]
+    },
+    "@supabase/cli-darwin-x64@2.117.0": {
+      "integrity": "sha512-NMuY3n8Bfe+sPCdrUQQSFkOLFqlQYkg1C0SuqvJG4HVU8ukZ7IH2gy+HFGXNuVitFPapmHTPT8NjbZ+YrunZQw==",
+      "os": ["darwin"],
+      "cpu": ["x64"]
+    },
+    "@supabase/cli-linux-arm64-musl@2.117.0": {
+      "integrity": "sha512-n5yZuBbBD5MnWqczezH72GAEfdTBHBk9Ei/pgpCnAJtClei9QQsiN1UZNw2A7K1EP4VWxgO/YZr3gFYgFFH1WQ==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
+    },
+    "@supabase/cli-linux-arm64@2.117.0": {
+      "integrity": "sha512-CcMHEB8znY9usMJ2dwAKQV06XIYHzLgnq1KY6HzVT9XmXo0qZxTifC/oWgHX39SmCFm7a3HR4K5J95ysYz+8Hg==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
+    },
+    "@supabase/cli-linux-x64-musl@2.117.0": {
+      "integrity": "sha512-rlVDN5kXTOe+50wFN7DywFFx956XoYpEJpDkADvZ3k+qL5+7jGxSzQN/7xhHqlhjtSlHfx4QlxajfOerJNnrlg==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
+    "@supabase/cli-linux-x64@2.117.0": {
+      "integrity": "sha512-qDJEURD/YajKD/OQ91O9XNHB/LHK9V8xZ9qGiUQCFhP9OAvMQjUT12j8k/mgTe4PqIxigGpfvm+eNxRcKnU9Rw==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
+    "@supabase/cli-windows-arm64@2.117.0": {
+      "integrity": "sha512-JNjI4dHhogjx1994jNoV9uUMioCrdzfdDJDeq0rZhYEepBGE9W+2gLniBQfQRzGxXK81mg5K3p9CTJYBZzbAKg==",
+      "os": ["win32"],
+      "cpu": ["arm64"]
+    },
+    "@supabase/cli-windows-x64@2.117.0": {
+      "integrity": "sha512-oFmeLMwgWAyQhzPoR6w+eUOfyJcRMNHN2Ju4BxBtpZ9vW+dO1bAsWd7aVVcpn1sgHA/ptM8U48P+se5yZR7BdQ==",
+      "os": ["win32"],
+      "cpu": ["x64"]
+    },
+    "@supabase/functions-js@2.116.0": {
+      "integrity": "sha512-E+VOc2QDcni/fySqkBFiZhnoB3SGydEdZgFI6/dEAGAHx6yEhB46TN9qb2wXs+E+RSzOBV0R6dasiSlw4xlZAA==",
+      "dependencies": [
+        "tslib"
+      ]
+    },
+    "@supabase/phoenix@0.4.5": {
+      "integrity": "sha512-aAn9H9ovVyeApKy11OWOrrOGq8DV68yWeH4ud2lN9fzn4aO8Zb5GLL9m1pUg9nLqIcT+ZDfAcsZe0E/nqdv2lw=="
+    },
+    "@supabase/postgrest-js@2.116.0": {
+      "integrity": "sha512-kGpVZTDHxFTJS3tu+rU0iTAZ+4U0bcLVjxwCk8f3gRhjw3qdCZjTBlgYvc4kGH2XccmAzbkKwXL/mrNHMGSc+A==",
+      "dependencies": [
+        "tslib"
+      ]
+    },
+    "@supabase/realtime-js@2.116.0": {
+      "integrity": "sha512-MHAnlXxi2s6yiJsZsQMfs2B3RFxeVfQWxerqYhIMqcCQV/FuY3LIeouPEkXw/ah7wUWMLYwempF9MOCUScyddg==",
+      "dependencies": [
+        "@supabase/phoenix",
+        "tslib"
+      ]
+    },
+    "@supabase/storage-js@2.116.0": {
+      "integrity": "sha512-6/3hR6vccBP6oGM5B6RfbwZcTCKmQOodd/ZWQdsw8yJsU5zO/a//oBL6yLnmgxcjnHSrelW8rsO7hL5DPybyUQ==",
+      "dependencies": [
+        "iceberg-js",
+        "tslib"
+      ]
+    },
+    "@supabase/supabase-js@2.116.0": {
+      "integrity": "sha512-YyWmKXt2NspV9iO8FPnlswUFJIRnrLd3oTCb+3ZyYRuKZtBH0xCUDgnUqoyA0fGUxpM/UhfwDjYf/dht/9bp7g==",
+      "dependencies": [
+        "@supabase/auth-js",
+        "@supabase/functions-js",
+        "@supabase/postgrest-js",
+        "@supabase/realtime-js",
+        "@supabase/storage-js"
+      ]
+    },
+    "eciesjs@0.5.0": {
+      "integrity": "sha512-s0J9SEVYAEPg7J63GFMApLYzPH9VNIQIyC6s15JpnqVc0TqcKWdbgFlnAweEBRyMmko2dcs2sfC83Hj4J43tuA==",
+      "dependencies": [
+        "@ecies/ciphers",
+        "@noble/ciphers",
+        "@noble/curves",
+        "@noble/hashes"
+      ]
+    },
+    "iceberg-js@0.8.1": {
+      "integrity": "sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA=="
+    },
+    "jose@6.2.12": {
+      "integrity": "sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw=="
+    },
+    "supabase@2.117.0": {
+      "integrity": "sha512-V4UDf/kgrqllHbc22vs89bL7pdBj3xhVolvDflByS5FuJb+tXpWhHZxYEbBQspxA0fBzaj+lpiedB72xTAZA4w==",
+      "dependencies": [
+        "eciesjs",
+        "jose"
+      ],
+      "optionalDependencies": [
+        "@supabase/cli-darwin-arm64",
+        "@supabase/cli-darwin-x64",
+        "@supabase/cli-linux-arm64",
+        "@supabase/cli-linux-arm64-musl",
+        "@supabase/cli-linux-x64",
+        "@supabase/cli-linux-x64-musl",
+        "@supabase/cli-windows-arm64",
+        "@supabase/cli-windows-x64"
+      ],
+      "bin": true
+    },
+    "tslib@2.8.1": {
+      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
+    }
+  },
+  "remote": {
+    "https://deno.land/std@0.224.0/async/delay.ts": "f90dd685b97c2f142b8069082993e437b1602b8e2561134827eeb7c12b95c499",
+    "https://deno.land/std@0.224.0/http/server.ts": "f9313804bf6467a1704f45f76cb6cd0a3396a3b31c316035e6a4c2035d1ea514",
+    "https://esm.sh/@supabase/supabase-js@2.45.0": "36ae57c3f2dc3f94fd122a846b40a87114d29bb2f47e910cb46bee5575febf2e"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:supabase@^2.115.0"
+      ]
+    }
+  }
+}

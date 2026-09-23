@@ -269,10 +269,10 @@ class PushNotificationService {
       );
 
       await flutterLocalNotificationsPlugin.show(
-        DateTime.now().millisecondsSinceEpoch ~/ 1000 % 2147483647,
-        message.notification?.title ?? 'eআরণ্যক',
-        message.notification?.body ?? '',
-        NotificationDetails(android: androidDetails),
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000 % 2147483647,
+        title: message.notification?.title ?? 'eআরণ্যক',
+        body: message.notification?.body ?? '',
+        notificationDetails: NotificationDetails(android: androidDetails),
         payload: jsonEncode(payloadData),
       );
     } catch (_) {}

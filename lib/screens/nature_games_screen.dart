@@ -449,53 +449,6 @@ class WildlifeGameData {
       }
     }
   }
-
-  static void _loadLegacyWeeklyPayload(dynamic response) {
-    for (final category in supportedCategories) {
-      _bank[category] = <GameQuestion>[];
-    }
-    if (response is! List) return;
-
-    for (final raw in response.whereType<Map>()) {
-      final category = raw['category']?.toString().toLowerCase() ?? '';
-      if (!supportedCategories.contains(category)) continue;
-      dynamic payload = raw['payload'];
-      if (payload is String) {
-        try {
-          payload = jsonDecode(payload);
-        } catch (_) {
-          payload = null;
-        }
-      }
-      if (payload is! Map) continue;
-      final p = Map<String, dynamic>.from(payload);
-
-      if (category == 'photo' || category == 'audio' || category == 'scramble') {
-        final species = p['species'];
-        if (species is List) {
-          for (final name in species) {
-            final english = name.toString();
-            _bank[category]!.add(GameQuestion(
-              id: '${category}_$english',
-              category: category,
-              english: english,
-              bengali: '',
-              question: '',
-              options: const [],
-            ));
-          }
-        }
-      } else if (category == 'hint') {
-        final indices = p['indices'];
-        // Old hint payloads cannot reconstruct the original local bank now
-        // that the app is Supabase-only, so we intentionally do not invent
-        // questions here.
-        if (indices is List) {
-          debugPrint('Legacy hint payload contains indices but no question objects; ignored.');
-        }
-      }
-    }
-  }
 }
 
 // ============================================================================

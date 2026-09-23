@@ -58,12 +58,12 @@ void callbackDispatcher() {
 
           final plugin = FlutterLocalNotificationsPlugin();
           await plugin.show(
-            101,
-            NewsEditorialService.safeHeadline(
+            id: 101,
+            title: NewsEditorialService.safeHeadline(
                 (latest['title'] ?? 'New Wildlife Update').toString()),
-            latest['snippet'] ??
+            body: latest['snippet'] ??
                 'Tap to read full article / সম্পূর্ণ প্রতিবেদন পড়তে ট্যাপ করুন',
-            notifDetails,
+            notificationDetails: notifDetails,
             payload: jsonEncode({
               'type': 'news',
               'id': latest['id']?.toString(),
@@ -121,7 +121,7 @@ Future<void> _initializeAppInBackground() async {
       );
 
       await flutterLocalNotificationsPlugin.initialize(
-        initializationSettings,
+        settings: initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           final payload = response.payload;
           if (payload != null && payload.isNotEmpty) {

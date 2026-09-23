@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/writing_submission_service.dart';
@@ -19,6 +20,11 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
   final WritingSubmissionService _service = WritingSubmissionService();
 
   final List<PlatformFile> _selectedPhotos = [];
+
+  /// file_picker 13.x removed `PlatformFile.bytes`; thumbnails are fed from the
+  /// bytes read once at pick time instead of from the picker result.
+  final Map<PlatformFile, Uint8List> _photoPreviewBytes = {};
+
   int _wordCount = 0;
   bool _isSubmitting = false;
   bool _loadingProfile = true;
@@ -58,17 +64,25 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
 
   Future<void> _pickPhotos() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: true,
-        withData: true,
-      );
+      // file_picker 13.x: `pickFiles()` returns the picked files directly
+      // (multiple selection is the default); an empty list means cancelled.
+      final picked = await FilePicker.pickFiles(type: FileType.image);
 
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _selectedPhotos.addAll(result.files);
-        });
+      if (picked.isEmpty) return;
+
+      // Warm the thumbnail cache so the preview list does not re-read the file
+      // bytes on every rebuild.
+      for (final file in picked) {
+        try {
+          _photoPreviewBytes[file] = await file.readAsBytes();
+        } catch (_) {
+          // Preview falls back to the file path / placeholder icon.
+        }
       }
+
+      setState(() {
+        _selectedPhotos.addAll(picked);
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +94,8 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
 
   void _removePhoto(int index) {
     setState(() {
-      _selectedPhotos.removeAt(index);
+      final removed = _selectedPhotos.removeAt(index);
+      _photoPreviewBytes.remove(removed);
     });
   }
 
@@ -429,6 +444,7 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
                           itemCount: _selectedPhotos.length,
                           itemBuilder: (context, index) {
                             final file = _selectedPhotos[index];
+                            final previewBytes = _photoPreviewBytes[file];
                             return Stack(
                               children: [
                                 Container(
@@ -443,9 +459,9 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(7),
-                                    child: file.bytes != null
+                                    child: previewBytes != null
                                         ? Image.memory(
-                                            file.bytes!,
+                                            previewBytes,
                                             fit: BoxFit.cover,
                                           )
                                         : (file.path != null

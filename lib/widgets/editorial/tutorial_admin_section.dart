@@ -1471,24 +1471,20 @@ class _TutorialAdminSectionState
                                             FileType.video;
                                       }
 
-                                      final res =
-                                          await FilePicker.platform.pickFiles(
+                                      final picked =
+                                          await FilePicker.pickFile(
                                         type:
                                             type,
                                         allowedExtensions:
                                             exts,
-                                        withData:
-                                            true,
                                       );
 
-                                      if (res !=
-                                              null &&
-                                          res.files
-                                              .isNotEmpty) {
+                                      if (picked !=
+                                          null) {
                                         setDialogState(
                                           () =>
                                               selectedResourceFile =
-                                                  res.files.first,
+                                                  picked,
                                         );
                                       }
                                     },
@@ -1531,22 +1527,18 @@ class _TutorialAdminSectionState
                                     isImportingSource
                                 ? null
                                 : () async {
-                                    final res =
-                                        await FilePicker.platform.pickFiles(
+                                    final picked =
+                                        await FilePicker.pickFile(
                                       type:
                                           FileType.image,
-                                      withData:
-                                          true,
                                     );
 
-                                    if (res !=
-                                            null &&
-                                        res.files
-                                            .isNotEmpty) {
+                                    if (picked !=
+                                        null) {
                                       setDialogState(
                                         () =>
                                             selectedThumbnail =
-                                                res.files.first,
+                                                picked,
                                       );
                                     }
                                   },

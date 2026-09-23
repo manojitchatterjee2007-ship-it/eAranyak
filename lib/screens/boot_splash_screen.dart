@@ -17,7 +17,6 @@ class BootSplash extends StatefulWidget {
 class _BootSplashState extends State<BootSplash>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _ctrl;
-  bool _leaving = false;
 
   @override
   void initState() {
@@ -33,7 +32,6 @@ class _BootSplashState extends State<BootSplash>
       if (status == AnimationStatus.completed && mounted) {
         Future.delayed(const Duration(milliseconds: 3600), () async {
           if (mounted) {
-            _leaving = true;
             // Forcefully terminate all sounds before routing to the silent Home Screen
             await SoundService.stopAllSounds();
             
@@ -57,7 +55,6 @@ class _BootSplashState extends State<BootSplash>
 
   @override
   void dispose() {
-    _leaving = true;
     WidgetsBinding.instance.removeObserver(this);
     SoundService.stopAllSounds();
     _ctrl.dispose();

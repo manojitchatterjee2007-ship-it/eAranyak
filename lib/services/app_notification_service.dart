@@ -28,8 +28,9 @@ class AppNotificationService {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('Editor session required / লগইন আবশ্যক');
 
-    final bytes = file.bytes;
-    if (bytes == null || bytes.isEmpty) {
+    // file_picker 13.x removed `PlatformFile.bytes`; the bytes are read on demand.
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) {
       throw Exception('ফাইল খোলার ক্ষেত্রে সমস্যা হয়েছে / File is empty');
     }
 

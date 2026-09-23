@@ -1,0 +1,337 @@
+﻿POLLINATIONS IMAGE TEST
+========================
+Date/time    : 2026-09-14 22:24:43
+API endpoint : https://gen.pollinations.ai/image/{{prompt}} (GET), auth: Authorization Bearer (key NOT stored here)
+Model discovery: SUCCESS
+
+==================== GENERATION RESULTS ====================
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 1 - ROYAL BENGAL TIGER / SUNDARBANS | model: openai/gpt-image-2]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Royal Bengal Tiger
+  Scientific name: Panthera tigris tigris
+  Location       : Sundarbans, West Bengal, India
+  Habitat        : mangrove forest
+  Visual elements: tiger, mangrove vegetation, tidal mud, stilt roots, brackish water channel
+Final image prompt:
+  Royal Bengal Tiger (scientific name Panthera tigris tigris) in its authentic habitat: A Royal Bengal Tiger moving naturally through a Sundarbans mangrove landscape, walking across muddy tidal ground between tangled stilt roots and mangrove trunks, a brackish water channel behind it, dense green mangrove foliage with atmospheric depth, wildlife-documentary composition, side-full-body view. Location context: Sundarbans, West Bengal, India. Habitat: mangrove forest. Visual elements: tiger, mangrove vegetation, tidal mud, stilt roots, brackish water channel. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 44.62 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\openai_gpt-image-2\01_tiger_sundarbans.jpg (image/jpeg, 350830 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 2 - SNOW LEOPARD / LADAKH | model: openai/gpt-image-2]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Snow Leopard
+  Scientific name: Panthera uncia
+  Location       : high-altitude Ladakh, trans-Himalaya, India
+  Habitat        : rocky alpine steppe
+  Visual elements: snow leopard, rocky Himalayan terrain, sparse alpine vegetation, cold clear light
+Final image prompt:
+  Snow Leopard (scientific name Panthera uncia) in its authentic habitat: A snow leopard resting on rocky Himalayan terrain in high-altitude Ladakh, thick pale smoky-grey rosetted fur, long balanced tail, sparse alpine cushion plants and scattered boulders, distant barren trans-Himalayan ridges with realistic atmospheric perspective, cold natural morning light, documentary natural-history composition, full-body three-quarter view. Location context: high-altitude Ladakh, trans-Himalaya, India. Habitat: rocky alpine steppe. Visual elements: snow leopard, rocky Himalayan terrain, sparse alpine vegetation, cold clear light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 43.39 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\openai_gpt-image-2\02_snow_leopard_ladakh.jpg (image/jpeg, 265303 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 3 - INDIAN WETLAND BIRD | model: openai/gpt-image-2]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Purple Heron
+  Scientific name: Ardea purpurea
+  Location       : Indian freshwater wetland
+  Habitat        : reed-bed wetland edge
+  Visual elements: purple heron, reeds, aquatic plants, still water, reflections
+Final image prompt:
+  Purple Heron (scientific name Ardea purpurea) in its authentic habitat: A Purple Heron standing in natural hunting posture at the edge of an Indian freshwater wetland, slender chestnut and slate plumage, snake-like neck in slight S-curve, among dense reeds and aquatic plants, calm still water with subtle reflections, soft overcast daylight, natural-history composition. Location context: Indian freshwater wetland. Habitat: reed-bed wetland edge. Visual elements: purple heron, reeds, aquatic plants, still water, reflections. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 40.91 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\openai_gpt-image-2\03_purple_heron_wetland.jpg (image/jpeg, 332873 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 4 - CAMERA TRAP / WILDLIFE MONITORING | model: openai/gpt-image-2]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Wildlife camera trap field setup
+  Scientific name: (not applicable)
+  Location       : Indian deciduous forest
+  Habitat        : forest trail at dusk
+  Visual elements: camera trap strapped to tree, forest trail, chital deer passing, low light
+Final image prompt:
+  Wildlife camera trap field setup in its authentic habitat: A realistic camouflaged camera trap strapped to a tree trunk beside a forest trail in an Indian deciduous forest at dusk, a chital deer walking naturally past in the background, subtle low-light evening atmosphere, scientifically plausible field equipment, educational editorial composition. Location context: Indian deciduous forest. Habitat: forest trail at dusk. Visual elements: camera trap strapped to tree, forest trail, chital deer passing, low light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 46.03 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\openai_gpt-image-2\04_camera_trap.jpg (image/jpeg, 255899 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 5 - INDIAN FOREST ECOSYSTEM | model: openai/gpt-image-2]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Indian forest ecosystem and biodiversity
+  Scientific name: (not applicable)
+  Location       : Indian subcontinent
+  Habitat        : moist deciduous forest
+  Visual elements: sal trees, bamboo, layered undergrowth, dappled light, distant deer and bird life
+Final image prompt:
+  Indian forest ecosystem and biodiversity in its authentic habitat: A rich but scientifically plausible Indian moist deciduous forest ecosystem, tall sal trees with straight trunks, bamboo clumps and layered green undergrowth, dappled golden forest light, a distant chital deer and small bird life as subtle signs of biodiversity, believable Indian ecology, natural-history illustration composition. Location context: Indian subcontinent. Habitat: moist deciduous forest. Visual elements: sal trees, bamboo, layered undergrowth, dappled light, distant deer and bird life. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 49.85 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\openai_gpt-image-2\05_indian_forest.jpg (image/jpeg, 355345 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 6 - TUTORIAL IMAGE / BIRDWATCHING | model: openai/gpt-image-2]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Beginner birdwatching in Indian wetlands
+  Scientific name: (not applicable)
+  Location       : Indian wetland
+  Habitat        : wetland observation point
+  Visual elements: birder with binoculars at respectful distance, wetland birds, reeds, morning light
+Final image prompt:
+  Beginner birdwatching in Indian wetlands in its authentic habitat: An educational natural-history illustration of a beginner birder quietly observing wetland birds through binoculars from a respectful distance at an Indian wetland, herons and waterfowl feeding undisturbed among reeds, soft morning light, calm responsible birdwatching behaviour, natural restrained composition. Location context: Indian wetland. Habitat: wetland observation point. Visual elements: birder with binoculars at respectful distance, wetland birds, reeds, morning light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 40.01 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\openai_gpt-image-2\06_birdwatching_wetland.jpg (image/jpeg, 273337 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 1 - ROYAL BENGAL TIGER / SUNDARBANS | model: microsoft/mai-image-2.5-flash]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Royal Bengal Tiger
+  Scientific name: Panthera tigris tigris
+  Location       : Sundarbans, West Bengal, India
+  Habitat        : mangrove forest
+  Visual elements: tiger, mangrove vegetation, tidal mud, stilt roots, brackish water channel
+Final image prompt:
+  Royal Bengal Tiger (scientific name Panthera tigris tigris) in its authentic habitat: A Royal Bengal Tiger moving naturally through a Sundarbans mangrove landscape, walking across muddy tidal ground between tangled stilt roots and mangrove trunks, a brackish water channel behind it, dense green mangrove foliage with atmospheric depth, wildlife-documentary composition, side-full-body view. Location context: Sundarbans, West Bengal, India. Habitat: mangrove forest. Visual elements: tiger, mangrove vegetation, tidal mud, stilt roots, brackish water channel. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 400
+Response time : 5.22 seconds
+Result        : FAILED | HTTP 400 (application/json)
+Server message: {"success":false,"error":{"message":"MAI Image 2.5 Flash requires width and height of at least 768px","code":"BAD_REQUEST","timestamp":"2026-09-14T17:00:22.944Z","details":{"name":"UpstreamError","upstreamStatus":400}},"status":400}
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 2 - SNOW LEOPARD / LADAKH | model: microsoft/mai-image-2.5-flash]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Snow Leopard
+  Scientific name: Panthera uncia
+  Location       : high-altitude Ladakh, trans-Himalaya, India
+  Habitat        : rocky alpine steppe
+  Visual elements: snow leopard, rocky Himalayan terrain, sparse alpine vegetation, cold clear light
+Final image prompt:
+  Snow Leopard (scientific name Panthera uncia) in its authentic habitat: A snow leopard resting on rocky Himalayan terrain in high-altitude Ladakh, thick pale smoky-grey rosetted fur, long balanced tail, sparse alpine cushion plants and scattered boulders, distant barren trans-Himalayan ridges with realistic atmospheric perspective, cold natural morning light, documentary natural-history composition, full-body three-quarter view. Location context: high-altitude Ladakh, trans-Himalaya, India. Habitat: rocky alpine steppe. Visual elements: snow leopard, rocky Himalayan terrain, sparse alpine vegetation, cold clear light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 400
+Response time : 2.53 seconds
+Result        : FAILED | HTTP 400 (application/json)
+Server message: {"success":false,"error":{"message":"MAI Image 2.5 Flash requires width and height of at least 768px","code":"BAD_REQUEST","timestamp":"2026-09-14T17:00:31.620Z","details":{"name":"UpstreamError","upstreamStatus":400}},"status":400}
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 3 - INDIAN WETLAND BIRD | model: microsoft/mai-image-2.5-flash]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Purple Heron
+  Scientific name: Ardea purpurea
+  Location       : Indian freshwater wetland
+  Habitat        : reed-bed wetland edge
+  Visual elements: purple heron, reeds, aquatic plants, still water, reflections
+Final image prompt:
+  Purple Heron (scientific name Ardea purpurea) in its authentic habitat: A Purple Heron standing in natural hunting posture at the edge of an Indian freshwater wetland, slender chestnut and slate plumage, snake-like neck in slight S-curve, among dense reeds and aquatic plants, calm still water with subtle reflections, soft overcast daylight, natural-history composition. Location context: Indian freshwater wetland. Habitat: reed-bed wetland edge. Visual elements: purple heron, reeds, aquatic plants, still water, reflections. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 400
+Response time : 2.93 seconds
+Result        : FAILED | HTTP 400 (application/json)
+Server message: {"success":false,"error":{"message":"MAI Image 2.5 Flash requires width and height of at least 768px","code":"BAD_REQUEST","timestamp":"2026-09-14T17:00:41.878Z","details":{"name":"UpstreamError","upstreamStatus":400}},"status":400}
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 4 - CAMERA TRAP / WILDLIFE MONITORING | model: microsoft/mai-image-2.5-flash]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Wildlife camera trap field setup
+  Scientific name: (not applicable)
+  Location       : Indian deciduous forest
+  Habitat        : forest trail at dusk
+  Visual elements: camera trap strapped to tree, forest trail, chital deer passing, low light
+Final image prompt:
+  Wildlife camera trap field setup in its authentic habitat: A realistic camouflaged camera trap strapped to a tree trunk beside a forest trail in an Indian deciduous forest at dusk, a chital deer walking naturally past in the background, subtle low-light evening atmosphere, scientifically plausible field equipment, educational editorial composition. Location context: Indian deciduous forest. Habitat: forest trail at dusk. Visual elements: camera trap strapped to tree, forest trail, chital deer passing, low light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 400
+Response time : 3.19 seconds
+Result        : FAILED | HTTP 400 (application/json)
+Server message: {"success":false,"error":{"message":"MAI Image 2.5 Flash requires width and height of at least 768px","code":"BAD_REQUEST","timestamp":"2026-09-14T17:00:51.110Z","details":{"name":"UpstreamError","upstreamStatus":400}},"status":400}
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 5 - INDIAN FOREST ECOSYSTEM | model: microsoft/mai-image-2.5-flash]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Indian forest ecosystem and biodiversity
+  Scientific name: (not applicable)
+  Location       : Indian subcontinent
+  Habitat        : moist deciduous forest
+  Visual elements: sal trees, bamboo, layered undergrowth, dappled light, distant deer and bird life
+Final image prompt:
+  Indian forest ecosystem and biodiversity in its authentic habitat: A rich but scientifically plausible Indian moist deciduous forest ecosystem, tall sal trees with straight trunks, bamboo clumps and layered green undergrowth, dappled golden forest light, a distant chital deer and small bird life as subtle signs of biodiversity, believable Indian ecology, natural-history illustration composition. Location context: Indian subcontinent. Habitat: moist deciduous forest. Visual elements: sal trees, bamboo, layered undergrowth, dappled light, distant deer and bird life. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 400
+Response time : 1.71 seconds
+Result        : FAILED | HTTP 400 (application/json)
+Server message: {"success":false,"error":{"message":"MAI Image 2.5 Flash requires width and height of at least 768px","code":"BAD_REQUEST","timestamp":"2026-09-14T17:00:59.065Z","details":{"name":"UpstreamError","upstreamStatus":400}},"status":400}
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 6 - TUTORIAL IMAGE / BIRDWATCHING | model: microsoft/mai-image-2.5-flash]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Beginner birdwatching in Indian wetlands
+  Scientific name: (not applicable)
+  Location       : Indian wetland
+  Habitat        : wetland observation point
+  Visual elements: birder with binoculars at respectful distance, wetland birds, reeds, morning light
+Final image prompt:
+  Beginner birdwatching in Indian wetlands in its authentic habitat: An educational natural-history illustration of a beginner birder quietly observing wetland birds through binoculars from a respectful distance at an Indian wetland, herons and waterfowl feeding undisturbed among reeds, soft morning light, calm responsible birdwatching behaviour, natural restrained composition. Location context: Indian wetland. Habitat: wetland observation point. Visual elements: birder with binoculars at respectful distance, wetland birds, reeds, morning light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 400
+Response time : 3.16 seconds
+Result        : FAILED | HTTP 400 (application/json)
+Server message: {"success":false,"error":{"message":"MAI Image 2.5 Flash requires width and height of at least 768px","code":"BAD_REQUEST","timestamp":"2026-09-14T17:01:08.237Z","details":{"name":"UpstreamError","upstreamStatus":400}},"status":400}
+
+Model microsoft/mai-image-2.5-flash had failures - running fallback model tongyi-mai/z-image-turbo (cost cap respected).
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 1 - ROYAL BENGAL TIGER / SUNDARBANS | model: tongyi-mai/z-image-turbo]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Royal Bengal Tiger
+  Scientific name: Panthera tigris tigris
+  Location       : Sundarbans, West Bengal, India
+  Habitat        : mangrove forest
+  Visual elements: tiger, mangrove vegetation, tidal mud, stilt roots, brackish water channel
+Final image prompt:
+  Royal Bengal Tiger (scientific name Panthera tigris tigris) in its authentic habitat: A Royal Bengal Tiger moving naturally through a Sundarbans mangrove landscape, walking across muddy tidal ground between tangled stilt roots and mangrove trunks, a brackish water channel behind it, dense green mangrove foliage with atmospheric depth, wildlife-documentary composition, side-full-body view. Location context: Sundarbans, West Bengal, India. Habitat: mangrove forest. Visual elements: tiger, mangrove vegetation, tidal mud, stilt roots, brackish water channel. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 9.98 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\tongyi-mai_z-image-turbo\01_tiger_sundarbans.jpg (image/jpeg, 430444 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 2 - SNOW LEOPARD / LADAKH | model: tongyi-mai/z-image-turbo]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Snow Leopard
+  Scientific name: Panthera uncia
+  Location       : high-altitude Ladakh, trans-Himalaya, India
+  Habitat        : rocky alpine steppe
+  Visual elements: snow leopard, rocky Himalayan terrain, sparse alpine vegetation, cold clear light
+Final image prompt:
+  Snow Leopard (scientific name Panthera uncia) in its authentic habitat: A snow leopard resting on rocky Himalayan terrain in high-altitude Ladakh, thick pale smoky-grey rosetted fur, long balanced tail, sparse alpine cushion plants and scattered boulders, distant barren trans-Himalayan ridges with realistic atmospheric perspective, cold natural morning light, documentary natural-history composition, full-body three-quarter view. Location context: high-altitude Ladakh, trans-Himalaya, India. Habitat: rocky alpine steppe. Visual elements: snow leopard, rocky Himalayan terrain, sparse alpine vegetation, cold clear light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 9.35 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\tongyi-mai_z-image-turbo\02_snow_leopard_ladakh.jpg (image/jpeg, 364365 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 3 - INDIAN WETLAND BIRD | model: tongyi-mai/z-image-turbo]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Purple Heron
+  Scientific name: Ardea purpurea
+  Location       : Indian freshwater wetland
+  Habitat        : reed-bed wetland edge
+  Visual elements: purple heron, reeds, aquatic plants, still water, reflections
+Final image prompt:
+  Purple Heron (scientific name Ardea purpurea) in its authentic habitat: A Purple Heron standing in natural hunting posture at the edge of an Indian freshwater wetland, slender chestnut and slate plumage, snake-like neck in slight S-curve, among dense reeds and aquatic plants, calm still water with subtle reflections, soft overcast daylight, natural-history composition. Location context: Indian freshwater wetland. Habitat: reed-bed wetland edge. Visual elements: purple heron, reeds, aquatic plants, still water, reflections. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 9.34 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\tongyi-mai_z-image-turbo\03_purple_heron_wetland.jpg (image/jpeg, 448484 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 4 - CAMERA TRAP / WILDLIFE MONITORING | model: tongyi-mai/z-image-turbo]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Wildlife camera trap field setup
+  Scientific name: (not applicable)
+  Location       : Indian deciduous forest
+  Habitat        : forest trail at dusk
+  Visual elements: camera trap strapped to tree, forest trail, chital deer passing, low light
+Final image prompt:
+  Wildlife camera trap field setup in its authentic habitat: A realistic camouflaged camera trap strapped to a tree trunk beside a forest trail in an Indian deciduous forest at dusk, a chital deer walking naturally past in the background, subtle low-light evening atmosphere, scientifically plausible field equipment, educational editorial composition. Location context: Indian deciduous forest. Habitat: forest trail at dusk. Visual elements: camera trap strapped to tree, forest trail, chital deer passing, low light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 9.09 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\tongyi-mai_z-image-turbo\04_camera_trap.jpg (image/jpeg, 361393 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 5 - INDIAN FOREST ECOSYSTEM | model: tongyi-mai/z-image-turbo]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Indian forest ecosystem and biodiversity
+  Scientific name: (not applicable)
+  Location       : Indian subcontinent
+  Habitat        : moist deciduous forest
+  Visual elements: sal trees, bamboo, layered undergrowth, dappled light, distant deer and bird life
+Final image prompt:
+  Indian forest ecosystem and biodiversity in its authentic habitat: A rich but scientifically plausible Indian moist deciduous forest ecosystem, tall sal trees with straight trunks, bamboo clumps and layered green undergrowth, dappled golden forest light, a distant chital deer and small bird life as subtle signs of biodiversity, believable Indian ecology, natural-history illustration composition. Location context: Indian subcontinent. Habitat: moist deciduous forest. Visual elements: sal trees, bamboo, layered undergrowth, dappled light, distant deer and bird life. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 9.99 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\tongyi-mai_z-image-turbo\05_indian_forest.jpg (image/jpeg, 419988 bytes)
+Result        : SUCCESS
+
+-------------------------------------------------------------
+[POLLINATIONS TEST - TEST 6 - TUTORIAL IMAGE / BIRDWATCHING | model: tongyi-mai/z-image-turbo]
+-------------------------------------------------------------
+Structured article-derived information:
+  Subject        : Beginner birdwatching in Indian wetlands
+  Scientific name: (not applicable)
+  Location       : Indian wetland
+  Habitat        : wetland observation point
+  Visual elements: birder with binoculars at respectful distance, wetland birds, reeds, morning light
+Final image prompt:
+  Beginner birdwatching in Indian wetlands in its authentic habitat: An educational natural-history illustration of a beginner birder quietly observing wetland birds through binoculars from a respectful distance at an Indian wetland, herons and waterfowl feeding undisturbed among reeds, soft morning light, calm responsible birdwatching behaviour, natural restrained composition. Location context: Indian wetland. Habitat: wetland observation point. Visual elements: birder with binoculars at respectful distance, wetland birds, reeds, morning light. Style: scientifically accurate natural-history wildlife illustration, realistic hand-painted watercolour, detailed natural anatomy, realistic fur and feathers, authentic habitat, subtle pigment variation, visible cold-press watercolour paper texture, delicate transparent washes, controlled pigment granulation, natural earthy colour palette, realistic atmospheric perspective, restrained editorial composition, high-detail wildlife field illustration, museum-quality natural-history artwork, Indian wildlife conservation editorial illustration. strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames
+Parameters: width=1280 height=720 (16:9 landscape) seed=42
+HTTP status   : 200
+Response time : 7.96 seconds
+Output file   : D:\earanyak\tools\pollinations-test-output\tongyi-mai_z-image-turbo\06_birdwatching_wetland.jpg (image/jpeg, 312414 bytes)
+Result        : SUCCESS
+
+==================== TECHNICAL METRICS ====================
+Endpoint               : https://gen.pollinations.ai/image/{prompt} (GET, Bearer auth)
+Parameters             : width=1280, height=720 (16:9), fixed seed=42
+Models tested          : openai/gpt-image-2, microsoft/mai-image-2.5-flash, tongyi-mai/z-image-turbo
+
+Total generations      : 18
+Successful             : 12
+Failed                 : 6
+HTTP errors            : 6
+HTTP status breakdown  : 400 x6, 200 x12
+Average generation time: 26.71 seconds
+Total elapsed time     : 339.25 seconds
+
+IMPORTANT: HTTP 200 only proves technical success. Visual quality
+(anatomy, habitat accuracy, watercolour character, AI artefacts)
+requires human inspection of the saved images in:
+  D:\earanyak\tools\pollinations-test-output
+Quality scoring table and model recommendation are added after human review.
+
+These images are AI-GENERATED ILLUSTRATIONS - never documentary photographs.
+Future production UI must label them as illustration generated from article subject.

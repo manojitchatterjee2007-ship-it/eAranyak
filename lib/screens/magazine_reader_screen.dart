@@ -102,11 +102,6 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
     });
   }
 
-  Future<void> _saveReaderSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('pref_page_flip_sound', _enablePageFlipSound);
-  }
-
   Future<void> _saveReadingProgress(int page) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('last_read_mag_id', widget.magazineId);
