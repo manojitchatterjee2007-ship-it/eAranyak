@@ -21,6 +21,20 @@ class Tutorial {
   final String? createdBy;
   final String? updatedBy;
 
+  // Editorial/source provenance
+  final String? sourceUrl;
+  final String? sourceName;
+  final String? sourceArticleId;
+  final String? translationProvider;
+  final String? imageProvenance;
+
+  /// Ordered rich tutorial content blocks.
+  ///
+  /// Each block is a JSON-compatible map produced by the tutorial
+  /// import/translation pipeline. Images remain in their original
+  /// position in this list.
+  final List<Map<String, dynamic>> contentBlocks;
+
   Tutorial({
     required this.id,
     required this.title,
@@ -43,6 +57,12 @@ class Tutorial {
     this.updatedAt,
     this.createdBy,
     this.updatedBy,
+    this.sourceUrl,
+    this.sourceName,
+    this.sourceArticleId,
+    this.translationProvider,
+    this.imageProvenance,
+    this.contentBlocks = const <Map<String, dynamic>>[],
   });
 
   factory Tutorial.fromJson(Map<String, dynamic> json) {
@@ -58,7 +78,8 @@ class Tutorial {
       category: json['category']?.toString(),
       difficulty: (json['difficulty'] ?? 'beginner').toString(),
       durationMinutes: (json['duration_minutes'] as num?)?.toInt(),
-      editorialPriority: (json['editorial_priority'] as num?)?.toInt() ?? 10,
+      editorialPriority:
+          (json['editorial_priority'] as num?)?.toInt() ?? 10,
       isFeatured: json['is_featured'] == true,
       isPublished: json['is_published'] == true,
       scheduledPublishAt: json['scheduled_publish_at'] != null
@@ -78,7 +99,28 @@ class Tutorial {
           : null,
       createdBy: json['created_by']?.toString(),
       updatedBy: json['updated_by']?.toString(),
+
+      // Editorial/source provenance
+      sourceUrl: json['source_url']?.toString(),
+      sourceName: json['source_name']?.toString(),
+      sourceArticleId: json['source_article_id']?.toString(),
+      translationProvider: json['translation_provider']?.toString(),
+      imageProvenance: json['image_provenance']?.toString(),
+      contentBlocks: _parseContentBlocks(json['content_blocks']),
     );
+  }
+
+  static List<Map<String, dynamic>> _parseContentBlocks(dynamic value) {
+    if (value is! List) {
+      return const <Map<String, dynamic>>[];
+    }
+
+    return value
+        .whereType<Map>()
+        .map(
+          (block) => Map<String, dynamic>.from(block),
+        )
+        .toList(growable: false);
   }
 
   Map<String, dynamic> toJson() {
@@ -96,11 +138,23 @@ class Tutorial {
       'editorial_priority': editorialPriority,
       'is_featured': isFeatured,
       'is_published': isPublished,
-      if (scheduledPublishAt != null) 'scheduled_publish_at': scheduledPublishAt!.toIso8601String(),
-      if (expiresAt != null) 'expires_at': expiresAt!.toIso8601String(),
-      if (publishedAt != null) 'published_at': publishedAt!.toIso8601String(),
+      if (scheduledPublishAt != null)
+        'scheduled_publish_at': scheduledPublishAt!.toIso8601String(),
+      if (expiresAt != null)
+        'expires_at': expiresAt!.toIso8601String(),
+      if (publishedAt != null)
+        'published_at': publishedAt!.toIso8601String(),
       if (createdBy != null) 'created_by': createdBy,
       if (updatedBy != null) 'updated_by': updatedBy,
+
+      // Editorial/source provenance
+      if (sourceUrl != null) 'source_url': sourceUrl,
+      if (sourceName != null) 'source_name': sourceName,
+      if (sourceArticleId != null) 'source_article_id': sourceArticleId,
+      if (translationProvider != null)
+        'translation_provider': translationProvider,
+      if (imageProvenance != null) 'image_provenance': imageProvenance,
+      'content_blocks': contentBlocks,
     };
   }
 

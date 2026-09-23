@@ -17,6 +17,7 @@ import '../screens/vlog_screen.dart';
 import '../screens/tutorial_screen.dart';
 import '../services/app_notification_service.dart';
 import '../services/writing_submission_service.dart';
+import 'sound_service.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();

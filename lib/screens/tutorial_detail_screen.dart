@@ -86,6 +86,214 @@ class TutorialDetailScreen extends StatelessWidget {
     }
   }
 
+  Widget _buildContentBlocks() {
+    if (tutorial.contentBlocks.isEmpty) {
+      if (tutorial.description == null ||
+          tutorial.description!.trim().isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return ScientificText(
+        tutorial.description!,
+        selectable: true,
+        style: const TextStyle(
+          color: Color(0xE6FFFFFF),
+          fontSize: 16,
+          height: 1.8,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < tutorial.contentBlocks.length; i++)
+          _buildContentBlock(tutorial.contentBlocks[i], i),
+      ],
+    );
+  }
+
+  Widget _buildContentBlock(Map<String, dynamic> block, int index) {
+    final type = (block['type'] ?? '').toString().toLowerCase().trim();
+
+    switch (type) {
+      case 'heading':
+      case 'subheading':
+        final text = (block['text'] ?? block['content'] ?? '').toString().trim();
+        if (text.isEmpty) return const SizedBox.shrink();
+
+        return Padding(
+          padding: EdgeInsets.only(
+            top: index == 0 ? 0 : 20,
+            bottom: 8,
+          ),
+          child: ScientificText(
+            text,
+            selectable: true,
+            style: const TextStyle(
+              color: Color(0xFF81C784),
+              fontSize: 18,
+              height: 1.4,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+
+      case 'image':
+        final url = (block['url'] ??
+                block['imageUrl'] ??
+                block['src'] ??
+                block['image_url'] ??
+                '')
+            .toString()
+            .trim();
+        if (url.isEmpty) return const SizedBox.shrink();
+
+        final caption = (block['caption'] ?? '').toString().trim();
+        final credit = (block['credit'] ?? block['imageCredit'] ?? '')
+            .toString()
+            .trim();
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 14, bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  width: double.infinity,
+                  color: const Color(0xFF142419),
+                  child: CachedNetworkImage(
+                    imageUrl: url,
+                    fit: BoxFit.contain,
+                    placeholder: (_, __) => const Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF00E676),
+                        ),
+                      ),
+                    ),
+                    errorWidget: (_, __, ___) => Container(
+                      constraints: const BoxConstraints(minHeight: 100),
+                      padding: const EdgeInsets.all(20),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.broken_image_outlined,
+                        color: Colors.white38,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (caption.isNotEmpty) ...[
+                const SizedBox(height: 7),
+                ScientificText(
+                  caption,
+                  selectable: true,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                    height: 1.45,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+              if (credit.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                ScientificText(
+                  'ছবি: $credit',
+                  selectable: true,
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 11,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+
+      case 'list':
+        final rawItems = block['items'];
+        final items = rawItems is List
+            ? rawItems
+                .map((item) => item.toString().trim())
+                .where((item) => item.isNotEmpty)
+                .toList()
+            : <String>[];
+
+        if (items.isEmpty) {
+          final text = (block['text'] ?? block['content'] ?? '').toString().trim();
+          if (text.isEmpty) return const SizedBox.shrink();
+          return _buildParagraph(text);
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final item in items)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 7),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 7, right: 9),
+                        child: Icon(
+                          Icons.circle,
+                          size: 5,
+                          color: Color(0xFF81C784),
+                        ),
+                      ),
+                      Expanded(
+                        child: ScientificText(
+                          item,
+                          selectable: true,
+                          style: const TextStyle(
+                            color: Color(0xE6FFFFFF),
+                            fontSize: 16,
+                            height: 1.7,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+
+      case 'paragraph':
+      case 'text':
+      case 'body':
+      default:
+        final value = (block['text'] ?? block['content'] ?? '').toString().trim();
+        if (value.isEmpty) return const SizedBox.shrink();
+        return _buildParagraph(value);
+    }
+  }
+
+  Widget _buildParagraph(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 10),
+      child: ScientificText(
+        text,
+        selectable: true,
+        style: const TextStyle(
+          color: Color(0xE6FFFFFF),
+          fontSize: 16,
+          height: 1.8,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final resUrl = _resolveResourceUrl();
@@ -93,7 +301,7 @@ class TutorialDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D1410),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1410).withValues(alpha: 0.9),
+        backgroundColor: const Color(0xFF0D1410).withOpacity(0.9),
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -122,20 +330,20 @@ class TutorialDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hero Thumbnail Banner
+                  // Hero Thumbnail Banner - UPDATED TO FULL VISIBILITY
                   Container(
                     width: double.infinity,
-                    height: 200,
+                    height: 280, // Increased height to give the image more room
                     decoration: BoxDecoration(
                       color: const Color(0xFF142419),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFF00E676).withValues(alpha: 0.4),
+                        color: const Color(0xFF00E676).withOpacity(0.4),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                          color: const Color(0xFF00E676).withOpacity(0.15),
                           blurRadius: 18,
                           spreadRadius: 1,
                         ),
@@ -146,7 +354,7 @@ class TutorialDetailScreen extends StatelessWidget {
                       child: tutorial.thumbnailUrl != null && tutorial.thumbnailUrl!.isNotEmpty
                           ? CachedNetworkImage(
                               imageUrl: tutorial.thumbnailUrl!,
-                              fit: BoxFit.cover,
+                              fit: BoxFit.contain, // Changed from cover to contain to prevent cropping
                               placeholder: (_, __) => const Center(
                                 child: CircularProgressIndicator(color: Color(0xFF00E676)),
                               ),
@@ -172,7 +380,7 @@ class TutorialDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD54F).withValues(alpha: 0.2),
+                            color: const Color(0xFFFFD54F).withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFFFFD54F)),
                           ),
@@ -196,7 +404,7 @@ class TutorialDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                            color: const Color(0xFF00E676).withOpacity(0.15),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFF00E676)),
                           ),
@@ -262,7 +470,65 @@ class TutorialDetailScreen extends StatelessWidget {
                       height: 1.3,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
+
+                  // Source acknowledgement — shown immediately below the title.
+                  if (tutorial.sourceName != null &&
+                      tutorial.sourceName!.trim().isNotEmpty) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF142419),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFF81C784).withOpacity(0.35),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 2),
+                            child: Icon(
+                              Icons.menu_book_rounded,
+                              color: Color(0xFF81C784),
+                              size: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text: 'সূত্র / Source: ',
+                                    style: TextStyle(
+                                      color: Color(0xFF81C784),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: tutorial.sourceName!.trim(),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                      height: 1.45,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
 
                   // Date
                   Row(
@@ -289,7 +555,7 @@ class TutorialDetailScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF142419),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                        border: Border.all(color: const Color(0xFF00E676).withOpacity(0.3)),
                       ),
                       child: ScientificText(
                         tutorial.snippet!,
@@ -305,17 +571,11 @@ class TutorialDetailScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                   ],
 
-                  // Main Description / Tutorial Article Body
-                  if (tutorial.description != null && tutorial.description!.trim().isNotEmpty) ...[
-                    ScientificText(
-                      tutorial.description!,
-                      selectable: true,
-                      style: const TextStyle(
-                        color: Color(0xE6FFFFFF),
-                        fontSize: 16,
-                        height: 1.8,
-                      ),
-                    ),
+                  // Main Tutorial Article Body
+                  if (tutorial.contentBlocks.isNotEmpty ||
+                      (tutorial.description != null &&
+                          tutorial.description!.trim().isNotEmpty)) ...[
+                    _buildContentBlocks(),
                     const SizedBox(height: 28),
                   ],
 
@@ -327,7 +587,7 @@ class TutorialDetailScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF18221B),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.4)),
+                        border: Border.all(color: const Color(0xFF00E676).withOpacity(0.4)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

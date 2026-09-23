@@ -3,7 +3,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Central, authoritative pool for significant-update notification sounds.
-/// Contains all 5 animal/nature sounds and implements a shuffled-bag approach.
 class NotificationSoundPool {
   static const List<String> notificationSounds = [
     'tiger_roar',
@@ -16,8 +15,6 @@ class NotificationSoundPool {
   static List<String> _bag = [];
   static String? _lastConsumedSound;
 
-  /// Selects the next sound using a shuffled-bag approach, avoiding
-  /// immediate repetition across bag refills.
   static Future<String> getNextSound() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -52,18 +49,95 @@ class NotificationSoundPool {
   static String soundToAssetPath(String soundName) => 'audio/$soundName.mp3';
 }
 
+/// Shuffled pool specifically for the Boot Splash Screen (7 sounds)
+class BootSoundPool {
+  static const List<String> bootSounds = [
+    'welcome_tone',
+    'bird_call',
+    'cricket',
+    'deer_call',
+    'elephant_trumpet',
+    'owl_hoot',
+    'tiger_roar',
+  ];
+
+  static List<String> _bag = [];
+  static String? _lastConsumedSound;
+
+  static Future<String> getNextSound() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _lastConsumedSound = prefs.getString('last_boot_sound');
+      final savedBag = prefs.getStringList('boot_sound_bag');
+
+      if (savedBag != null && savedBag.isNotEmpty) {
+        _bag = List<String>.from(savedBag);
+      }
+
+      if (_bag.isEmpty) {
+        _bag = List<String>.from(bootSounds)..shuffle();
+        if (_bag.length > 1 && _bag.first == _lastConsumedSound) {
+          final first = _bag.first;
+          _bag[0] = _bag.last;
+          _bag[_bag.length - 1] = first;
+        }
+      }
+
+      final selected = _bag.removeAt(0);
+      _lastConsumedSound = selected;
+
+      await prefs.setString('last_boot_sound', selected);
+      await prefs.setStringList('boot_sound_bag', _bag);
+
+      return selected;
+    } catch (_) {
+      return bootSounds.first;
+    }
+  }
+}
+
 class SoundService {
   static final AudioPlayer _player = AudioPlayer();
+
   static final ValueNotifier<bool> keyPressSoundNotifier =
       ValueNotifier<bool>(false);
 
-  static bool get isMuted => false;
+  static final ValueNotifier<bool> mutedNotifier =
+      ValueNotifier<bool>(false);
+
+  static bool get isMuted => mutedNotifier.value;
   static bool get isKeyPressSoundEnabled => keyPressSoundNotifier.value;
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    keyPressSoundNotifier.value =
-        prefs.getBool('key_press_sound_enabled') ?? false;
+    keyPressSoundNotifier.value = prefs.getBool('key_press_sound_enabled') ?? false;
+    mutedNotifier.value = prefs.getBool('sound_muted') ?? false;
+  }
+
+  static Future<void> setMuted(bool muted) async {
+    mutedNotifier.value = muted;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sound_muted', muted);
+
+    if (muted) {
+      await stopAllSounds();
+    }
+  }
+
+  static Future<void> stopAllSounds() async {
+    try {
+      await _player.stop();
+    } catch (_) {}
+  }
+
+  static Future<void> playBootSound() async {
+    if (isMuted) return;
+    try {
+      final soundName = await BootSoundPool.getNextSound();
+      await _player.stop();
+      await _player.setReleaseMode(ReleaseMode.stop);
+      await _player.play(AssetSource('audio/$soundName.mp3'), volume: 1.0);
+    } catch (_) {}
   }
 
   static Future<void> setKeyPressSoundEnabled(bool enabled) async {
@@ -77,7 +151,7 @@ class SoundService {
   }
 
   static Future<void> playButtonSound() async {
-    if (!keyPressSoundNotifier.value) return;
+    if (isMuted || !keyPressSoundNotifier.value) return;
     try {
       await _player.stop();
       await _player.play(AssetSource('audio/button_press.mp3'), volume: 0.45);
@@ -85,6 +159,7 @@ class SoundService {
   }
 
   static Future<void> playWildlifeSound(String assetName) async {
+    if (isMuted) return;
     try {
       await _player.stop();
       await _player.play(AssetSource('audio/$assetName'), volume: 0.5);
@@ -96,6 +171,5 @@ class SoundService {
   static Future<void> playBirdCall() => playWildlifeSound('bird_call.mp3');
   static Future<void> playCricket() => playWildlifeSound('cricket.mp3');
   static Future<void> playDeerCall() => playWildlifeSound('deer_call.mp3');
-  static Future<void> playElephantTrumpet() =>
-      playWildlifeSound('elephant_trumpet.mp3');
+  static Future<void> playElephantTrumpet() => playWildlifeSound('elephant_trumpet.mp3');
 }

@@ -192,17 +192,18 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
           children: [
             Hero(
               tag: 'news_image_${newsItem['title']}',
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF142419),
-                  ),
-                  child: NewsImageWidget(
-                    item: newsItem,
-                    fit: BoxFit.cover,
-                  ),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(
+                  minHeight: 200,
+                  maxHeight: 350, 
+                ),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF142419),
+                ),
+                child: NewsImageWidget(
+                  item: newsItem,
+                  fit: BoxFit.contain, 
                 ),
               ),
             ),

@@ -211,18 +211,68 @@ serve(async (req) => {
 
       // IMPORTANT: existing automated news remains automated.
       if (existing) {
-        const now = new Date().toISOString();
-        const { data: rows, error } = await db.from("wildlife_news")
-          .update({ is_published: true, editorial_priority: priority, published_at: now })
-          .eq("id", existing.id)
-          .select("id, article_id, publication_source, editorial_priority, is_published, published_at");
+        /*
+         * The source is re-fetched before this branch, so use the freshly
+         * extracted image to repair older editorial records that may have
+         * an empty/stale image_url.  The publication source remains
+         * untouched, so automated articles stay automated.
+         */
+        const p = await pipeline(normalized, supabaseUrl, serviceKey);
+        if (!p.ok || !p.data) {
+          return reply({
+            success: false,
+            error: `Cannot refresh existing article: ${p.error}. Existing article was NOT modified.`,
+          }, 422);
+        }
 
-        if (error) return reply({ success: false, error: `Failed to update existing article: ${error.message}` }, 500);
+        const d = p.data;
+        const now = new Date().toISOString();
+
+        const { data: rows, error } = await db.from("wildlife_news")
+          .update({
+            is_published: true,
+            editorial_priority: priority,
+            published_at: now,
+            image_url: d.imageUrl,
+            image_credit: d.imageCredit,
+            title: d.sourceTitle,
+            source_title: d.sourceTitle,
+            snippet: d.dek || d.headline,
+            content: d.body,
+            source: d.host,
+            source_name: d.host,
+            source_url: d.normalized,
+            original_article_url: d.normalized,
+            category: categoryFor(`${d.sourceTitle} ${d.headline}`),
+            bengali_headline: d.headline,
+            bengali_dek: d.dek,
+            bengali_body: d.body,
+            fetched_at: now,
+            processed_at: now,
+            notification_ready_at: now,
+            processing_status: "published",
+            content_hash: await sha256(`${d.normalized}\n${d.articleText}`),
+          })
+          .eq("id", existing.id)
+          .select(
+            "id, article_id, publication_source, editorial_priority, is_published, published_at, image_url, image_credit, bengali_headline, bengali_dek, bengali_body"
+          );
+
+        if (error) {
+          return reply({
+            success: false,
+            error: `Failed to update existing article: ${error.message}`,
+          }, 500);
+        }
         if (!rows?.length) return reply({ success: false, error: "Article not found" }, 404);
 
         return reply({
-          success: true, action, alreadyExisted: true, article: rows[0],
-          message: "Existing article published and priority updated; original publication source preserved.",
+          success: true,
+          action,
+          alreadyExisted: true,
+          imageRefreshed: true,
+          article: rows[0],
+          message: "Existing article refreshed with the latest Bengali editorial, source image, and publication data; original publication source preserved.",
         });
       }
 

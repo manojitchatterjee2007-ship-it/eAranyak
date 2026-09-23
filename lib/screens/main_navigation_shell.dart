@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/config.dart';
 import '../services/sound_service.dart';
 import '../services/push_notification_service.dart';
+import '../services/forest_ambience_service.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/nature_background.dart';
 import 'home_screen.dart';
@@ -30,8 +30,6 @@ class MainNavigationShell extends StatefulWidget {
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
   int _currentIndex = 0;
-  AudioPlayer? _audioPlayer;
-  Timer? _audioTimer;
   String _fullName = '';
   String _mobileNumber = '';
   String _appVersion = '2.1.0';
@@ -48,7 +46,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   @override
   void initState() {
     super.initState();
-    _initAndPlayBirdCall();
+    unawaited(SoundService.init());
     _fetchProfile();
     _initPackageInfo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -89,24 +87,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     } catch (_) {}
   }
 
-  Future<void> _initAndPlayBirdCall() async {
-    if (SoundService.isMuted) return;
-    try {
-      _audioPlayer = AudioPlayer();
-      await _audioPlayer!.setPlayerMode(PlayerMode.lowLatency);
-      await _audioPlayer!.setVolume(1.0);
-      await _audioPlayer!.play(AssetSource('audio/bird_call.mp3'));
-
-      _audioTimer = Timer(const Duration(seconds: 10), () {
-        _audioPlayer?.stop();
-      });
-    } catch (_) {}
-  }
-
   @override
   void dispose() {
-    _audioTimer?.cancel();
-    _audioPlayer?.dispose();
+    unawaited(ForestAmbienceService.stopAmbience());
     super.dispose();
   }
 
@@ -114,6 +97,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     setState(() {
       _currentIndex = index;
     });
+
+    if (index == 1 || index == 2) {
+      unawaited(ForestAmbienceService.startAmbience());
+    } else {
+      unawaited(ForestAmbienceService.stopAmbience());
+    }
+
     if (index == 0) {
       _homeKey.currentState?.loadData();
     }
@@ -171,8 +161,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   style: TextStyle(color: Color(0xFF81C784), fontSize: 11),
                 ),
                 const SizedBox(height: 20),
-
-                // Name
                 TextField(
                   controller: nameCtrl,
                   style: const TextStyle(color: Colors.white),
@@ -185,8 +173,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   ),
                 ),
                 const SizedBox(height: 14),
-
-                // Mobile
                 TextField(
                   controller: mobileCtrl,
                   style: const TextStyle(color: Colors.white),
@@ -199,8 +185,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   ),
                 ),
                 const SizedBox(height: 14),
-
-                // Email (Read only)
                 TextField(
                   enabled: false,
                   controller: TextEditingController(text: widget.userEmail),
@@ -215,8 +199,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Update Button
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -259,8 +241,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // Delete Account Text Button
                 TextButton(
                   onPressed: () {
                     Navigator.pop(ctx);
@@ -411,7 +391,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     value: enabled,
                     onChanged: (val) async {
                       await SoundService.setKeyPressSoundEnabled(val);
-                      SoundService.playButtonSound();
                       setModalState(() {});
                     },
                   );
@@ -725,17 +704,101 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     _openSettingsDialog();
                   },
                 ),
+                ListTile(
+                  leading: const Padding(
+                    padding: EdgeInsets.only(left: 12),
+                    child: Icon(Icons.copyright_rounded, color: Color(0xFF00E676), size: 24),
+                  ),
+                  title: const Text(
+                    'Copyright Policy (কপিরাইট)',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: const Color(0xFF18221B),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                        ),
+                        title: const Row(
+                          children: [
+                            Icon(Icons.gavel_rounded, color: Color(0xFF00E676)),
+                            SizedBox(width: 10),
+                            Text('বিধিবদ্ধ সতর্কীকরণ', style: TextStyle(color: Colors.white, fontSize: 18)),
+                          ],
+                        ),
+                        content: const SingleChildScrollView(
+                          child: Text(
+                            "eআরণ্যক অ্যাপের নাম, লোগো, নকশা, লেখা, চিত্র, আলোকচিত্র, গ্রাফিক্স, তথ্য, শিক্ষামূলক উপাদান, গেম ও অন্যান্য সৃজনশীল বিষয়বস্তু অনুমতি ব্যতীত সম্পূর্ণ বা আংশিকভাবে অনুলিপি, পুনরুৎপাদন, পরিবর্তন, প্রকাশ, পুনঃপ্রকাশ, বাণিজ্যিকভাবে ব্যবহার, বিতরণ বা অন্য কোনো মাধ্যমে প্রচার করা নিষিদ্ধ। কোনো ব্যক্তি বা প্রতিষ্ঠান যথাযথ অনুমতি ছাড়া এসব বিষয়বস্তু ব্যবহার বা বিতরণ করলে, প্রযোজ্য মেধাস্বত্ব ও অন্যান্য আইনের অধীনে আইনানুগ ব্যবস্থা গ্রহণ করা হতে পারে। তৃতীয় পক্ষের উৎস থেকে প্রদত্ত বিষয়বস্তুর ক্ষেত্রে সংশ্লিষ্ট উৎস ও স্বত্বাধিকারীর অধিকারও প্রযোজ্য। অনুমতি ব্যতীত ব্যবহার থেকে বিরত থাকুন।",
+                            style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                            textAlign: TextAlign.justify,
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('সম্মত (Agreed)', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
-          const Divider(color: Colors.white12, height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              'Version $_appVersion',
-              style: const TextStyle(color: Colors.white38, fontSize: 11),
+          InkWell(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: const Color(0xFF18221B),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                  ),
+                  title: const Row(
+                    children: [
+                      Icon(Icons.system_update_alt_rounded, color: Color(0xFF00E676)),
+                      SizedBox(width: 10),
+                      Text('Version 2.1.0 Updates', style: TextStyle(color: Colors.white, fontSize: 18)),
+                    ],
+                  ),
+                  content: const SingleChildScrollView(
+                    child: Text(
+                      "এই সংস্করণে eআরণ্যক-এর বন্যপ্রাণী ও প্রকৃতি-ভিত্তিক অভিজ্ঞতাকে আরও সমৃদ্ধ ও আকর্ষণীয় করার জন্য বেশ কিছু গুরুত্বপূর্ণ উন্নয়ন আনা হয়েছে। এতে উন্নততর লাইভ বন্যপ্রাণী পর্যবেক্ষণ, ইন্টারঅ্যাক্টিভ 3D পর্যবেক্ষণ কার্ড, যাচাইকৃত অবস্থান-ভিত্তিক বন্যপ্রাণী মানচিত্র, পরিমার্জিত ড্যাশবোর্ড নেভিগেশন এবং আরও বিস্তৃত শিক্ষামূলক ও ইন্টারঅ্যাক্টিভ বৈশিষ্ট্য যুক্ত হয়েছে। পাশাপাশি অ্যাপের ভিজ্যুয়াল ডিজাইন, কর্মক্ষমতা, বিষয়বস্তু উপস্থাপন এবং ভারতের জীববৈচিত্র্য অন্বেষণের সামগ্রিক অভিজ্ঞতাকেও আরও উন্নত করা হয়েছে। আপনাদের মূল্যবান মতামত ও পরামর্শ eআরণ্যক-কে আরও সমৃদ্ধ ও উন্নত করতে সাহায্য করবে। আমাদের সম্মিলিত প্রচেষ্টায় এই উদ্যোগ আরও বৃহৎ সাফল্যের শিখরে পৌঁছাক—এই আমাদের প্রত্যাশা।",
+                      style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('বন্ধ করুন', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Colors.white10)),
+              ),
+              child: Text(
+                'Version $_appVersion',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white54, 
+                  fontSize: 12, 
+                  letterSpacing: 1.2,
+                ),
+              ),
             ),
-          ),
+          )
         ],
       ),
     );
