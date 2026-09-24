@@ -94,12 +94,29 @@ Future<void> routeToContent(Map<String, dynamic> data) async {
           builder: (_) => NewsDetailScreen(newsItem: item!)));
     } else if (type == 'game' || type == 'quiz') {
       final category = (data['category'] ?? 'photo').toString();
-      if (category == 'scramble') {
+      final difficulty = (data['difficulty'] ?? 'medium').toString();
+
+      if (category == 'scramble' || category == 'puzzle') {
         nav.push(
-            MaterialPageRoute(builder: (_) => const ScrambledImageGame()));
+          MaterialPageRoute(
+            builder: (_) => ScrambledImageGame(difficulty: difficulty),
+          ),
+        );
+      } else if (category == 'word' || category == 'crossword') {
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => WordPuzzleGame(difficulty: difficulty),
+          ),
+        );
       } else {
         nav.push(
-            MaterialPageRoute(builder: (_) => WildlifeQuizGame(type: category)));
+          MaterialPageRoute(
+            builder: (_) => WildlifeQuizGame(
+              type: category,
+              difficulty: difficulty,
+            ),
+          ),
+        );
       }
     } else if (type == 'magazine') {
       final email = supabase.auth.currentUser?.email ?? 'guest';
@@ -269,12 +286,14 @@ class PushNotificationService {
       );
 
       await flutterLocalNotificationsPlugin.show(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000 % 2147483647,
-        title: message.notification?.title ?? 'eআরণ্যক',
-        body: message.notification?.body ?? '',
-        notificationDetails: NotificationDetails(android: androidDetails),
-        payload: jsonEncode(payloadData),
-      );
+       id: DateTime.now().millisecondsSinceEpoch ~/ 1000 % 2147483647,
+       title: message.notification?.title ?? 'eআরণ্যক',
+       body: message.notification?.body ?? '',
+       notificationDetails: NotificationDetails(
+        android: androidDetails,
+       ),
+       payload: jsonEncode(payloadData),
+     );
     } catch (_) {}
   }
 }

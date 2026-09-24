@@ -3,9 +3,12 @@
 // XENO_CANTO_API_KEY must remain in Supabase secrets.
 
 const MAX_AUDIO_BYTES = 16 * 1024 * 1024;
-const SEARCH_TIMEOUT_MS = 8_000;
-const AUDIO_TIMEOUT_MS = 20_000;
-const MAX_CANDIDATES = 10;
+// Keep the interactive dashboard call fast. The previous implementation could
+// try up to 10 recordings x 2 URLs x 20 seconds, which explains the 45-second
+// Flutter timeout seen on Windows.
+const SEARCH_TIMEOUT_MS = 6_000;
+const AUDIO_TIMEOUT_MS = 8_000;
+const MAX_CANDIDATES = 2;
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -192,16 +195,15 @@ async function downloadAudio(
   const raw = resolveUrl(recording.file);
   if (!raw) return null;
 
-  // Try the authenticated URL first, then the plain media URL. The second
-  // attempt matters because the API key authenticates the API request while
-  // some Xeno-canto media hosts do not accept/need the key query parameter.
+  // Xeno-canto API authentication belongs on the server. Try the authenticated
+  // media URL first. Only retry the plain URL when the host explicitly rejects
+  // the authenticated request; do not perform two full downloads routinely.
   const urls: string[] = [];
   try {
     const authenticated = new URL(raw);
     authenticated.searchParams.set('key', apiKey);
     urls.push(authenticated.toString());
   } catch (_) {}
-  urls.push(raw);
 
   for (const url of [...new Set(urls)]) {
     try {
@@ -225,7 +227,6 @@ async function downloadAudio(
 
       const bytes = new Uint8Array(await response.arrayBuffer());
       if (!audioLooksValid(bytes, contentType)) continue;
-
       return bytes;
     } catch (error) {
       console.error('Xeno audio attempt failed', recording.id, error);
@@ -234,7 +235,6 @@ async function downloadAudio(
 
   return null;
 }
-
 
 async function searchINaturalistSounds(
   scientific: string,
@@ -329,13 +329,8 @@ Deno.serve(async (request) => {
     return json({ error: 'POST required' }, 405);
   }
 
-  const apiKey = Deno.env.get('XENO_CANTO_API_KEY')?.trim();
-  if (!apiKey) {
-    return json({
-      error: 'XENO_CANTO_API_KEY is not configured',
-      code: 'MISSING_XENO_API_KEY',
-    }, 503);
-  }
+  const apiKey = Deno.env.get('XENO_CANTO_API_KEY')?.trim() || '';
+
 
   let body: Record<string, unknown>;
   try {
@@ -356,75 +351,60 @@ Deno.serve(async (request) => {
   const species = parts[1];
   const exactScientific = `${genus} ${species}`;
 
-  const candidates = new Map<string, Record<string, unknown>>();
-  let searchSucceeded = false;
+  if (apiKey) {
+    const candidates = new Map<string, Record<string, unknown>>();
+    let searchSucceeded = false;
 
-  const addCandidates = (results: Record<string, unknown>[]) => {
-    searchSucceeded = true;
-    for (const recording of results) {
-      if (!exactSpecies(recording, genus, species, exactScientific)) continue;
-      const id = String(recording.id ?? recording.file ?? '');
-      if (id && !candidates.has(id)) candidates.set(id, recording);
-    }
-  };
+    const addCandidates = (results: Record<string, unknown>[]) => {
+      searchSucceeded = true;
+      for (const recording of results) {
+        if (!exactSpecies(recording, genus, species, exactScientific)) continue;
+        const id = String(recording.id ?? recording.file ?? '');
+        if (id && !candidates.has(id)) candidates.set(id, recording);
+      }
+    };
 
-  // Keep the first queries narrow. Do not broaden to a common-name-only query,
-  // because that can return a different species with a similar English name.
-  const queries = [
-    `gen:${genus} sp:${species} grp:birds`,
-    `sp:"${exactScientific}" grp:birds`,
-    `"${exactScientific}" grp:birds`,
-  ];
-
-  for (const query of queries) {
+    const primaryQuery = `gen:${genus} sp:${species} grp:birds`;
     try {
-      addCandidates(await searchXenoV3(query, apiKey));
+      addCandidates(await searchXenoV3(primaryQuery, apiKey));
     } catch (error) {
-      console.error('Xeno v3 search failed', query, error);
+      console.error('Xeno v3 search failed', primaryQuery, error);
     }
-    if (candidates.size >= 12) break;
-  }
 
-  // If v3 did not provide candidates, use the older search endpoint as a
-  // compatibility fallback. The same exact-species validation still applies.
-  if (candidates.size === 0) {
-    try {
-      addCandidates(await searchXenoV2(exactScientific));
-    } catch (error) {
-      console.error('Xeno v2 fallback search failed', error);
+    if (candidates.size === 0) {
+      try {
+        addCandidates(await searchXenoV2(exactScientific));
+      } catch (error) {
+        console.error('Xeno v2 fallback search failed', error);
+      }
     }
-  }
 
-  if (candidates.size === 0) {
-    return json({
-      error: 'No exact-species recording found',
-      scientific_name: exactScientific,
-      common_name: commonName,
-      code: searchSucceeded ? 'NO_EXACT_RECORDING' : 'BIRD_CALL_PROVIDER_UNAVAILABLE',
-    }, searchSucceeded ? 404 : 502);
-  }
+    const sorted = [...candidates.values()]
+      .sort((a, b) => scoreRecording(b) - scoreRecording(a))
+      .slice(0, MAX_CANDIDATES);
 
-  const sorted = [...candidates.values()]
-    .sort((a, b) => scoreRecording(b) - scoreRecording(a))
-    .slice(0, MAX_CANDIDATES);
+    for (const recording of sorted) {
+      try {
+        const audio = await downloadAudio(recording, apiKey);
+        if (!audio) continue;
 
-  for (const recording of sorted) {
-    try {
-      const audio = await downloadAudio(recording, apiKey);
-      if (!audio) continue;
+        return new Response(audio, {
+          status: 200,
+          headers: {
+            'content-type': 'application/octet-stream',
+            'cache-control': 'no-store',
+            'x-bird-species': exactScientific,
+            'x-audio-source': 'xeno-canto',
+            'x-xenocanto-recording': String(recording.id ?? ''),
+          },
+        });
+      } catch (error) {
+        console.error('Xeno audio download failed', recording.id, error);
+      }
+    }
 
-      return new Response(audio, {
-        status: 200,
-        headers: {
-          'content-type': 'application/octet-stream',
-          'cache-control': 'no-store',
-          'x-bird-species': exactScientific,
-          'x-audio-source': 'xeno-canto',
-          'x-xenocanto-recording': String(recording.id ?? ''),
-        },
-      });
-    } catch (error) {
-      console.error('Xeno audio download failed', recording.id, error);
+    if (!searchSucceeded) {
+      console.warn('Xeno-canto unavailable; trying iNaturalist sound fallback');
     }
   }
 

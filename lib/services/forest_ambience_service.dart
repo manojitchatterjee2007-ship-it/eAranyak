@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'sound_service.dart';
 
 class ForestAmbienceService {
+  static bool get isPlaying => _player.state == PlayerState.playing;
+
   static final AudioPlayer _player = AudioPlayer();
   
   // The 3 specific ambient forest sounds

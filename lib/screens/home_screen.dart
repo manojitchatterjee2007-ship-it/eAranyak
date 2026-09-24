@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,12 +11,10 @@ import 'package:cube_transition_plus/cube_transition_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
 import '../services/sound_service.dart';
-import '../services/app_notification_service.dart';
 import '../services/forest_ambience_service.dart';
-import '../services/wildlife_bengali_name_service.dart';
+import '../services/app_notification_service.dart';
 import '../models/app_notification.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/rotating_book_card.dart';
@@ -127,10 +126,10 @@ class NewsImageWidget extends StatelessWidget {
       return Container(
         width: double.infinity,
         height: double.infinity,
-        color: const Color(0xFF0A120D), // Solid background prevents white letterboxing
+        color: const Color(0xFF0A120D),
         child: CachedNetworkImage(
           imageUrl: imgUrl,
-          fit: fit, // Defaults to contain
+          fit: fit,
           placeholder: (c, u) => Container(color: const Color(0xFF142419)),
           errorWidget: (c, u, e) => NewsImageFallbackWidget(tags: tags, category: cat),
         ),
@@ -143,7 +142,6 @@ class NewsImageWidget extends StatelessWidget {
 class WildlifeLiveObservation {
   final String id;
   final String commonName;
-  final String? bengaliName;
   final String scientificName;
   final String location;
   final String observedAt;
@@ -166,7 +164,6 @@ class WildlifeLiveObservation {
   const WildlifeLiveObservation({
     required this.id,
     required this.commonName,
-    this.bengaliName,
     required this.scientificName,
     required this.location,
     required this.observedAt,
@@ -214,7 +211,6 @@ class WildlifeLiveObservation {
     double? latitude,
     double? longitude,
     String? location,
-    String? bengaliName,
     bool? sourceLocationVerified,
     String? imageUrl,
     String? imageSource,
@@ -223,7 +219,6 @@ class WildlifeLiveObservation {
     return WildlifeLiveObservation(
       id: id,
       commonName: commonName,
-      bengaliName: bengaliName ?? this.bengaliName,
       scientificName: scientificName,
       location: location ?? this.location,
       observedAt: observedAt,
@@ -267,26 +262,11 @@ class WildlifeLiveObservation {
             ? _string(raw['sciName'])
             : _string(taxon['name']));
 
-    String? bengaliName;
-    const bengaliKeys = <String>[
-      'bengali_name', 'bengaliName', 'bn_name', 'name_bn',
-      'vernacular_name_bn', 'common_name_bn', 'bengali_common_name',
-      'commonNameBn',
-    ];
-    for (final key in bengaliKeys) {
-      final value = _string(raw[key]);
-      if (value.isNotEmpty && RegExp(r'[\u0980-\u09FF]').hasMatch(value)) {
-        bengaliName = value;
-        break;
-      }
-    }
-
     return WildlifeLiveObservation(
       id: _string(raw['id']).isNotEmpty
           ? _string(raw['id'])
           : '${_string(raw['source'])}-${_string(raw['speciesCode'])}-${_string(raw['obsDt'])}',
       commonName: commonName.isEmpty ? 'বন্যপ্রাণ পর্যবেক্ষণ' : commonName,
-      bengaliName: bengaliName,
       scientificName: scientificName,
       location: _string(raw['location']).isNotEmpty
           ? _string(raw['location'])
@@ -837,34 +817,16 @@ class _WindowsLiveTileState extends State<WindowsLiveTile> {
             left: 6,
             right: 6,
             bottom: 5,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.observation.commonName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                    shadows: [Shadow(blurRadius: 4)],
-                  ),
-                ),
-                if (widget.observation.bengaliName != null && widget.observation.bengaliName!.isNotEmpty)
-                  Text(
-                    widget.observation.bengaliName!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFFB9F6CA),
-                      fontSize: 7,
-                      fontWeight: FontWeight.w600,
-                      shadows: [Shadow(blurRadius: 4)],
-                    ),
-                  ),
-              ],
+            child: Text(
+              widget.observation.commonName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                shadows: [Shadow(blurRadius: 4)],
+              ),
             ),
           ),
         ],
@@ -948,19 +910,6 @@ class _WindowsLiveTileState extends State<WindowsLiveTile> {
                   height: 1.1,
                 ),
               ),
-              if (o.bengaliName != null && o.bengaliName!.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  o.bengaliName!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    color: Color(0xFFB9F6CA),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
               if (o.scientificName.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
@@ -1031,7 +980,6 @@ class IndiaObservationMap extends StatefulWidget {
 }
 
 class _IndiaObservationMapState extends State<IndiaObservationMap> with SingleTickerProviderStateMixin {
-  // Update this path to exactly match where you put the new transparent topography map
   static const String _asset = 'assets/images/india_topo_map.png';
   Rect? _visibleMapRect;
   Size? _assetSize;
@@ -1044,7 +992,6 @@ class _IndiaObservationMapState extends State<IndiaObservationMap> with SingleTi
   void initState() {
     super.initState();
     
-    // Setup pulsating animation
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -1292,13 +1239,10 @@ class _IndiaObservationMarkerPainter extends CustomPainter {
       imageTop + assetY * scaleY,
     );
 
-    // Creates the breathing/pulsating glow effect
     final glowRadius = 4.0 + (10.0 * pulseValue);
     final glowAlpha = (0.8 - (0.6 * pulseValue)).clamp(0.0, 1.0);
     
-    // Green glow as requested
     final glow = Paint()..color = const Color(0xFF00E676).withValues(alpha: glowAlpha);
-    // Red center dot
     final fill = Paint()..color = const Color(0xFFFF1744); 
     final ring = Paint()
       ..color = Colors.white
@@ -1306,8 +1250,8 @@ class _IndiaObservationMarkerPainter extends CustomPainter {
       ..strokeWidth = 1.0;
 
     canvas.drawCircle(point, glowRadius, glow);
-    canvas.drawCircle(point, 2.5, fill);  // Precision center dot
-    canvas.drawCircle(point, 3.5, ring);  // Precision outer ring
+    canvas.drawCircle(point, 2.5, fill);  
+    canvas.drawCircle(point, 3.5, ring);  
   }
 
   @override
@@ -1337,6 +1281,7 @@ class _WildlifeDetailSheet extends StatefulWidget {
 
 class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
   late final AudioPlayer _audioPlayer;
+  late final bool _ambienceWasPlaying;
   bool _isAudioLoading = false;
   bool _isPlaying = false;
   String? _audioError;
@@ -1344,7 +1289,7 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
   @override
   void initState() {
     super.initState();
-    // Wildlife detail is silent until the user explicitly presses Bird Call.
+    _ambienceWasPlaying = ForestAmbienceService.isPlaying;
     unawaited(ForestAmbienceService.stopAmbience());
     _audioPlayer = AudioPlayer();
     _audioPlayer.onPlayerStateChanged.listen((state) {
@@ -1359,6 +1304,9 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    if (_ambienceWasPlaying) {
+      unawaited(ForestAmbienceService.startAmbience());
+    }
     super.dispose();
   }
 
@@ -1368,16 +1316,18 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
     if (_isPlaying) {
       try {
         await _audioPlayer.pause();
+        if (mounted) setState(() => _isPlaying = false);
       } catch (_) {}
       return;
     }
 
-    // If a previous recording was loaded successfully, resume it without
-    // another network request.
     if (_audioPlayer.source != null && _audioError == null) {
       try {
         await ForestAmbienceService.stopAmbience();
-        await _audioPlayer.resume();
+        final source = _audioPlayer.source!;
+        await _audioPlayer.stop();
+        await _audioPlayer.play(source, volume: 1.0);
+        if (mounted) setState(() => _isPlaying = true);
         return;
       } catch (_) {
         try {
@@ -1393,55 +1343,54 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
     });
 
     try {
-      // Bird call always owns the audio channel while it is playing.
       await ForestAmbienceService.stopAmbience();
+      await _audioPlayer.stop();
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+      await _audioPlayer.setVolume(1.0);
 
       final scientific = widget.observation.scientificName.trim();
       final commonName = widget.observation.commonName.trim();
+      final parts = scientific.split(RegExp(r'\s+')).where((x) => x.trim().isNotEmpty).toList();
 
-      final parts = scientific.split(RegExp(r'\s+'));
-      if (parts.length < 2 ||
-          parts[0].trim().isEmpty ||
-          parts[1].trim().isEmpty) {
-        throw Exception('A valid scientific name is required');
+      if (parts.length < 2) {
+        throw Exception('A valid binomial scientific name is required');
       }
 
-      // The Xeno-canto API is now accessed server-side. This is deliberate:
-      // the Xeno-canto API/download key must NEVER be shipped inside Flutter.
-      //
-      // The Supabase function:
-      //   1. searches Xeno-canto by exact scientific name,
-      //   2. validates genus/species,
-      //   3. tries multiple recordings,
-      //   4. downloads the audio server-side,
-      //   5. returns application/octet-stream.
-      //
-      // Supabase's Dart client converts application/octet-stream responses
-      // into Uint8List, which can be played directly with BytesSource.
-      final response = await Supabase.instance.client.functions
+      // Bird calls are resolved server-side. The Flutter app never receives
+      // the Xeno-canto API key and never tries to stream a protected media URL
+      // directly from Windows/Android.
+      final response = await supabase.functions
           .invoke(
             'wildlife-bird-call',
             body: <String, dynamic>{
-              'scientific_name': scientific,
+              'scientific_name': '${parts[0]} ${parts[1]}',
               'common_name': commonName,
             },
-            abortSignal: Future<void>.delayed(const Duration(seconds: 35)),
           )
           .timeout(const Duration(seconds: 40));
 
       final data = response.data;
-      if (data is! Uint8List || data.length < 1024) {
-        throw Exception('The bird-call service returned no valid audio');
+      if (data is Uint8List) {
+        if (data.length < 1024) {
+          throw Exception('The bird-call service returned no valid audio');
+        }
+        await _audioPlayer.play(BytesSource(data), volume: 1.0);
+      } else if (data is String && data.trim().startsWith('http')) {
+        await _audioPlayer.play(UrlSource(data.trim()), volume: 1.0);
+      } else if (data is Map && (data['audio_url'] ?? data['url']) != null) {
+        final url = (data['audio_url'] ?? data['url']).toString().trim();
+        if (!url.startsWith('http')) throw Exception('The bird-call service returned an invalid audio URL');
+        await _audioPlayer.play(UrlSource(url), volume: 1.0);
+      } else {
+        String details = '';
+        if (data is Map) {
+          details = (data['error'] ?? data['message'] ?? '').toString().trim();
+        } else if (data != null) {
+          details = data.toString().trim();
+        }
+        throw Exception(details.isEmpty ? 'The bird-call service returned no valid audio' : details);
       }
-
-      await _audioPlayer.play(BytesSource(data));
-    } on FunctionException catch (e) {
-      if (mounted) {
-        setState(() {
-          _audioError = _friendlyBirdCallError(e);
-        });
-      }
-      debugPrint('Bird call service failed: status=${e.status}, details=${e.details}, reason=${e.reasonPhrase}');
+      if (mounted) setState(() => _isPlaying = true);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -1461,23 +1410,24 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
   String _friendlyBirdCallError(Object error) {
     final text = error.toString().toLowerCase();
 
-    if (text.contains('no playable exact-species recording') ||
-        text.contains('no exact-species recording') ||
+    if (text.contains('no exact-species recording') ||
+        text.contains('no playable exact-species recording') ||
+        text.contains('no playable exact-species') ||
         text.contains('404')) {
-      return 'এই প্রজাতির জন্য এখন কোনও নির্ভরযোগ্য পাখির ডাক পাওয়া যাচ্ছে না। পরে আবার চেষ্টা করুন।';
+      return 'এই প্রজাতির জন্য এখন কোনও নির্ভরযোগ্য পাখির ডাক পাওয়া যাচ্ছে না।';
     }
 
-    if (text.contains('service degraded') ||
-        text.contains('temporarily unavailable') ||
+    if (text.contains('xeno_canto_api_key') ||
+        text.contains('missing_xeno_api_key')) {
+      return 'পাখির ডাক সার্ভিসের API configuration সম্পূর্ণ হয়নি।';
+    }
+
+    if (text.contains('timeout') ||
         text.contains('502') ||
         text.contains('503') ||
         text.contains('504') ||
-        text.contains('timeout')) {
-      return 'পাখির ডাকের সার্ভিসটি এই মুহূর্তে ব্যস্ত বা সাময়িকভাবে unavailable। একটু পরে আবার চেষ্টা করুন।';
-    }
-
-    if (text.contains('valid audio') || text.contains('audio')) {
-      return 'পাখির ডাকটি এখন বাজানো যাচ্ছে না। আবার চেষ্টা করুন।';
+        text.contains('provider unavailable')) {
+      return 'পাখির ডাকের সার্ভিসটি এই মুহূর্তে unavailable। একটু পরে আবার চেষ্টা করুন।';
     }
 
     return 'পাখির ডাকটি এখন বাজানো যাচ্ছে না। আবার চেষ্টা করুন।';
@@ -1537,7 +1487,7 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
                   borderRadius: BorderRadius.circular(13),
                   child: CachedNetworkImage(
                     imageUrl: WildlifeLiveObservation._upgradeWildlifeImageUrl(o.imageUrl!, large: true),
-                    fit: BoxFit.contain, // CRITICAL FIX: Ensures no part of the bird is cut off
+                    fit: BoxFit.contain, 
                     errorWidget: (_, __, ___) => const Center(child: Icon(Icons.image_not_supported_rounded, color: Color(0xFF69F0AE))),
                   ),
                 ),
@@ -1552,17 +1502,6 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
             ),
             const SizedBox(height: 8),
             Text(o.commonName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            if (o.bengaliName != null && o.bengaliName!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                o.bengaliName!,
-                style: const TextStyle(
-                  color: Color(0xFFB9F6CA),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
             if (o.scientificName.isNotEmpty) ...[
               const SizedBox(height: 3),
               Text(o.scientificName, style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic)),
@@ -1748,9 +1687,6 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Home is intentionally silent even if ambience was playing before
-    // navigation reached this screen.
-    unawaited(ForestAmbienceService.stopAmbience());
     _newsPageController = PageController(viewportFraction: 0.85);
     _refreshVisibleNewsWindow();
     loadData();
@@ -1768,7 +1704,6 @@ class HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _autoShuffleTimer?.cancel();
     _liveWildlifeRefreshTimer?.cancel();
-    unawaited(ForestAmbienceService.stopAmbience());
     _newsPageController.dispose();
     super.dispose();
   }
@@ -1830,27 +1765,7 @@ class HomeScreenState extends State<HomeScreen> {
           }
         }
       }
-
-      // Bengali name enrichment is deliberately done after the feed is
-      // assembled, in parallel, so a slow name lookup never serially delays
-      // the wildlife/image pipeline. Missing names are harmless.
-      final enriched = await Future.wait(
-        verified.map((observation) async {
-          if (observation.bengaliName != null && observation.bengaliName!.trim().isNotEmpty) {
-            return observation;
-          }
-          final bengaliName = await WildlifeBengaliNameService.resolve(
-            scientificName: observation.scientificName,
-          );
-          return bengaliName == null || bengaliName.isEmpty
-              ? observation
-              : observation.copyWith(bengaliName: bengaliName);
-        }),
-      );
-      verified
-        ..clear()
-        ..addAll(enriched);
-
+      
       if (!mounted) return;
       setState(() {
         _liveWildlife = verified;
@@ -2921,7 +2836,7 @@ class HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 158,
+            height: 132,
             child: _loadingLiveWildlife && _liveWildlife.isEmpty
                 ? const Center(
                     child: SizedBox(
@@ -2968,8 +2883,8 @@ class HomeScreenState extends State<HomeScreen> {
                                   visibleObservations[index];
 
                               return SizedBox(
-                                width: 132,
-                                height: 150,
+                                width: 124,
+                                height: 124,
                                 child: WindowsLiveTile(
                                   key: ValueKey(observation.id),
                                   observation: observation,
@@ -3253,11 +3168,11 @@ class HomeScreenState extends State<HomeScreen> {
                                         Expanded(
                                           flex: compact ? 1 : artFlex.toInt(),
                                           child: Container(
-                                            color: const Color(0xFF0A120D), // ADDED: Letterboxing color
+                                            color: const Color(0xFF0A120D),
                                             child: ClipRect(
                                               child: NewsImageWidget(
                                                 item: item, 
-                                                fit: BoxFit.contain // FIX: Added fit contain to prevent cropping
+                                                fit: BoxFit.contain 
                                               ),
                                             ),
                                           ),
@@ -3538,8 +3453,8 @@ class HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildHomeGameTile(
                     context,
-                    'আলোকচিত্র চেনা',
-                    'Identify Photos',
+                    'ছবি দেখে চিনুন',
+                    'Identify from Picture',
                     'assets/images/identify_image.png',
                     const Color(0xFF2E7D32),
                     'photo',
@@ -3547,7 +3462,7 @@ class HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (_) =>
-                            const WildlifeQuizGame(type: 'photo'))),
+                            const WildlifeQuizGame(type: 'photo', difficulty: 'medium'))),
                   ),
                   const SizedBox(width: 12),
                   _buildHomeGameTile(
@@ -3561,7 +3476,7 @@ class HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (_) =>
-                            const WildlifeQuizGame(type: 'audio'))),
+                            const WildlifeQuizGame(type: 'audio', difficulty: 'medium'))),
                   ),
                   const SizedBox(width: 12),
                   _buildHomeGameTile(
@@ -3575,7 +3490,7 @@ class HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (_) =>
-                            const WildlifeQuizGame(type: 'hint'))),
+                            const WildlifeQuizGame(type: 'hint', difficulty: 'medium'))),
                   ),
                   const SizedBox(width: 12),
                   _buildHomeGameTile(
@@ -3588,7 +3503,7 @@ class HomeScreenState extends State<HomeScreen> {
                         () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const ScrambledImageGame())),
+                            builder: (_) => const ScrambledImageGame(difficulty: 'medium'))),
                   ),
                   const SizedBox(width: 12),
                   _buildHomeGameTile(
@@ -3601,7 +3516,7 @@ class HomeScreenState extends State<HomeScreen> {
                         () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const WordPuzzleGame())),
+                            builder: (_) => const WordPuzzleGame(difficulty: 'medium'))),
                   ),
                 ],
               ),
@@ -3630,7 +3545,7 @@ class HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 12),
                   const Text('🌿 প্রকৃতি নিয়ে আপনার ভাবনা আমাদের সঙ্গে ভাগ করে নিন', style: TextStyle(color: Color(0xFF81C784), fontWeight: FontWeight.bold, fontSize: 13)),
                   const SizedBox(height: 6),
-                  const Text('প্রকৃতি, বন, বন্যপ্রাণী, পাখি বা পরিবেশ নিয়ে আপনার অভিজ্ঞতা, পর্যবেক্ষণ এবং ভাবনা পৌঁছে দিন এখন আরণ্যক-এর কাছে।\n\nআপনার লেখা প্রবন্ধ (এক হাজার শব্দের মধ্যে) এবং সেই বিষয়ের সঙ্গে সম্পর্কিত আপনার নিজের তোলা ছবি ক্যামাদের পাঠাতে পারেন।\n\nনির্বাচিত লেখা ও ছবি প্রকাশিত হতে পারে এখন আরণ্যক App-এ।\n\n🌿 লিখুন। প্রকৃতিকে অনুভব করুন। আপনার অভিজ্ঞতা অন্যদের সঙ্গে ভাগ করে নিন।', style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
+                  const Text('প্রকৃতি, বন, বন্যপ্রাণী, পাখি বা পরিবেশ নিয়ে আপনার অভিজ্ঞতা, পর্যবেক্ষণ এবং ভাবনা পৌঁছে দিন এখন আরণ্যক-এর কাছে।\n\nআপনার লেখা প্রবন্ধ (এক হাজার শব্দের মধ্যে) এবং সেই বিষয়ের সঙ্গে সম্পর্কিত আপনার নিজের তোলা ছবি আমাদের পাঠাতে পারেন।\n\nনির্বাচিত লেখা ও ছবি প্রকাশিত হতে পারে এখন আরণ্যক App-এ।\n\n🌿 লিখুন। প্রকৃতিকে অনুভব করুন। আপনার অভিজ্ঞতা অন্যদের সঙ্গে ভাগ করে নিন।', style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,

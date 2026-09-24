@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../core/config.dart';
+import '../services/forest_ambience_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 
 // ============================================================================
@@ -199,6 +201,7 @@ class WordPuzzleItem {
 class GameQuestion {
   final String id;
   final String category;
+  final String difficulty;
   final String english;
   final String bengali;
   final String question;
@@ -210,12 +213,15 @@ class GameQuestion {
   final String? imageSource;
   final String? audioSource;
   final String? attribution;
+  final String? source;
+  final String? generationProvider;
   final String? bengaliWord;
   final List<String> syllables;
 
   const GameQuestion({
     required this.id,
     required this.category,
+    required this.difficulty,
     required this.english,
     required this.bengali,
     required this.question,
@@ -227,6 +233,8 @@ class GameQuestion {
     this.imageSource,
     this.audioSource,
     this.attribution,
+    this.source,
+    this.generationProvider,
     this.bengaliWord,
     this.syllables = const [],
   });
@@ -263,6 +271,8 @@ class GameQuestion {
 
     final m = <String, dynamic>{...nested, ...raw};
     final category = _string(m['category']).toLowerCase();
+    final difficultyRaw = _string(m['difficulty']).toLowerCase();
+    final difficulty = const {'easy', 'medium', 'hard'}.contains(difficultyRaw) ? difficultyRaw : 'medium';
     final english = _string(
       m['english'] ?? m['species'] ?? m['common_name'] ?? m['commonName'] ?? m['name'] ?? m['title'],
     );
@@ -277,7 +287,9 @@ class GameQuestion {
     final audioUrl = _string(m['audio_url'] ?? m['audioUrl'] ?? m['recording_url']);
     final imageSource = _string(m['image_source'] ?? m['imageSource']);
     final audioSource = _string(m['audio_source'] ?? m['audioSource']);
-    final attribution = _string(m['attribution'] ?? m['credit'] ?? m['author'] ?? m['source']);
+    final attribution = _string(m['attribution'] ?? m['credit'] ?? m['author']);
+    final source = _string(m['source']);
+    final generationProvider = _string(m['generation_provider'] ?? m['generationProvider']);
     final bengaliWord = _string(m['bengali_word'] ?? m['bengaliWord'] ?? m['word_bn'] ?? bengali);
     var syllables = _strings(m['syllables'] ?? m['tiles'] ?? m['letters']);
 
@@ -290,6 +302,7 @@ class GameQuestion {
     return GameQuestion(
       id: _string(m['id']).isEmpty ? '${category}_${english}_$bengali' : _string(m['id']),
       category: category,
+      difficulty: difficulty,
       english: english,
       bengali: bengali,
       question: question,
@@ -301,6 +314,8 @@ class GameQuestion {
       imageSource: imageSource.isEmpty ? null : imageSource,
       audioSource: audioSource.isEmpty ? null : audioSource,
       attribution: attribution.isEmpty ? null : attribution,
+      source: source.isEmpty ? null : source,
+      generationProvider: generationProvider.isEmpty ? null : generationProvider,
       bengaliWord: bengaliWord.isEmpty ? null : bengaliWord,
       syllables: syllables,
     );
@@ -322,131 +337,298 @@ class BengaliGrapheme {
   }
 }
 
+Widget _resourceAcknowledgement({String? source, String? attribution}) {
+  final s = source?.trim() ?? '';
+  final a = attribution?.replaceAll(RegExp(r'<[^>]*>'), '').trim() ?? '';
+  if (s.isEmpty && a.isEmpty) return const SizedBox.shrink();
+  return Container(
+    width: double.infinity, margin: const EdgeInsets.only(top: 12), padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(color: Colors.white.withOpacity(.035), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white10)),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Icon(Icons.info_outline, size: 15, color: Colors.white54), const SizedBox(width: 7),
+      Expanded(child: Text([if (s.isNotEmpty) 'Source: $s', if (a.isNotEmpty) 'Credit: $a'].join('\n'), style: const TextStyle(color: Colors.white54, fontSize: 9.5, height: 1.35))),
+    ]),
+  );
+}
+
 class WildlifeGameData {
+  // The database is the authoritative source.  Visual games deliberately use
+  // one shared, deduplicated image universe so a bird that has a Bengali name
+  // can also appear in Photo and Scrambled Image, and wildlife images from
+  // iNaturalist/Wikimedia are not trapped inside one category.
   static const int startingQuestionsPerCategory = 20;
-  static const Set<String> supportedCategories = {'photo', 'audio', 'hint', 'scramble', 'word'};
+  static const Set<String> supportedCategories = {
+    'photo', 'audio', 'hint', 'scramble', 'word'
+  };
 
   static final Map<String, List<GameQuestion>> _bank = {
     for (final category in supportedCategories) category: <GameQuestion>[],
   };
+
   static bool loaded = false;
   static String? lastError;
 
-  static List<GameQuestion> get(String category) => List.unmodifiable(_bank[category] ?? const []);
+  static List<GameQuestion> get(String category) =>
+      List.unmodifiable(_bank[category] ?? const []);
+
+  static List<GameQuestion> getByDifficulty(String category, String difficulty) =>
+      get(category)
+          .where((q) => q.category == category && q.difficulty == difficulty)
+          .toList();
+
+  static int count(String category, String difficulty) =>
+      getByDifficulty(category, difficulty).length;
+
+  static String _norm(String value) =>
+      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
+
+  static String _imageIdentity(String value) {
+    return value.trim().replaceAll(
+      RegExp(r'/(?:square|tiny|small|medium|large|original)\.', caseSensitive: false),
+      '/IMAGE.',
+    );
+  }
+
+  static bool _isWordQuestion(GameQuestion q) {
+    final source = (q.source ?? '').trim().toLowerCase();
+    final provider = (q.generationProvider ?? '').trim().toLowerCase();
+    final question = q.question.trim();
+    final answer = (q.bengaliWord ?? q.bengali).replaceAll(RegExp(r'\s+'), '');
+    return source == 'naturesbook' &&
+        provider == "nature's book" &&
+        question == 'বাংলা নামটি অক্ষর সাজিয়ে সম্পূর্ণ করুন' &&
+        answer.isNotEmpty &&
+        q.syllables.isNotEmpty;
+  }
+
+  static bool _isUsableRaw(GameQuestion q) {
+    if (q.english.trim().isEmpty || q.bengali.trim().isEmpty) return false;
+    switch (q.category) {
+      case 'photo':
+        return q.imageUrl?.trim().isNotEmpty == true &&
+            q.options.map((x) => x.trim()).where((x) => x.isNotEmpty).toSet().length == 4 &&
+            (q.answer?.trim().isNotEmpty ?? false) &&
+            q.options.contains(q.answer);
+      case 'audio':
+        return q.audioUrl?.trim().isNotEmpty == true &&
+            q.options.map((x) => x.trim()).where((x) => x.isNotEmpty).toSet().length == 4 &&
+            (q.answer?.trim().isNotEmpty ?? false) &&
+            q.options.contains(q.answer);
+      case 'hint':
+        return q.hints.length >= 3 &&
+            q.options.map((x) => x.trim()).where((x) => x.isNotEmpty).toSet().length == 4 &&
+            (q.answer?.trim().isNotEmpty ?? false);
+      case 'scramble':
+        return q.imageUrl?.trim().isNotEmpty == true;
+      case 'word':
+        return _isWordQuestion(q) && q.imageUrl?.trim().isNotEmpty == true;
+      default:
+        return false;
+    }
+  }
+
+  static List<GameQuestion> _dedupeBySpeciesAndImage(List<GameQuestion> source) {
+    final result = <GameQuestion>[];
+    final seenSpecies = <String>{};
+    final seenImages = <String>{};
+
+    // Prefer the Bengali-name record when the exact same image exists there;
+    // it is the broadest verified visual source in the current bank.
+    final ordered = [...source]
+      ..sort((a, b) {
+        int rank(GameQuestion q) => q.category == 'word' ? 0 : q.category == 'photo' ? 1 : 2;
+        return rank(a).compareTo(rank(b));
+      });
+
+    for (final q in ordered) {
+      final speciesKey = _norm(q.english);
+      final imageKey = _imageIdentity(q.imageUrl ?? '');
+      if (speciesKey.isEmpty || imageKey.isEmpty) continue;
+      if (!seenSpecies.add(speciesKey)) continue;
+      if (!seenImages.add(imageKey)) {
+        seenSpecies.remove(speciesKey);
+        continue;
+      }
+      result.add(q);
+    }
+    return result;
+  }
+
+  static String _visualDifficulty(int index, String sourceDifficulty) {
+    // Keep explicitly hard/medium records, but distribute the much larger
+    // Bengali bird image pool across all three game levels when its source
+    // bank contains only one difficulty.
+    if (sourceDifficulty == 'hard' || sourceDifficulty == 'medium') {
+      return sourceDifficulty;
+    }
+    const cycle = ['easy', 'medium', 'hard'];
+    return cycle[index % cycle.length];
+  }
+
+  static List<String> _makeOptions(
+    GameQuestion target,
+    List<GameQuestion> visualPool,
+    int index,
+  ) {
+    final correct = target.label;
+    final distractors = <String>[];
+    final seen = <String>{_norm(correct)};
+    final candidates = [...visualPool]..shuffle(math.Random(index + 17));
+
+    // Prefer taxonomically different labels; the bank itself remains the
+    // authority for names, while this function only constructs the UI choices.
+    for (final candidate in candidates) {
+      final label = candidate.label.trim();
+      final key = _norm(label);
+      if (key.isEmpty || seen.contains(key)) continue;
+      seen.add(key);
+      distractors.add(label);
+      if (distractors.length == 3) break;
+    }
+    if (distractors.length < 3) return const [];
+    return <String>[correct, ...distractors]..shuffle(math.Random(index + 91));
+  }
+
+  static GameQuestion _asPhotoQuestion(
+    GameQuestion source,
+    List<GameQuestion> visualPool,
+    int index,
+  ) {
+    final options = source.options.length == 4 &&
+            source.options.contains(source.label)
+        ? List<String>.from(source.options)
+        : _makeOptions(source, visualPool, index);
+    return GameQuestion(
+      id: 'derived_photo_${source.id}',
+      category: 'photo',
+      difficulty: _visualDifficulty(index, source.difficulty),
+      english: source.english,
+      bengali: source.bengali,
+      question: 'ছবি দেখে চিনুন',
+      options: options,
+      answer: source.label,
+      hints: source.hints,
+      imageUrl: source.imageUrl,
+      imageSource: source.imageSource ?? source.source,
+      attribution: source.attribution,
+      source: source.source,
+      generationProvider: source.generationProvider,
+    );
+  }
+
+  static GameQuestion _asScrambleQuestion(GameQuestion source, int index) {
+    return GameQuestion(
+      id: 'derived_scramble_${source.id}',
+      category: 'scramble',
+      difficulty: _visualDifficulty(index, source.difficulty),
+      english: source.english,
+      bengali: source.bengali,
+      question: 'ছবিটি সাজিয়ে প্রাণীটিকে চিনুন',
+      options: const [],
+      answer: source.english,
+      hints: source.hints,
+      imageUrl: source.imageUrl,
+      imageSource: source.imageSource ?? source.source,
+      attribution: source.attribution,
+      source: source.source,
+      generationProvider: source.generationProvider,
+    );
+  }
+
+  static void _buildUniversalVisualBank(List<GameQuestion> parsed) {
+    final visualSources = parsed
+        .where((q) =>
+            (q.category == 'photo' ||
+                q.category == 'scramble' ||
+                q.category == 'word') &&
+            q.imageUrl?.trim().isNotEmpty == true)
+        .toList();
+
+    final visualPool = _dedupeBySpeciesAndImage(visualSources);
+
+    final photos = <GameQuestion>[];
+    final scrambles = <GameQuestion>[];
+    for (var i = 0; i < visualPool.length; i++) {
+      final source = visualPool[i];
+      final photo = _asPhotoQuestion(source, visualPool, i);
+      if (photo.options.length == 4) photos.add(photo);
+      scrambles.add(_asScrambleQuestion(source, i));
+    }
+
+    _bank['photo'] = photos;
+    _bank['scramble'] = scrambles;
+
+    // Hints are intentionally a subset: a species enters this category only
+    // when the authoritative bank actually provides characteristic hints.
+    final hints = <GameQuestion>[];
+    final seenHintSpecies = <String>{};
+    for (final q in parsed) {
+      if (q.hints.length < 3 || q.options.length != 4 || q.answer == null) continue;
+      if (!seenHintSpecies.add(_norm(q.english))) continue;
+      hints.add(GameQuestion(
+        id: 'derived_hint_${q.id}',
+        category: 'hint',
+        difficulty: q.difficulty,
+        english: q.english,
+        bengali: q.bengali,
+        question: 'ইঙ্গিতগুলি পড়ে চিনুন',
+        options: List<String>.from(q.options),
+        answer: q.answer,
+        hints: q.hints.take(3).toList(),
+        imageUrl: q.imageUrl,
+        imageSource: q.imageSource ?? q.source,
+        attribution: q.attribution,
+        source: q.source,
+        generationProvider: q.generationProvider,
+      ));
+    }
+    _bank['hint'] = hints;
+  }
 
   static Future<void> loadGameBank() async {
     lastError = null;
     try {
-      // The app must play the current weekly selection, not the entire active
-      // bank. The permanent bank remains in game_questions; weekly_challenges
-      // decides which questions are playable this week.
-      final weeklyResponse = await supabase
-          .from('weekly_challenges')
-          .select('week_start,category,question_ids')
-          .order('week_start', ascending: false)
-          .limit(5);
-
-      final weeklyRows = (weeklyResponse as List)
-          .whereType<Map>()
-          .map((row) => Map<String, dynamic>.from(row))
-          .toList();
-
-      final latestWeek = weeklyRows
-          .map((row) => row['week_start']?.toString() ?? '')
-          .where((value) => value.isNotEmpty)
-          .fold<String>('', (current, value) => value.compareTo(current) > 0 ? value : current);
-
-      if (latestWeek.isEmpty) {
-        throw Exception('No current weekly game challenge is available.');
-      }
-
-      final idsByCategory = <String, List<String>>{};
-      for (final row in weeklyRows.where((row) => row['week_start']?.toString() == latestWeek)) {
-        final category = row['category']?.toString().toLowerCase() ?? '';
-        final ids = row['question_ids'];
-        if (!supportedCategories.contains(category) || ids is! List) continue;
-        idsByCategory[category] = ids
-            .map((id) => id.toString())
-            .where((id) => id.isNotEmpty)
-            .toList();
-      }
-
-      final allIds = idsByCategory.values.expand((ids) => ids).toSet().toList();
-      if (allIds.isEmpty) {
-        throw Exception('The current weekly challenge contains no question IDs.');
-      }
-
       final response = await supabase
           .from('game_questions')
           .select()
-          .inFilter('id', allIds)
-          .eq('active', true);
+          .eq('active', true)
+          .order('created_at', ascending: false);
 
-      final questionMap = <String, GameQuestion>{};
-      for (final raw in (response as List).whereType<Map>()) {
-        final q = GameQuestion.fromRow(Map<String, dynamic>.from(raw));
-        if (q.id.isNotEmpty && q.english.isNotEmpty) {
-          questionMap[q.id] = q;
-        }
-      }
-
-      for (final category in supportedCategories) {
-        final seen = <String>{};
-        final seenAnswers = <String>{};
-        final orderedIds = idsByCategory[category] ?? const <String>[];
-        _bank[category] = orderedIds
-            .map((id) => questionMap[id])
-            .whereType<GameQuestion>()
-            .where((q) {
-              // Bengali Bird Puzzle must never repeat the same Bengali answer
-              // within a weekly set, even if two species share an alias.
-              if (category == 'word') {
-                final key = (q.bengaliWord ?? q.bengali)
-                    .replaceAll(RegExp(r'\s+'), '')
-                    .toLowerCase();
-                return key.isNotEmpty && seenAnswers.add(key);
-              }
-              return seen.add(q.id);
-            })
-            .toList();
-      }
-
-      final missing = allIds.where((id) => !questionMap.containsKey(id)).toList();
-      if (missing.isNotEmpty) {
-        lastError = 'Some weekly game questions are missing or inactive (${missing.length}).';
-      }
-
-      final emptyCategories = supportedCategories
-          .where((category) => (_bank[category]?.isNotEmpty ?? false) == false)
+      final parsed = (response as List)
+          .whereType<Map>()
+          .map((row) => GameQuestion.fromRow(Map<String, dynamic>.from(row)))
+          .where((q) => supportedCategories.contains(q.category) && _isUsableRaw(q))
           .toList();
-      if (emptyCategories.isNotEmpty) {
-        throw Exception('No playable questions for: ${emptyCategories.join(', ')}');
+
+      // The universal visual bank is intentionally built BEFORE category
+      // partitioning. This is what allows the same verified photograph to be
+      // reused by Photo and Scrambled Image without duplicating species names.
+      _buildUniversalVisualBank(parsed);
+
+      final audio = <GameQuestion>[];
+      final seenAudio = <String>{};
+      for (final q in parsed.where((q) => q.category == 'audio')) {
+        final key = '${_norm(q.english)}|${q.audioUrl?.trim()}';
+        if (seenAudio.add(key)) audio.add(q);
       }
+      _bank['audio'] = audio;
+
+      final words = <GameQuestion>[];
+      final seenWords = <String>{};
+      for (final q in parsed.where((q) => q.category == 'word')) {
+        final key = (q.bengaliWord ?? q.bengali).replaceAll(RegExp(r'\s+'), '').toLowerCase();
+        if (key.isNotEmpty && seenWords.add(key)) words.add(q);
+      }
+      _bank['word'] = words;
 
       loaded = true;
-    } catch (e) {
-      // Legacy compatibility only. We do not hardcode game content here.
-      try {
-        final response = await supabase
-            .from('game_questions')
-            .select()
-            .eq('active', true)
-            .order('created_at', ascending: false);
-        final parsed = (response as List)
-            .whereType<Map>()
-            .map((row) => GameQuestion.fromRow(Map<String, dynamic>.from(row)))
-            .where((q) => supportedCategories.contains(q.category) && q.english.isNotEmpty)
-            .toList();
-        for (final category in supportedCategories) {
-          _bank[category] = parsed.where((q) => q.category == category).take(startingQuestionsPerCategory).toList();
-        }
-        loaded = true;
-        lastError = 'Weekly game data could not be loaded; temporary active-bank fallback used: $e';
-      } catch (legacyError) {
-        loaded = false;
-        lastError = 'Unable to load game bank: $e; fallback read: $legacyError';
-        rethrow;
+      if (_bank['photo']!.isEmpty || _bank['scramble']!.isEmpty) {
+        lastError = 'No usable wildlife photographs are currently available.';
       }
+    } catch (e) {
+      loaded = false;
+      lastError = 'Unable to load the wildlife game bank: $e';
+      rethrow;
     }
   }
 }
@@ -498,19 +680,24 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
     await _load();
   }
 
-  void _startQuiz(BuildContext context, String type) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => WildlifeQuizGame(type: type)),
-    );
+  void _startCategory(BuildContext context, String category) { _showDifficultyPicker(context, category); }
+
+  void _showDifficultyPicker(BuildContext context, String category) {
+    final names = {
+      'photo': ('আলোকচিত্র চেনা', 'Identify from Photos'), 'audio': ('ডাক শুনে চেনা', 'Recognize by Call'),
+      'hint': ('ইঙ্গিত বুঝে চেনা', 'Identify from Hints'), 'scramble': ('টুকরো ছবি জোড়া', 'Scrambled Image'), 'word': ('শব্দ-জব্দ', 'Bengali Bird Puzzle'),
+    };
+    const levels = [('easy','সহজ','Easy',Color(0xFF43A047)),('medium','মাঝারি','Medium',Color(0xFFFFA000)),('hard','কঠিন','Hard',Color(0xFFE53935))];
+    showModalBottomSheet(context: context, backgroundColor: const Color(0xFF18221B), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))), builder: (sheet) => SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(18,18,18,20), child: Column(mainAxisSize: MainAxisSize.min, children: [
+      Container(width:42,height:4,decoration:BoxDecoration(color:Colors.white24,borderRadius:BorderRadius.circular(4))), const SizedBox(height:14),
+      Text(names[category]!.$1,style:const TextStyle(color:Colors.white,fontSize:19,fontWeight:FontWeight.bold)), Text(names[category]!.$2,style:const TextStyle(color:Color(0xFF81C784),fontSize:11)), const SizedBox(height:15),
+      ...levels.map((l) { final count=WildlifeGameData.count(category,l.$1); final available=count>0; return Padding(padding:const EdgeInsets.only(bottom:9),child:InkWell(borderRadius:BorderRadius.circular(14),onTap:!available?null:(){Navigator.pop(sheet);_launchDifficulty(context,category,l.$1);},child:Container(padding:const EdgeInsets.symmetric(horizontal:15,vertical:13),decoration:BoxDecoration(color:available?l.$4.withOpacity(.13):Colors.white.withOpacity(.035),borderRadius:BorderRadius.circular(14),border:Border.all(color:available?l.$4.withOpacity(.45):Colors.white12)),child:Row(children:[Container(width:12,height:12,decoration:BoxDecoration(color:available?l.$4:Colors.white24,shape:BoxShape.circle)),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(l.$2,style:TextStyle(color:available?Colors.white:Colors.white38,fontWeight:FontWeight.bold,fontSize:15)),Text(l.$3,style:TextStyle(color:available?Colors.white60:Colors.white24,fontSize:10))])),Text(available?'$count questions':'Unavailable',style:TextStyle(color:available?Colors.white70:Colors.white30,fontSize:11)),const SizedBox(width:7),Icon(Icons.arrow_forward_ios_rounded,size:14,color:available?Colors.white54:Colors.white24)])))); }),
+    ]))));
   }
 
-  void _startScramble(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const ScrambledImageGame()));
-  }
-
-  void _startWordPuzzle(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const WordPuzzleGame()));
+  void _launchDifficulty(BuildContext context, String category, String difficulty) {
+    final page = category == 'scramble' ? ScrambledImageGame(difficulty:difficulty) : category == 'word' ? WordPuzzleGame(difficulty:difficulty) : WildlifeQuizGame(type:category,difficulty:difficulty);
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
   }
 
   @override
@@ -607,17 +794,21 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: crossAxisCount == 4 ? 1.05 : .96,
+            childAspectRatio: crossAxisCount == 4 ? 1.02 : .78,
             children: [
-              _buildGameCard(context, 'আলোকচিত্র চেনা', 'Identify from Photos', 'assets/images/identify_image.png', const Color(0xFF2E7D32), 'দেখে চিনুন', () => _startQuiz(context, 'photo')),
-              _buildGameCard(context, 'ডাক শুনে চেনা', 'Recognize by Call', 'assets/images/identify_call.png', const Color(0xFF00897B), 'শুনে চিনুন', () => _startQuiz(context, 'audio')),
-              _buildGameCard(context, 'ইঙ্গিত বুঝে চেনা', 'Identify from Hints', 'assets/images/identify_clue.png', const Color(0xFF6A1B9A), 'ইঙ্গিত ধরুন', () => _startQuiz(context, 'hint')),
-              _buildGameCard(context, 'টুকরো ছবি জোড়া', 'Scrambled Image', 'assets/images/zigshaw_puzzle.png', const Color(0xFFE65100), 'ছবি মিলিয়ে নিন', () => _startScramble(context)),
-              _buildGameCard(context, 'শব্দ-জব্দ', 'Bengali Bird Puzzle', 'assets/images/crossword.png', const Color(0xFF1565C0), 'শব্দ সাজান', () => _startWordPuzzle(context)),
+              _buildGameCard(context, 'আলোকচিত্র চেনা', 'Identify from Photos', 'assets/images/identify_image.png', const Color(0xFF2E7D32), 'দেখে চিনুন', 'photo', () => _startCategory(context, 'photo')),
+              _buildGameCard(context, 'ডাক শুনে চেনা', 'Recognize by Call', 'assets/images/identify_call.png', const Color(0xFF00897B), 'শুনে চিনুন', 'audio', () => _startCategory(context, 'audio')),
+              _buildGameCard(context, 'ইঙ্গিত বুঝে চেনা', 'Identify from Hints', 'assets/images/identify_clue.png', const Color(0xFF6A1B9A), 'ইঙ্গিত ধরুন', 'hint', () => _startCategory(context, 'hint')),
+              _buildGameCard(context, 'টুকরো ছবি জোড়া', 'Scrambled Image', 'assets/images/zigshaw_puzzle.png', const Color(0xFFE65100), 'ছবি মিলিয়ে নিন', 'scramble', () => _startCategory(context, 'scramble')),
+              _buildGameCard(context, 'শব্দ-জব্দ', 'Bengali Bird Puzzle', 'assets/images/crossword.png', const Color(0xFF1565C0), 'শব্দ সাজান', 'word', () => _startCategory(context, 'word')),
             ],
           );
         },
       );
+
+  Widget _difficultySummary(String category) => Wrap(spacing:5,runSpacing:4,children:[_levelChip('সহজ',WildlifeGameData.count(category,'easy'),const Color(0xFF43A047)),_levelChip('মাঝারি',WildlifeGameData.count(category,'medium'),const Color(0xFFFFA000)),_levelChip('কঠিন',WildlifeGameData.count(category,'hard'),const Color(0xFFE53935))]);
+
+  Widget _levelChip(String label,int count,Color color)=>Container(padding:const EdgeInsets.symmetric(horizontal:6,vertical:3),decoration:BoxDecoration(color:count>0?color.withOpacity(.12):Colors.white.withOpacity(.035),borderRadius:BorderRadius.circular(10),border:Border.all(color:count>0?color.withOpacity(.35):Colors.white10)),child:Text('$label $count',style:TextStyle(color:count>0?Colors.white70:Colors.white24,fontSize:7.5,fontWeight:FontWeight.w600)));
 
   Widget _buildGameCard(
     BuildContext context,
@@ -626,6 +817,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
     String imageAsset,
     Color color,
     String action,
+    String category,
     VoidCallback onTap,
   ) {
     return KeyboardPressEffect(
@@ -701,6 +893,8 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 9.5, color: Colors.white70),
               ),
+              const SizedBox(height: 7),
+              _difficultySummary(category),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -732,7 +926,8 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
 
 class WildlifeQuizGame extends StatefulWidget {
   final String type;
-  const WildlifeQuizGame({super.key, required this.type});
+  final String difficulty;
+  const WildlifeQuizGame({super.key, required this.type, required this.difficulty});
 
   @override
   State<WildlifeQuizGame> createState() => _WildlifeQuizGameState();
@@ -761,7 +956,7 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
   }
 
   Future<void> _initQuiz() async {
-    final pool = WildlifeGameData.get(widget.type).toList()..shuffle();
+    final pool = WildlifeGameData.getByDifficulty(widget.type, widget.difficulty)..shuffle();
     _questions = pool.take(WildlifeGameData.startingQuestionsPerCategory).toList();
     _currentIndex = 0;
     _score = 0;
@@ -833,7 +1028,7 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
 
   void _handleAnswer(String option) {
     if (_answered || _loading || _questions.isEmpty) return;
-    _quizAudioPlayer?.stop();
+    if (_quizAudioPlayer != null) unawaited(_quizAudioPlayer!.stop());
     final q = _questions[_currentIndex];
     final correct = q.answer?.trim().isNotEmpty == true ? q.answer!.trim() : q.label;
     final isCorrect = option == correct || _sameAnswer(option, q);
@@ -875,6 +1070,8 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
     await _loadCurrentMedia();
   }
 
+  String _difficultyLabel(String value) => value == 'easy' ? 'সহজ' : value == 'hard' ? 'কঠিন' : 'মাঝারি';
+
   void _showFinalScore() {
     if (!mounted) return;
     showDialog(
@@ -891,8 +1088,32 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
 
   @override
   void dispose() {
+    if (_quizAudioPlayer != null) unawaited(_quizAudioPlayer!.stop());
     _quizAudioPlayer?.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleQuizAudio() async {
+    final player = _quizAudioPlayer;
+    final url = _media?.audioUrl?.trim();
+    if (player == null || url == null || url.isEmpty || _audioPlaying) {
+      if (_audioPlaying) {
+        try { await player?.pause(); } catch (_) {}
+        if (mounted) setState(() => _audioPlaying = false);
+      }
+      return;
+    }
+
+    try {
+      await ForestAmbienceService.stopAmbience();
+      await player.stop();
+      await player.setReleaseMode(ReleaseMode.stop);
+      if (mounted) setState(() => _audioPlaying = true);
+      await player.play(UrlSource(url), volume: 1.0);
+    } catch (e) {
+      debugPrint('Quiz bird-call playback failed: $e');
+      if (mounted) setState(() => _audioPlaying = false);
+    }
   }
 
   @override
@@ -911,9 +1132,24 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D1410),
       appBar: AppBar(
-        title: Text(widget.type == 'photo' ? 'PHOTO QUIZ' : widget.type == 'audio' ? 'AUDIO QUIZ' : 'HINT QUIZ'),
+        title: Text(
+          '${widget.type == 'photo' ? 'ছবি দেখে চিনুন' : widget.type == 'audio' ? 'পাখির ডাক শুনে চিনুন' : 'ইঙ্গিত দেখে চিনুন'} • ${_difficultyLabel(widget.difficulty)}',
+        ),
         backgroundColor: Colors.transparent,
-        actions: [Center(child: Padding(padding: const EdgeInsets.only(right: 16), child: Text('$_score / ${_currentIndex + (_answered ? 1 : 0)}', style: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold))))],
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Text(
+                '$_score / ${_currentIndex + (_answered ? 1 : 0)}',
+                style: const TextStyle(
+                  color: Color(0xFF00E676),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -922,7 +1158,17 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
           children: [
             LinearProgressIndicator(value: (_currentIndex + 1) / _questions.length, backgroundColor: Colors.white12, color: const Color(0xFF00E676)),
             const SizedBox(height: 18),
-            Text(current.question.isEmpty ? 'চিনে নিন' : current.question, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+            Text(
+              widget.type == 'photo'
+                  ? 'ছবি দেখে চিনুন'
+                  : (current.question.isEmpty ? 'চিনে নিন' : current.question),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 12),
             if (widget.type == 'photo') _buildPhotoArea() else if (widget.type == 'audio') _buildAudioArea() else _buildHintArea(current),
             const SizedBox(height: 12),
@@ -950,9 +1196,10 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
               );
             }),
             const SizedBox(height: 8),
-            if (_answered)
-              KeyboardPressEffect(onTap: _nextQuestion, child: Container(height: 52, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0xFF00E676), borderRadius: BorderRadius.circular(10)), child: Text(_currentIndex == _questions.length - 1 ? 'Finish (শেষ)' : 'Next (পরবর্তী)', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black))))
-            else
+            if (_answered) ...[
+              KeyboardPressEffect(onTap: _nextQuestion, child: Container(height: 52, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0xFF00E676), borderRadius: BorderRadius.circular(10)), child: Text(_currentIndex == _questions.length - 1 ? 'Finish (শেষ)' : 'Next (পরবর্তী)', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)))),
+              _resourceAcknowledgement(source: widget.type == 'audio' ? current.audioSource : current.imageSource, attribution: current.attribution),
+            ] else
               TextButton(onPressed: _skipQuestion, child: const Text('Skip (এড়িয়ে যান)', style: TextStyle(color: Colors.white54, fontSize: 16))),
           ],
         ),
@@ -981,8 +1228,35 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
   }
 
   Widget _buildAudioArea() {
-    if (_loading) return const SizedBox(height: 190, child: Center(child: CircularProgressIndicator(color: Color(0xFF00E676))));
-    return Container(height: 190, decoration: BoxDecoration(color: const Color(0xFF174D2B), borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFF00E676).withOpacity(.35))), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [IconButton(iconSize: 64, color: const Color(0xFF00E676), icon: Icon(_audioPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill), onPressed: () async { if (_audioPlaying) { await _quizAudioPlayer?.pause(); if (mounted) setState(() => _audioPlaying = false); } else { await _quizAudioPlayer?.play(UrlSource(_media!.audioUrl!)); if (mounted) setState(() => _audioPlaying = true); } }), const Text('PLAY BIRD CALL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]));
+    if (_loading) {
+      return const SizedBox(
+        height: 190,
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF00E676))),
+      );
+    }
+    return Container(
+      height: 190,
+      decoration: BoxDecoration(
+        color: const Color(0xFF174D2B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF00E676).withOpacity(.35)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            iconSize: 64,
+            color: const Color(0xFF00E676),
+            icon: Icon(_audioPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill),
+            onPressed: _toggleQuizAudio,
+          ),
+          const Text(
+            'পাখির ডাক শুনুন',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildHintArea(GameQuestion current) {
@@ -996,7 +1270,8 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
 // ============================================================================
 
 class ScrambledImageGame extends StatefulWidget {
-  const ScrambledImageGame({super.key});
+  final String difficulty;
+  const ScrambledImageGame({super.key, required this.difficulty});
 
   @override
   State<ScrambledImageGame> createState() => _ScrambledImageGameState();
@@ -1011,6 +1286,7 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
   int _moveCount = 0;
   int? _selectedTile;
   List<int> _tiles = [];
+  final Set<String> _usedIds = {};
 
   @override
   void initState() {
@@ -1019,12 +1295,21 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
   }
 
   Future<void> _initGame() async {
-    final pool = WildlifeGameData.get('scramble').toList()..shuffle();
+    final pool = WildlifeGameData.getByDifficulty('scramble', widget.difficulty)
+        .where((q) => !_usedIds.contains(q.id))
+        .toList()..shuffle();
+    if (pool.isEmpty) {
+      // A completed run may have consumed every item; start a fresh rotation.
+      _usedIds.clear();
+      final resetPool = WildlifeGameData.getByDifficulty('scramble', widget.difficulty).toList()..shuffle();
+      if (resetPool.isNotEmpty) pool.add(resetPool.first);
+    }
     if (pool.isEmpty) {
       if (mounted) setState(() => _loading = false);
       return;
     }
     final q = pool.first;
+    _usedIds.add(q.id);
     if (mounted) setState(() { _question = q; _loading = true; _submitted = false; _showHint = false; _moveCount = 0; _selectedTile = null; _tiles = List.generate(9, (i) => i)..shuffle(); });
 
     final media = q.imageUrl != null && q.imageUrl!.trim().isNotEmpty
@@ -1096,12 +1381,14 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
     );
   }
 
+  String _difficultyLabel(String value) => value == 'easy' ? 'সহজ' : value == 'hard' ? 'কঠিন' : 'মাঝারি';
+
   @override
   Widget build(BuildContext context) {
     final q = _question;
     return Scaffold(
       backgroundColor: const Color(0xFF0D1410),
-      appBar: AppBar(title: const Text('SCRAMBLED IMAGE'), backgroundColor: Colors.transparent),
+      appBar: AppBar(title: Text('SCRAMBLED IMAGE • ${_difficultyLabel(widget.difficulty)}'), backgroundColor: Colors.transparent),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
           : q == null || _media?.imageUrl == null
@@ -1182,8 +1469,10 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
                                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                                 ),
                               ),
-                            ] else
+                            ] else ...[
                               const Text('Submitted', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
+                              _resourceAcknowledgement(source: q.imageSource, attribution: q.attribution),
+                            ],
                             const SizedBox(height: 6),
                             TextButton(onPressed: _initGame, child: const Text('Skip (এড়িয়ে যান)', style: TextStyle(color: Colors.white54))),
                           ],
@@ -1201,7 +1490,8 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
 // ============================================================================
 
 class WordPuzzleGame extends StatefulWidget {
-  const WordPuzzleGame({super.key});
+  final String difficulty;
+  const WordPuzzleGame({super.key, required this.difficulty});
 
   @override
   State<WordPuzzleGame> createState() => _WordPuzzleGameState();
@@ -1216,6 +1506,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
   List<bool> _isFixed = [];
   List<String> _availableLetters = [];
   final Set<String> _usedIds = {};
+  bool _submitted = false;
 
   @override
   void initState() {
@@ -1246,7 +1537,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
   }
 
   Future<void> _loadNextPuzzle() async {
-    final pool = WildlifeGameData.get('word').where((q) => !_usedIds.contains(q.id)).toList();
+    final pool = WildlifeGameData.getByDifficulty('word', widget.difficulty).where((q) => !_usedIds.contains(q.id)).toList();
     final source = pool;
     if (source.isEmpty) {
       if (mounted) setState(() => _loading = false);
@@ -1256,7 +1547,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
     final q = source.first;
     _usedIds.add(q.id);
 
-    if (mounted) setState(() { _current = q; _loading = true; _showHint = false; });
+    if (mounted) setState(() { _current = q; _loading = true; _showHint = false; _submitted = false; });
 
     WildlifeMedia? media;
     if (q.imageUrl != null && q.imageUrl!.trim().isNotEmpty) {
@@ -1314,6 +1605,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
     final answer = _slots.join('');
     final correct = (q.bengaliWord ?? q.bengali).replaceAll(RegExp(r'\s+'), '');
     final ok = answer == correct;
+    if (mounted) setState(() => _submitted = true);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1329,6 +1621,8 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
     );
   }
 
+  String _difficultyLabel(String value) => value == 'easy' ? 'সহজ' : value == 'hard' ? 'কঠিন' : 'মাঝারি';
+
   @override
   Widget build(BuildContext context) {
     final q = _current;
@@ -1337,7 +1631,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D1410),
-      appBar: AppBar(title: const Text('শব্দ-জব্দ (BIRD PUZZLE)'), backgroundColor: Colors.transparent),
+      appBar: AppBar(title: Text('শব্দ-জব্দ • ${_difficultyLabel(widget.difficulty)}'), backgroundColor: Colors.transparent),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -1395,6 +1689,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
               ),
               const SizedBox(height: 24),
               SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(onPressed: _slots.contains('') ? null : _submitWord, icon: const Icon(Icons.check_circle_outline), label: const Text('SUBMIT / জমা দিন'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, disabledBackgroundColor: Colors.white12, disabledForegroundColor: Colors.white38, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))))),
+              if (_submitted) _resourceAcknowledgement(source: _media?.source, attribution: _media?.attribution),
               TextButton(onPressed: _loadNextPuzzle, child: const Text('Skip (এড়িয়ে যান)', style: TextStyle(color: Colors.white54))),
             ],
           ),
