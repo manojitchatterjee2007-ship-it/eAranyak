@@ -262,6 +262,7 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  int _selectedTabIndex = 0;
   late String _startMonth;
   late String _endMonth;
   late String _selectedYear;
@@ -1784,17 +1785,69 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Widget _buildSelectedTabContent() {
+    switch (_selectedTabIndex) {
+      case 0: return _buildUnifiedEditorialDashboard();
+      case 1: return _buildNewsAdminSection();
+      case 2: return _buildSubmissionsAdminSection();
+      case 3: return _buildMagazineAdminSection();
+      case 4: return GalleryAdminSection(onUploadComplete: widget.onUploadComplete);
+      case 5: return TutorialAdminSection(onUploadComplete: widget.onUploadComplete);
+      case 6: return PodcastAdminSection(onUploadComplete: widget.onUploadComplete);
+      case 7: return VlogAdminSection(onUploadComplete: widget.onUploadComplete);
+      case 8: return _buildNotificationAdminSection();
+      case 9: return _buildOnlineBookAdminSection();
+      default: return const SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(24),
+    return Row(
       children: [
-        // PART F: UNIFIED EDITORIAL DASHBOARD
-        _buildUnifiedEditorialDashboard(),
+        NavigationRail(
+          backgroundColor: const Color(0xFF142419),
+          selectedIndex: _selectedTabIndex,
+          onDestinationSelected: (int index) {
+            setState(() {
+              _selectedTabIndex = index;
+            });
+          },
+          labelType: NavigationRailLabelType.all,
+          selectedLabelTextStyle: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 11),
+          unselectedLabelTextStyle: const TextStyle(color: Colors.white70, fontSize: 11),
+          selectedIconTheme: const IconThemeData(color: Color(0xFF00E676)),
+          unselectedIconTheme: const IconThemeData(color: Colors.white70),
+          destinations: const [
+            NavigationRailDestination(icon: Icon(Icons.dashboard_rounded), label: Text('Dashboard')),
+            NavigationRailDestination(icon: Icon(Icons.newspaper_rounded), label: Text('News')),
+            NavigationRailDestination(icon: Icon(Icons.article_rounded), label: Text('Articles')),
+            NavigationRailDestination(icon: Icon(Icons.menu_book_rounded), label: Text('Magazines')),
+            NavigationRailDestination(icon: Icon(Icons.photo_library_rounded), label: Text('Gallery')),
+            NavigationRailDestination(icon: Icon(Icons.school_rounded), label: Text('Tutorials')),
+            NavigationRailDestination(icon: Icon(Icons.podcasts_rounded), label: Text('Podcasts')),
+            NavigationRailDestination(icon: Icon(Icons.video_library_rounded), label: Text('Vlogs')),
+            NavigationRailDestination(icon: Icon(Icons.notifications_rounded), label: Text('Notifs')),
+            NavigationRailDestination(icon: Icon(Icons.book_rounded), label: Text('Books')),
+          ],
+        ),
+        const VerticalDivider(thickness: 1, width: 1, color: Colors.white24),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              _buildSelectedTabContent(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-        // PART D: ONLINE BOOK STORE MANAGEMENT
-        _buildOnlineBookAdminSection(),
-
+  Widget _buildMagazineAdminSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         const SizedBox(height: 28),
         const Divider(color: Colors.white24),
         const SizedBox(height: 16),
@@ -1970,7 +2023,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         const SizedBox(height: 36),
         const Divider(color: Colors.white24),
         const SizedBox(height: 16),
+      ],
+    );
+  }
 
+  Widget _buildNewsAdminSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         // =========================================================
         // 📰 EDITORIAL NEWS MANAGEMENT
         // =========================================================
@@ -2260,6 +2320,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         const SizedBox(height: 36),
         const Divider(color: Colors.white24),
         const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildSubmissionsAdminSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -2740,16 +2808,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             );
           }),
 
-        // -------------------------------------------------------------
-        // PART 3: NOTIFICATION MANAGEMENT SECTION
-        // -------------------------------------------------------------
-        _buildNotificationAdminSection(),
-
-        // NEW Phase 7B-2 Editorial Control Centre Sections
-        GalleryAdminSection(onUploadComplete: widget.onUploadComplete),
-        PodcastAdminSection(onUploadComplete: widget.onUploadComplete),
-        VlogAdminSection(onUploadComplete: widget.onUploadComplete),
-        TutorialAdminSection(onUploadComplete: widget.onUploadComplete),
       ],
     );
   }
