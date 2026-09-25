@@ -8,6 +8,7 @@ import '../core/config.dart';
 import '../services/sound_service.dart';
 import '../services/forest_ambience_service.dart';
 import '../services/forest_scene_manager.dart';
+import '../services/protected_asset_service.dart';
 import '../widgets/magazine_cover_image.dart';
 import '../widgets/realistic_rack_widget.dart';
 
@@ -490,11 +491,15 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
       final List<FlipbookPage?> builtPages = [null]; 
       
       for (final p in pages) {
-        final signedUrl = await _supabase.storage
-            .from('magazine_pages')
-            .createSignedUrl(p['storage_path'], 120);
-        final provider = NetworkImage(signedUrl);
-        builtPages.add(FlipbookPage(image: provider, hiResImage: provider));
+        final signedUrl = await ProtectedAssetService.getSignedUrl(
+          bucket: 'magazine_pages',
+          storagePath: p['storage_path'],
+          expiresInSeconds: 120,
+        );
+        if (signedUrl != null) {
+          final provider = NetworkImage(signedUrl);
+          builtPages.add(FlipbookPage(image: provider, hiResImage: provider));
+        }
       }
 
       if (mounted) {

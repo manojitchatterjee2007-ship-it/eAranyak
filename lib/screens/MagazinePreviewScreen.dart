@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_realistic_flipbook/flutter_realistic_flipbook.dart';
+import '../models/content_protection_models.dart';
+import '../services/protected_asset_service.dart';
+import '../widgets/protected_content.dart';
 
 class MagazinePreviewScreen extends StatefulWidget {
   final String magazineId;
@@ -44,11 +47,15 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
       final List<FlipbookPage?> builtPages = [null]; // Null flyleaf for odd/even spread
       
       for (final p in pages) {
-        final signedUrl = await _supabase.storage
-            .from('magazine_pages')
-            .createSignedUrl(p['storage_path'], 120);
-        final provider = NetworkImage(signedUrl);
-        builtPages.add(FlipbookPage(image: provider, hiResImage: provider));
+        final signedUrl = await ProtectedAssetService.getSignedUrl(
+          bucket: 'magazine_pages',
+          storagePath: p['storage_path'],
+          expiresInSeconds: 120,
+        );
+        if (signedUrl != null) {
+          final provider = NetworkImage(signedUrl);
+          builtPages.add(FlipbookPage(image: provider, hiResImage: provider));
+        }
       }
 
       if (mounted) {
@@ -63,7 +70,6 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
   }
 
   void _checkPageEnd() {
-    // If the user reaches page 4 (index 4 in the 1-based controller due to flyleaf)
     if (_flipbookController.page >= _flipbookPages.length - 1) {
       setState(() => _showDownloadPrompt = true);
     } else {
@@ -79,61 +85,66 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
         backgroundColor: Colors.black.withValues(alpha: 0.85),
         title: Text('${widget.title} (Preview)'),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
-          : Stack(
-              fit: StackFit.expand,
-              children: [
-                RealisticFlipbook(
-                  controller: _flipbookController,
-                  pages: _flipbookPages,
-                  singlePage: false,
-                  onFlipLeftEnd: (_) => _checkPageEnd(),
-                  onFlipRightEnd: (_) => _checkPageEnd(),
-                ),
-                if (_showDownloadPrompt)
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.black.withValues(alpha: 0.8),
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          margin: const EdgeInsets.symmetric(horizontal: 32),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF142018),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFF00E676)),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.menu_book_rounded, color: Color(0xFF00E676), size: 48),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Download to your bookshelf to read the full issue.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 24),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF00E676),
-                                  foregroundColor: Colors.black,
+      body: ProtectedContent(
+        scope: ContentProtectionScope.magazine,
+        contentId: widget.magazineId,
+        userIdentity: 'eআরণ্যক PREVIEW',
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
+            : Stack(
+                fit: StackFit.expand,
+                children: [
+                  RealisticFlipbook(
+                    controller: _flipbookController,
+                    pages: _flipbookPages,
+                    singlePage: false,
+                    onFlipLeftEnd: (_) => _checkPageEnd(),
+                    onFlipRightEnd: (_) => _checkPageEnd(),
+                  ),
+                  if (_showDownloadPrompt)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.8),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            margin: const EdgeInsets.symmetric(horizontal: 32),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF142018),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFF00E676)),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.menu_book_rounded, color: Color(0xFF00E676), size: 48),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Download to your bookshelf to read the full issue.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
-                                onPressed: () {
-                                  Navigator.pop(context); // Close preview
-                                  widget.onDownloadTriggered(); // Trigger download in Library
-                                },
-                                child: const Text('Download Full Issue', style: TextStyle(fontWeight: FontWeight.bold)),
-                              ),
-                            ],
+                                const SizedBox(height: 24),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF00E676),
+                                    foregroundColor: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context); // Close preview
+                                    widget.onDownloadTriggered(); // Trigger download in Library
+                                  },
+                                  child: const Text('Download Full Issue', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  )
-              ],
-            ),
+                    )
+                ],
+              ),
+      ),
     );
   }
 }

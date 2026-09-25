@@ -104,11 +104,6 @@ function htmlToSearchText(html: string): string {
   );
 }
 
-/**
- * Nature's Book has changed page markup over time. Do not depend on one
- * particular HTML container. We first try line-oriented numbered entries,
- * then a fallback over the complete cleaned text.
- */
 function parseBirdEntries(text: string): BirdName[] {
   const birds: BirdName[] = [];
   const seen = new Set<string>();
@@ -124,7 +119,6 @@ function parseBirdEntries(text: string): BirdName[] {
       .replace(/\s+/g, " ")
       .trim();
 
-    // Remove trailing source/navigation fragments if they slipped into a match.
     bengali = bengali
       .split(/\s+(?:English|Scientific|Family|Order|Habitat)\s*:/i)[0]
       .trim();
@@ -133,8 +127,6 @@ function parseBirdEntries(text: string): BirdName[] {
     if (!/^[A-Za-z][A-Za-z'’().,&/\- ]{1,100}$/.test(english)) return;
     if (!containsBengali(bengali)) return;
 
-    // Nature's Book can provide aliases separated by comma, slash, or
-    // Bengali punctuation. The first listed Bengali name is deterministic.
     bengali = bengali
       .split(/[,/|;]/)[0]
       .replace(/[।.]+$/, "")
@@ -149,7 +141,6 @@ function parseBirdEntries(text: string): BirdName[] {
     birds.push({ english, bengali });
   };
 
-  // First pass: individual lines.
   for (const rawLine of text.split(/\n+/)) {
     const line = rawLine.replace(/\s+/g, " ").trim();
     if (!line) continue;
@@ -161,7 +152,6 @@ function parseBirdEntries(text: string): BirdName[] {
     if (match) add(match[1], match[2]);
   }
 
-  // Second pass: numbered entries may have been collapsed onto one line.
   if (birds.length < 50) {
     const collapsed = text.replace(/\s+/g, " ").trim();
 
@@ -186,18 +176,13 @@ async function fetchNaturesBookBirdNames(): Promise<BirdName[]> {
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Nature's Book bird-name list HTTP ${response.status}`,
-    );
+    throw new Error(`Nature's Book bird-name list HTTP ${response.status}`);
   }
 
   const html = await response.text();
   const text = htmlToSearchText(html);
   const birds = parseBirdEntries(text);
 
-  // The source is expected to contain a substantial bird-name list. Keep a
-  // conservative safety gate so malformed pages cannot silently overwrite
-  // the synchronized word bank.
   if (birds.length < 50) {
     throw new Error(
       `Nature's Book bird-name list could not be parsed reliably (${birds.length} names).`,
@@ -228,7 +213,7 @@ function extractJson(text: string): any {
   try {
     return JSON.parse(candidate);
   } catch (_) {
-    // Continue with bracket extraction.
+    // continue
   }
 
   const start = candidate.indexOf("[");
@@ -297,8 +282,6 @@ async function callGemini(
       break;
     }
 
-    // Exponential backoff with a small jitter. This handles temporary
-    // Gemini capacity spikes without immediately failing the whole bank run.
     const delay = Math.min(16000, 1500 * Math.pow(2, attempt - 1)) +
       Math.floor(Math.random() * 500);
     await sleep(delay);
@@ -346,13 +329,30 @@ AUDIO SET (SEPARATE RESOURCE POOL):
       category: "hint",
       count: 20,
       promptRules: `
-HINT SET (KNOWLEDGE SUBSET):
+HINT SET (FIELD-MARK IDENTIFICATION):
 - Generate exactly 20 UNIQUE Indian wildlife species.
-- Prefer species commonly found in the PHOTO universal pool and suitable for
-  factual identification clues.
-- 3 progressively useful factual Bengali hints.
+- Prefer species commonly found in the PHOTO universal pool.
+- Produce exactly 3 progressively useful, FACTUAL Bengali hints.
+- Each hint must describe an OBSERVABLE FIELD CHARACTERISTIC of the species:
+  habitat, region/state, plumage or fur colour, body shape, bill/beak shape,
+  tail length, size relative to a familiar species, call quality, diet,
+  behaviour, or a distinctive marking.
+- HINT 1 (broad): habitat or region clue.
+- HINT 2 (medium): one distinctive visual or behavioural feature.
+- HINT 3 (narrow): a second feature that together with HINT 2 narrows the
+  answer to a single option among the four choices.
+- FORBIDDEN hint content (must NOT appear in any hint):
+  * the species' English common name or any part of it,
+  * the Bengali common name or any part of it,
+  * the first letter / first syllable / word count of either name,
+  * the scientific name or any part of it,
+  * any restatement of the question,
+  * phrases like "প্রথম অক্ষর", "শব্দের", "বৈজ্ঞানিক নাম".
+- Good hint example: "সাধারণত নদীর ধারে বা জলাশয়ের কাছে দেখা যায়।"
+- Good hint example: "এর ডানা ও লেজে সাদা-কালো ডোরাকাটা দাগ থাকে।"
+- Bad hint example: "ইংরেজি নামের প্রথম অক্ষর C।"
+- Bad hint example: "এর বৈজ্ঞানিক নামের প্রথম অংশ Corvus।"
 - options exactly 4 Bengali-first labels and answer must exactly equal one option.
-- Hints must contain verifiable biological/ecological information.
 `,
     },
   ];
@@ -531,14 +531,9 @@ async function fetchINaturalistTaxonImage(query: string): Promise<Media | null> 
 }
 
 async function fetchImage(species: string): Promise<Media | null> {
-  // First try the exact English common name. This is the normal path for
-  // Gemini-generated visual records and for non-bird Indian wildlife.
   const direct = await fetchINaturalistTaxonImage(species);
   if (direct) return direct;
 
-  // For bird names, resolve the verified eBird taxon and retry iNaturalist by
-  // scientific name. This avoids ambiguous common-name matches and is crucial
-  // for the Nature's Book Bengali bird-name bank.
   try {
     const bird = await fetchEBirdTaxon(species);
     if (bird?.scientificName) {
@@ -607,12 +602,12 @@ async function loadEBirdTaxonomy(): Promise<EBirdTaxon[] | null> {
       if (!Array.isArray(raw)) return null;
 
       const taxonomy = raw
-          .map((item: any) => ({
-            speciesCode: clean(item?.speciesCode),
-            scientificName: clean(item?.sciName),
-            commonName: clean(item?.comName),
-          }))
-          .filter((x: EBirdTaxon) => x.commonName || x.scientificName);
+        .map((item: any) => ({
+          speciesCode: clean(item?.speciesCode),
+          scientificName: clean(item?.sciName),
+          commonName: clean(item?.comName),
+        }))
+        .filter((x: EBirdTaxon) => x.commonName || x.scientificName);
 
       eBirdTaxonomyCache = taxonomy;
       return taxonomy;
@@ -643,9 +638,6 @@ async function filterToVerifiedBirds(birdNames: BirdName[]): Promise<{
 }> {
   const taxonomy = await loadEBirdTaxonomy();
 
-  // The Nature's Book page is the authoritative source for the Bengali names.
-  // eBird is used only as a biological safety check so malformed page parsing
-  // cannot turn a mammal/reptile into a "bird" puzzle.
   if (!taxonomy) {
     throw new Error(
       "Cannot verify the Nature's Book bird list: eBird taxonomy is unavailable. Set EBIRD_API_KEY (or eBird_API) in Supabase secrets.",
@@ -724,66 +716,92 @@ async function fetchXenoCantoAudio(
   }
 }
 
-async function fetchWikimediaAudio(species: string): Promise<Media | null> {
+/**
+ * Search Wikimedia Commons for a species recording.  Commons names audio
+ * files after the SCIENTIFIC name far more often than after the English
+ * common name (e.g. "Corvus_splendens_call.ogg").  We therefore search by
+ * both, then accept any candidate whose title shares a meaningful token
+ * with either name.
+ */
+async function fetchWikimediaAudio(
+  species: string,
+  scientificName?: string,
+): Promise<Media | null> {
   try {
-    const uri = new URL("https://commons.wikimedia.org/w/api.php");
-    uri.search = new URLSearchParams({
-      action: "query",
-      format: "json",
-      generator: "search",
-      gsrnamespace: "6",
-      gsrsearch: `\"${species}\" filetype:audio`,
-      gsrlimit: "30",
-      prop: "imageinfo",
-      iiprop: "url|mime|extmetadata",
-    }).toString();
+    const terms: string[] = [];
+    if (scientificName) terms.push(`"${scientificName}" filetype:audio`);
+    terms.push(`"${species}" filetype:audio`);
 
-    const response = await fetch(uri, {
-      headers: { "User-Agent": "eAranyakGameGenerator/4.0" },
-    });
-    if (!response.ok) return null;
+    const speciesTokens = normalize(species).split(" ").filter((t) => t.length > 3);
+    const sciTokens = scientificName
+      ? normalize(scientificName).split(" ").filter((t) => t.length > 3)
+      : [];
 
-    const body = await response.json();
-    const pages = body?.query?.pages;
-    if (!pages) return null;
+    for (const term of terms) {
+      const uri = new URL("https://commons.wikimedia.org/w/api.php");
+      uri.search = new URLSearchParams({
+        action: "query",
+        format: "json",
+        generator: "search",
+        gsrnamespace: "6",
+        gsrsearch: term,
+        gsrlimit: "30",
+        prop: "imageinfo",
+        iiprop: "url|mime|extmetadata",
+      }).toString();
 
-    const candidates: any[] = [];
-    for (const page of Object.values(pages) as any[]) {
-      const title = clean(page?.title);
-      const info = page?.imageinfo?.[0];
-      const url = clean(info?.url);
-      const mime = clean(info?.mime).toLowerCase();
-      if (!url || !mime.startsWith("audio/")) continue;
-
-      const normalizedTitle = normalize(title);
-      const normalizedSpecies = normalize(species);
-      if (!normalizedTitle.includes(normalizedSpecies)) continue;
-
-      const meta = info?.extmetadata || {};
-      const artist = clean(meta.Artist?.value || meta.Credit?.value || meta.Creator?.value);
-      const license = clean(meta.LicenseShortName?.value || meta.UsageTerms?.value);
-      candidates.push({
-        url,
-        artist,
-        license,
-        title,
-        rank: audioRank(mime, url),
+      const response = await fetch(uri, {
+        headers: { "User-Agent": "eAranyakGameGenerator/4.0" },
       });
+      if (!response.ok) continue;
+
+      const body = await response.json();
+      const pages = body?.query?.pages;
+      if (!pages) continue;
+
+      const candidates: any[] = [];
+      for (const page of Object.values(pages) as any[]) {
+        const title = clean(page?.title);
+        const info = page?.imageinfo?.[0];
+        const url = clean(info?.url);
+        const mime = clean(info?.mime).toLowerCase();
+        if (!url || !mime.startsWith("audio/")) continue;
+
+        const titleTokens = new Set(normalize(title).split(" "));
+        const overlap =
+          speciesTokens.filter((t) => titleTokens.has(t)).length +
+          sciTokens.filter((t) => titleTokens.has(t)).length;
+        if (overlap === 0) continue;
+
+        const meta = info?.extmetadata || {};
+        const artist = clean(meta.Artist?.value || meta.Credit?.value || meta.Creator?.value);
+        const license = clean(meta.LicenseShortName?.value || meta.UsageTerms?.value);
+        candidates.push({
+          url,
+          artist,
+          license,
+          title,
+          overlap,
+          rank: audioRank(mime, url),
+        });
+      }
+
+      candidates.sort((a, b) => b.overlap - a.overlap || a.rank - b.rank);
+      const best = candidates[0];
+      if (!best) continue;
+
+      return {
+        url: best.url,
+        source: "Wikimedia Commons",
+        attribution: [
+          best.artist && `Recorded by ${best.artist}`,
+          best.license,
+          "Wikimedia Commons",
+        ].filter(Boolean).join(" • ") || null,
+      };
     }
 
-    candidates.sort((a, b) => a.rank - b.rank);
-    const best = candidates[0];
-    if (!best) return null;
-
-    return {
-      url: best.url,
-      source: "Wikimedia Commons",
-      attribution: [
-        best.artist && `Recorded by ${best.artist}`,
-        best.license,
-        "Wikimedia Commons",
-      ].filter(Boolean).join(" • ") || null,
-    };
+    return null;
   } catch (_) {
     return null;
   }
@@ -793,8 +811,6 @@ async function fetchAudio(species: string): Promise<Media | null> {
   try {
     const ebirdTaxon = await fetchEBirdTaxon(species);
 
-    // Audio questions must use a verified bird taxon. We do not silently
-    // substitute another species' recording.
     if (!ebirdTaxon?.scientificName) return null;
 
     const xenoKey = Deno.env.get("XENO_CANTO_API_KEY");
@@ -807,9 +823,10 @@ async function fetchAudio(species: string): Promise<Media | null> {
       if (xeno) return xeno;
     }
 
-    // Exact-species Wikimedia fallback prevents a valid bird-call question
-    // from disappearing simply because Xeno-canto has no recording.
-    return await fetchWikimediaAudio(ebirdTaxon.commonName || species);
+    return await fetchWikimediaAudio(
+      ebirdTaxon.commonName || species,
+      ebirdTaxon.scientificName,
+    );
   } catch (_) {
     return null;
   }
@@ -836,8 +853,6 @@ async function fetchWordImage(species: string): Promise<Media | null> {
 
   let image: Media | null = null;
 
-  // Nature's Book is a bird-name source, so use the verified eBird scientific
-  // name first. This greatly reduces wrong/common-name photo matches.
   try {
     const bird = await fetchEBirdTaxon(species);
     if (bird?.scientificName) {
@@ -852,162 +867,667 @@ async function fetchWordImage(species: string): Promise<Media | null> {
   return image;
 }
 
+// ---------------------------------------------------------------------------
+// Deterministic shuffle — same input + same seed always produces the same
+// order, so re-running the generator does not churn existing rows.
+// ---------------------------------------------------------------------------
 
-async function repairAudioBank(admin: any, birdNames: BirdName[]): Promise<{
+function deterministicShuffle<T>(arr: T[], seedStr: string): T[] {
+  let h = 2166136261;
+  for (let i = 0; i < seedStr.length; i++) {
+    h ^= seedStr.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const rng = () => {
+    h ^= h << 13;
+    h ^= h >>> 17;
+    h ^= h << 5;
+    return ((h >>> 0) % 100000) / 100000;
+  };
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Difficulty — a single deterministic rebalancer.  Sort by fingerprint (a
+// stable key) and split into three nearly equal buckets.  No other code path
+// is allowed to write difficulty.
+// ---------------------------------------------------------------------------
+
+function bucketSizes(total: number, buckets = DIFFICULTIES.length): number[] {
+  const base = Math.floor(total / buckets);
+  const rem = total % buckets;
+  return Array.from({ length: buckets }, (_, i) => base + (i < rem ? 1 : 0));
+}
+
+async function rebalanceCategory(
+  admin: any,
+  category: Category | "word",
+): Promise<Record<string, number>> {
+  const { data, error } = await admin
+    .from("game_questions")
+    .select("id")
+    .eq("category", category)
+    .eq("active", true)
+    .order("fingerprint", { ascending: true });
+  if (error) throw error;
+
+  const rows = (data || []) as any[];
+  const sizes = bucketSizes(rows.length);
+  const labels = DIFFICULTIES;
+  const result: Record<string, number> = { easy: 0, medium: 0, hard: 0 };
+
+  let cursor = 0;
+  for (let i = 0; i < labels.length; i++) {
+    const slice = rows.slice(cursor, cursor + sizes[i]);
+    cursor += sizes[i];
+    const ids = slice.map((r) => clean(r.id)).filter(Boolean);
+    if (!ids.length) continue;
+    const { error: u } = await admin
+      .from("game_questions")
+      .update({ difficulty: labels[i], updated_at: new Date().toISOString() })
+      .in("id", ids);
+    if (u) throw u;
+    result[labels[i]] = ids.length;
+  }
+
+  return result;
+}
+
+async function rebalanceAllCategories(
+  admin: any,
+): Promise<Record<string, Record<string, number>>> {
+  const result: Record<string, Record<string, number>> = {};
+  for (const category of ["photo", "audio", "hint", "scramble", "word"] as const) {
+    result[category] = await rebalanceCategory(admin, category);
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Hint validation — reject hints that leak the answer or describe spelling.
+// ---------------------------------------------------------------------------
+
+const FORBIDDEN_HINT_RE =
+  /(প্রথম\s*অক্ষর|প্রথম\s*বর্ণ|অক্ষরটি|বর্ণটি|শব্দের\s*সংখ্যা|বৈজ্ঞানিক\s*নাম|ইংরেজি\s*নামের\s*প্রথম)/;
+
+function hintsAreValid(
+  hints: string[],
+  species: string,
+  bengali: string,
+): boolean {
+  if (hints.length !== 3) return false;
+  const speciesNorm = normalize(species);
+  const bengaliNorm = normalize(bengali);
+  const speciesTokens = speciesNorm.split(" ").filter((t) => t.length > 3);
+
+  for (const hint of hints) {
+    const h = clean(hint);
+    if (!h || !containsBengali(h)) return false;
+    if (FORBIDDEN_HINT_RE.test(h)) return false;
+
+    const hNorm = normalize(h);
+    // English species name (full or any significant token) must not appear.
+    if (speciesNorm && hNorm.includes(speciesNorm)) return false;
+    for (const token of speciesTokens) {
+      if (hNorm.includes(token)) return false;
+    }
+    // Bengali species name must not appear.
+    if (bengaliNorm && hNorm.includes(bengaliNorm)) return false;
+  }
+
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Audio bank repair
+// ---------------------------------------------------------------------------
+
+async function repairAudioBank(
+  admin: any,
+  birdNames: BirdName[],
+): Promise<{
   audioInsertedOrUpdated: number;
   audioRetired: number;
   audioSpecies: number;
+  audioMissing: number;
+  audioMissingSample: string[];
 }> {
   const found: Array<{ bird: BirdName; audio: Media }> = [];
+  const missing: string[] = [];
   const concurrency = 5;
+
   for (let start = 0; start < birdNames.length; start += concurrency) {
     const batch = birdNames.slice(start, start + concurrency);
-    const results = await Promise.all(batch.map(async (bird) => ({ bird, audio: await fetchAudio(bird.english) })));
-    for (const result of results) if (result.audio) found.push({ bird: result.bird, audio: result.audio });
+    const results = await Promise.all(
+      batch.map(async (bird) => ({ bird, audio: await fetchAudio(bird.english) })),
+    );
+    for (const result of results) {
+      if (result.audio) found.push({ bird: result.bird, audio: result.audio });
+      else missing.push(result.bird.english);
+    }
+  }
+
+  console.log(
+    `audio repair: ${found.length} birds with audio, ${missing.length} without`,
+  );
+  if (missing.length) {
+    console.log("audio missing sample:", missing.slice(0, 40).join(", "));
   }
 
   const { data: oldUniversal, error: oldUniversalError } = await admin
-    .from("game_questions").select("id").eq("category", "audio").eq("source", "audio-universal-set").eq("active", true);
+    .from("game_questions")
+    .select("id")
+    .eq("category", "audio")
+    .eq("source", "audio-universal-set")
+    .eq("active", true);
   if (oldUniversalError) throw oldUniversalError;
+
   const oldIds = (oldUniversal || []).map((row: any) => clean(row.id)).filter(Boolean);
   if (oldIds.length) {
-    const { error } = await admin.from("game_questions").update({ active: false, updated_at: new Date().toISOString() }).in("id", oldIds);
+    const { error } = await admin
+      .from("game_questions")
+      .update({ active: false, updated_at: new Date().toISOString() })
+      .in("id", oldIds);
     if (error) throw error;
   }
 
   let audioInsertedOrUpdated = 0;
+  const activeFingerprints = new Set<string>();
+
   for (let index = 0; index < found.length; index++) {
     const { bird, audio } = found[index];
     const species = bird.english;
     const bengali = bird.bengali;
     const answer = `${bengali} (${species})`;
-    const options: string[] = [answer];
-    for (let offset = 1; offset <= birdNames.length && options.length < 4; offset++) {
+
+    const optionLabels: string[] = [answer];
+    for (let offset = 1; offset <= birdNames.length && optionLabels.length < 4; offset++) {
       const candidate = birdNames[(index + offset) % birdNames.length];
       if (normalize(candidate.english) === normalize(species)) continue;
       const label = `${candidate.bengali} (${candidate.english})`;
-      if (!options.includes(label)) options.push(label);
+      if (!optionLabels.includes(label)) optionLabels.push(label);
     }
-    if (options.length !== 4) continue;
-    const shift = index % options.length;
-    const rotatedOptions = [...options.slice(shift), ...options.slice(0, shift)];
-    const fingerprint = await sha256(`audio-universal|${normalize(species)}|${normalize(audio.url)}`);
+    if (optionLabels.length !== 4) continue;
+
+    const fingerprint = await sha256(
+      `audio-universal|${normalize(species)}|${normalize(audio.url)}`,
+    );
+    activeFingerprints.add(fingerprint);
+
+    const shuffledOptions = deterministicShuffle(optionLabels, fingerprint);
+    if (!shuffledOptions.includes(answer)) {
+      throw new Error(`audio shuffle lost answer for ${species}`);
+    }
+
     const row = {
-      category: "audio", species, bengali,
+      category: "audio",
+      species,
+      bengali,
       question: "ডাক শুনে পাখিটিকে চিনুন",
-      options: rotatedOptions, answer, hints: [], syllables: [],
+      options: shuffledOptions,
+      answer,
+      hints: [],
+      syllables: [],
       explanation: `${bengali} পাখিটির স্বর শুনে প্রজাতিটি শনাক্ত করুন।`,
-      difficulty: difficultyForIndex(index, found.length), active: true,
-      image_url: null, audio_url: audio.url, image_source: null,
-      audio_source: audio.source, attribution: audio.attribution,
+      difficulty: "medium", // rebalanceCategory owns the final label
+      active: true,
+      image_url: null,
+      audio_url: audio.url,
+      image_source: null,
+      audio_source: audio.source,
+      attribution: audio.attribution,
       source: "audio-universal-set",
       generation_provider: "Xeno-canto/Wikimedia bird-call universal set",
-      fingerprint, updated_at: new Date().toISOString(),
+      fingerprint,
+      updated_at: new Date().toISOString(),
     };
-    const { error } = await admin.from("game_questions").upsert(row, { onConflict: "fingerprint" });
+
+    const { error } = await admin
+      .from("game_questions")
+      .upsert(row, { onConflict: "fingerprint" });
     if (error) throw error;
     audioInsertedOrUpdated++;
   }
-  return { audioInsertedOrUpdated, audioRetired: oldIds.length, audioSpecies: found.length };
+
+  return {
+    audioInsertedOrUpdated,
+    audioRetired: oldIds.length,
+    audioSpecies: found.length,
+    audioMissing: missing.length,
+    audioMissingSample: missing.slice(0, 20),
+  };
 }
 
-function difficultyForIndex(index: number, total: number): "easy" | "medium" | "hard" {
-  if (total <= 0) return "medium";
-  const base = Math.floor(total / 3);
-  const remainder = total % 3;
-  const easySize = base + (remainder > 0 ? 1 : 0);
-  const mediumSize = base + (remainder > 1 ? 1 : 0);
-  if (index < easySize) return "easy";
-  if (index < easySize + mediumSize) return "medium";
-  return "hard";
-}
+// ---------------------------------------------------------------------------
+// Visual bank repair
+// ---------------------------------------------------------------------------
 
-async function rebalanceDifficulty(admin: any): Promise<Record<string, number>> {
-  const { data, error } = await admin.from("game_questions")
-    .select("id,category,created_at")
-    .in("category", ["photo", "audio", "hint", "scramble"])
-    .eq("active", true)
-    .order("category", { ascending: true })
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true });
-  if (error) throw error;
-
-  const byCategory = new Map<string, any[]>();
-  for (const row of (data || []) as any[]) {
-    const category = clean(row.category);
-    if (!byCategory.has(category)) byCategory.set(category, []);
-    byCategory.get(category)!.push(row);
+async function fetchScientificNameForHint(species: string): Promise<string | null> {
+  try {
+    const url = `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(species)}&per_page=10`;
+    const response = await fetch(url, {
+      headers: { "User-Agent": "eAranyakGameGenerator/5.0" },
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    const taxon = body?.results?.find((t: any) =>
+      normalize(clean(t?.preferred_common_name)) === normalize(species) ||
+      normalize(clean(t?.name)) === normalize(species)
+    );
+    const scientific = clean(taxon?.name);
+    return scientific || null;
+  } catch (_) {
+    return null;
   }
-
-  const result: Record<string, number> = {};
-  for (const [category, rows] of byCategory.entries()) {
-    const groups: Record<string, string[]> = { easy: [], medium: [], hard: [] };
-    for (let index = 0; index < rows.length; index++) {
-      const difficulty = difficultyForIndex(index, rows.length);
-      groups[difficulty].push(clean(rows[index].id));
-    }
-
-    for (const difficulty of ["easy", "medium", "hard"] as const) {
-      const ids = groups[difficulty].filter(Boolean);
-      if (!ids.length) continue;
-      const { error: updateError } = await admin.from("game_questions")
-        .update({ difficulty, updated_at: new Date().toISOString() })
-        .in("id", ids);
-      if (updateError) throw updateError;
-    }
-    result[category] = rows.length;
-  }
-  return result;
 }
 
-async function cleanupInvalidActiveRows(admin: any): Promise<number> {
+function buildVisualOptions(
+  visualSources: any[],
+  index: number,
+  species: string,
+  bengali: string,
+  seed: string,
+): string[] {
+  const answer = `${bengali} (${species})`;
+  const candidates: string[] = [];
+  for (
+    let offset = 1;
+    offset <= visualSources.length && candidates.length < 3;
+    offset++
+  ) {
+    const candidate = visualSources[(index + offset) % visualSources.length];
+    const candidateSpecies = clean(candidate?.species);
+    const candidateBengali = clean(candidate?.bengali);
+    if (
+      !candidateSpecies ||
+      !candidateBengali ||
+      normalize(candidateSpecies) === normalize(species)
+    ) continue;
+    const label = `${candidateBengali} (${candidateSpecies})`;
+    if (!candidates.includes(label)) candidates.push(label);
+  }
+  if (candidates.length < 3) return [];
+  return deterministicShuffle([answer, ...candidates], seed);
+}
+
+async function repairVisualBank(admin: any): Promise<{
+  photoRetired: number;
+  photoFromWordInsertedOrUpdated: number;
+  scrambleInsertedOrUpdated: number;
+  scrambleRetired: number;
+  universalVisualSpecies: number;
+  hintsInserted: number;
+}> {
   const { data, error } = await admin
     .from("game_questions")
-    .select("id,category,question,options,hints,image_url,audio_url,source,generation_provider,active")
-    .eq("active", true);
+    .select(
+      "id,category,species,bengali,question,options,answer,hints,explanation,difficulty,active,image_url,image_source,audio_url,audio_source,attribution,source,generation_provider,fingerprint",
+    )
+    .in("category", ["photo", "word", "scramble"])
+    .eq("active", true)
+    .order("created_at", { ascending: true });
 
   if (error) throw error;
 
-  const wordPhrase = "বাংলা নামটি অক্ষর সাজিয়ে সম্পূর্ণ করুন";
-  const invalidIds: string[] = [];
+  const rows = (data || []) as any[];
+  const wordRows = rows.filter((r) => clean(r.category) === "word");
+  const photoRows = rows.filter(
+    (r) => clean(r.category) === "photo" && clean(r.image_url),
+  );
 
-  for (const row of (data || []) as any[]) {
-    const category = clean(row.category).toLowerCase();
-    const question = clean(row.question);
-    const options = Array.isArray(row.options) ? row.options.map(clean).filter(Boolean) : [];
-    const hints = Array.isArray(row.hints) ? row.hints.map(clean).filter(Boolean) : [];
-    const hasImage = clean(row.image_url).length > 0;
-    const hasAudio = clean(row.audio_url).length > 0;
-    const source = clean(row.source).toLowerCase();
-    const provider = clean(row.generation_provider).toLowerCase();
+  const visualSources: any[] = [];
+  const seenImages = new Set<string>();
+  const seenSpecies = new Set<string>();
+  let photoRetired = 0;
 
-    let invalid = false;
-    if (category === "photo") {
-      invalid = !hasImage || options.length !== 4 || question.includes(wordPhrase);
-    } else if (category === "audio") {
-      invalid = !hasAudio || options.length !== 4 || question.includes(wordPhrase);
-    } else if (category === "hint") {
-      invalid = options.length !== 4 || hints.length !== 3 || question.includes(wordPhrase);
-    } else if (category === "scramble") {
-      invalid = !hasImage;
-    } else if (category === "word") {
-      invalid = source !== "naturesbook" || provider !== "nature's book" || question !== wordPhrase;
-    } else {
-      invalid = true;
+  for (const row of photoRows) {
+    const imageUrl = clean(row.image_url);
+    const imageKey = imageIdentity(imageUrl);
+    const speciesKey = normalize(clean(row.species));
+    if (
+      !imageUrl ||
+      !speciesKey ||
+      seenImages.has(imageKey) ||
+      seenSpecies.has(speciesKey)
+    ) {
+      if (clean(row.id)) {
+        const { error: retireError } = await admin
+          .from("game_questions")
+          .update({ active: false, updated_at: new Date().toISOString() })
+          .eq("id", row.id);
+        if (retireError) throw retireError;
+        photoRetired++;
+      }
+      continue;
     }
-
-    if (invalid && clean(row.id)) invalidIds.push(clean(row.id));
+    seenImages.add(imageKey);
+    seenSpecies.add(speciesKey);
+    visualSources.push(row);
   }
 
-  if (!invalidIds.length) return 0;
+  let photoFromWordInsertedOrUpdated = 0;
+  for (const row of wordRows) {
+    const species = clean(row.species);
+    const bengali = clean(row.bengali);
+    const speciesKey = normalize(species);
+    if (!species || !bengali || !speciesKey || seenSpecies.has(speciesKey)) {
+      continue;
+    }
 
-  const { error: updateError } = await admin
+    let imageUrl = clean(row.image_url);
+    let imageSource = clean(row.image_source);
+    let attribution = clean(row.attribution);
+
+    if (!imageUrl) {
+      const repaired = await fetchWordImage(species);
+      if (repaired) {
+        imageUrl = repaired.url;
+        imageSource = repaired.source;
+        attribution = repaired.attribution || "";
+        const { error: repairError } = await admin
+          .from("game_questions")
+          .update({
+            image_url: imageUrl,
+            image_source: imageSource,
+            attribution: attribution || null,
+            active: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", row.id);
+        if (repairError) throw repairError;
+      }
+    }
+
+    if (!imageUrl) continue;
+
+    const imageKey = imageIdentity(imageUrl);
+    if (seenImages.has(imageKey)) continue;
+
+    const enrichedRow = {
+      ...row,
+      image_url: imageUrl,
+      image_source: imageSource,
+      attribution,
+    };
+    visualSources.push(enrichedRow);
+    seenImages.add(imageKey);
+    seenSpecies.add(speciesKey);
+  }
+
+  const labelBySpecies = new Map<string, string>();
+  for (const row of visualSources) {
+    labelBySpecies.set(
+      normalize(clean(row.species)),
+      `${clean(row.bengali)} (${clean(row.species)})`,
+    );
+  }
+
+  for (let index = 0; index < visualSources.length; index++) {
+    const source = visualSources[index];
+    const category = clean(source.category);
+    const species = clean(source.species);
+    const bengali = clean(source.bengali);
+    const imageUrl = clean(source.image_url);
+    if (!species || !bengali || !imageUrl) continue;
+
+    const speciesKey = normalize(species);
+
+    const candidates: string[] = [];
+    for (
+      let offset = 1;
+      offset <= visualSources.length && candidates.length < 3;
+      offset++
+    ) {
+      const candidate = visualSources[(index + offset) % visualSources.length];
+      const candidateKey = normalize(clean(candidate.species));
+      const label = labelBySpecies.get(candidateKey);
+      if (!label || candidateKey === speciesKey || candidates.includes(label)) {
+        continue;
+      }
+      candidates.push(label);
+    }
+    if (candidates.length < 3) continue;
+
+    const answer = `${bengali} (${species})`;
+    const fingerprint = await sha256(
+      `photo-universal|${speciesKey}|${normalize(imageUrl)}`,
+    );
+
+    const options = deterministicShuffle([answer, ...candidates], fingerprint);
+    if (!options.includes(answer)) {
+      throw new Error(`photo shuffle lost answer for ${species}`);
+    }
+
+    const row = {
+      category: "photo",
+      species,
+      bengali,
+      question: "ছবি দেখে চিনুন",
+      options,
+      answer,
+      hints: Array.isArray(source.hints)
+        ? source.hints.map(clean).filter(Boolean)
+        : [],
+      syllables: [],
+      explanation: clean(source.explanation) || null,
+      difficulty: "medium", // rebalanceCategory owns final label
+      active: true,
+      image_url: imageUrl,
+      image_source: clean(source.image_source) || "iNaturalist",
+      audio_url: null,
+      audio_source: null,
+      attribution: clean(source.attribution) || null,
+      source:
+        category === "word"
+          ? "visual-universal-set"
+          : clean(source.source) || "visual-universal-set",
+      generation_provider:
+        category === "word"
+          ? "Visual universal set from Nature's Book image bank"
+          : clean(source.generation_provider) || "Visual universal set",
+      fingerprint,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: upsertError } = await admin
+      .from("game_questions")
+      .upsert(row, { onConflict: "fingerprint" });
+    if (upsertError) throw upsertError;
+
+    if (category === "word") photoFromWordInsertedOrUpdated++;
+  }
+
+  // Ensure every visual species has a HINT row.  We DO NOT synthesise
+  // template hints here — the species list is instead handed to Gemini by
+  // the caller, and rows are created there.  If the species still has no
+  // hint row after that pass, it simply has none; better no hint than a
+  // tautological hint.
+  //
+  // (The generator's Gemini hint plan already covers the visual pool via
+  // photoSpeciesForHints.  This function therefore only projects SCRAMBLE.)
+  const { data: existingHints } = await admin
     .from("game_questions")
-    .update({ active: false, updated_at: new Date().toISOString() })
-    .in("id", invalidIds);
+    .select("id,species,active")
+    .eq("category", "hint");
+  const hintSpecies = new Set(
+    ((existingHints || []) as any[])
+      .filter((r) => r.active === true)
+      .map((r) => normalize(clean(r.species)))
+      .filter(Boolean),
+  );
 
-  if (updateError) throw updateError;
-  return invalidIds.length;
+  // Reload active PHOTO universe for scramble projection.
+  const { data: activePhotos, error: activePhotoError } = await admin
+    .from("game_questions")
+    .select(
+      "id,species,bengali,question,options,answer,hints,explanation,difficulty,image_url,image_source,attribution,source,generation_provider,fingerprint",
+    )
+    .eq("category", "photo")
+    .eq("active", true)
+    .order("created_at", { ascending: true });
+  if (activePhotoError) throw activePhotoError;
+
+  const active = (activePhotos || []) as any[];
+  const validScrambleFingerprints = new Set<string>();
+  const seenScrambleImages = new Set<string>();
+  let scrambleInsertedOrUpdated = 0;
+  let scrambleRetired = 0;
+
+  for (const photo of active) {
+    const imageUrl = clean(photo.image_url);
+    const species = clean(photo.species);
+    const imageKey = imageIdentity(imageUrl);
+    if (!imageUrl || !species || seenScrambleImages.has(imageKey)) continue;
+    seenScrambleImages.add(imageKey);
+
+    const fingerprint = await sha256(
+      `scramble|${normalize(species)}|${normalize(imageUrl)}`,
+    );
+    validScrambleFingerprints.add(fingerprint);
+
+    const scrambleRow = {
+      category: "scramble",
+      species,
+      bengali: clean(photo.bengali),
+      question: "ছবিটি জোড়া লাগিয়ে চিনুন",
+      options: [],
+      answer: species,
+      hints: Array.isArray(photo.hints)
+        ? photo.hints.map(clean).filter(Boolean)
+        : [],
+      syllables: [],
+      image_url: imageUrl,
+      audio_url: null,
+      image_source: clean(photo.image_source) || "iNaturalist",
+      audio_source: null,
+      attribution: clean(photo.attribution) || null,
+      explanation: clean(photo.explanation) || null,
+      difficulty: "medium",
+      active: true,
+      source: "visual-universal-set",
+      generation_provider: "Visual universal set",
+      fingerprint,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: upsertError } = await admin
+      .from("game_questions")
+      .upsert(scrambleRow, { onConflict: "fingerprint" });
+    if (upsertError) throw upsertError;
+    scrambleInsertedOrUpdated++;
+  }
+
+  const { data: scrambleRows, error: scrambleReadError } = await admin
+    .from("game_questions")
+    .select("id,fingerprint,image_url,active")
+    .eq("category", "scramble")
+    .eq("active", true);
+  if (scrambleReadError) throw scrambleReadError;
+
+  for (const row of (scrambleRows || []) as any[]) {
+    const fp = clean(row.fingerprint);
+    if (fp && validScrambleFingerprints.has(fp)) continue;
+    if (!clean(row.id)) continue;
+    const { error: retireError } = await admin
+      .from("game_questions")
+      .update({ active: false, updated_at: new Date().toISOString() })
+      .eq("id", row.id);
+    if (retireError) throw retireError;
+    scrambleRetired++;
+  }
+
+  return {
+    photoRetired,
+    photoFromWordInsertedOrUpdated,
+    scrambleInsertedOrUpdated,
+    scrambleRetired,
+    universalVisualSpecies: visualSources.length,
+    hintsInserted: 0,
+  };
+}
+
+function validRecord(r: any): boolean {
+  const category = clean(r?.category) as Category;
+
+  if (!GENERATED_CATEGORIES.includes(category as GeneratedCategory)) return false;
+
+  const species = clean(r?.species);
+  const bengali = clean(r?.bengali);
+  const question = clean(r?.question);
+  const answer = clean(r?.answer);
+
+  if (
+    !species ||
+    !bengali ||
+    !question ||
+    !answer ||
+    !containsBengali(bengali) ||
+    !containsBengali(question)
+  ) {
+    return false;
+  }
+
+  const options = Array.isArray(r?.options)
+    ? r.options.map(clean).filter(Boolean)
+    : [];
+
+  const hints = Array.isArray(r?.hints)
+    ? r.hints.map(clean).filter(Boolean)
+    : [];
+
+  if (
+    (category === "photo" || category === "audio" || category === "hint") &&
+    (options.length !== 4 || !options.includes(answer))
+  ) {
+    return false;
+  }
+
+  if (category === "hint") {
+    if (!hintsAreValid(hints, species, bengali)) return false;
+  }
+
+  if (!DIFFICULTIES.includes(clean(r?.difficulty) as any)) return false;
+
+  const wordPhrase = "বাংলা নামটি অক্ষর সাজিয়ে সম্পূর্ণ করুন";
+  if (question.includes(wordPhrase)) return false;
+  if (category === "audio" && !/পাখ|ডাক|শব্দ|কণ্ঠ|গান/.test(question)) return false;
+  if (
+    category === "photo" &&
+    !/ছবি|ছবিতে|ছবিটি|প্রাণী|পাখি|সরীসৃপ|উভচর|স্তন্যপায়ী/.test(question)
+  ) return false;
+  if (
+    category === "hint" &&
+    !/ইঙ্গিত|লক্ষণ|চিহ্ন|চেন|প্রাণী|পাখি/.test(question)
+  ) return false;
+
+  return true;
+}
+
+async function enrichMedia(category: Category, species: string) {
+  if (category === "audio") {
+    const audio = await fetchAudio(species);
+    return audio
+      ? {
+        audio_url: audio.url,
+        audio_source: audio.source,
+        attribution: audio.attribution,
+      }
+      : null;
+  }
+
+  const image = await fetchImage(species);
+  return image
+    ? {
+      image_url: image.url,
+      image_source: image.source,
+      attribution: image.attribution,
+    }
+    : null;
 }
 
 async function syncWordBank(admin: any, birdNames: BirdName[]) {
@@ -1035,29 +1555,23 @@ async function syncWordBank(admin: any, birdNames: BirdName[]) {
     const tiles = bengaliTiles(bengali);
     const question = "বাংলা নামটি অক্ষর সাজিয়ে সম্পূর্ণ করুন";
 
-    const fingerprint = await sha256(
-      `word|${speciesKey}|${normalize(bengali)}`,
-    );
+    const fingerprint = await sha256(`word|${speciesKey}|${normalize(bengali)}`);
 
     const matches = rows.filter(
       (row) => normalize(clean(row.species)) === speciesKey,
     );
 
     const exact = matches.find(
-      (row) =>
-        normalize(clean(row.bengali)) === normalize(bengali),
+      (row) => normalize(clean(row.bengali)) === normalize(bengali),
     );
 
     if (exact) {
-      const image = clean(exact.image_url)
-        ? null
-        : await fetchWordImage(bird.english);
+      const image = clean(exact.image_url) ? null : await fetchWordImage(bird.english);
 
       const needsUpdate =
         clean(exact.fingerprint) !== fingerprint ||
         clean(exact.question) !== question ||
-        JSON.stringify(exact.syllables || []) !==
-          JSON.stringify(tiles) ||
+        JSON.stringify(exact.syllables || []) !== JSON.stringify(tiles) ||
         exact.active !== true ||
         clean(exact.source).toLowerCase() !== "naturesbook" ||
         clean(exact.generation_provider).toLowerCase() !== "nature's book" ||
@@ -1075,10 +1589,10 @@ async function syncWordBank(admin: any, birdNames: BirdName[]) {
             syllables: tiles,
             ...(image
               ? {
-                  image_url: image.url,
-                  image_source: image.source,
-                  attribution: image.attribution,
-                }
+                image_url: image.url,
+                image_source: image.source,
+                attribution: image.attribution,
+              }
               : {}),
             active: true,
             source: "naturesbook",
@@ -1134,12 +1648,8 @@ async function syncWordBank(admin: any, birdNames: BirdName[]) {
       if (row.active !== false) {
         const { error: retireError } = await admin
           .from("game_questions")
-          .update({
-            active: false,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ active: false, updated_at: new Date().toISOString() })
           .eq("id", row.id);
-
         if (retireError) throw retireError;
         retired++;
       }
@@ -1157,524 +1667,83 @@ async function syncWordBank(admin: any, birdNames: BirdName[]) {
 
   for (const row of rows) {
     if (row.active === false) continue;
-
-    const key = `${normalize(clean(row.species))}|${normalize(
-      clean(row.bengali),
-    )}`;
-
+    const key = `${normalize(clean(row.species))}|${normalize(clean(row.bengali))}`;
     if (sourceKeys.has(key)) continue;
 
-    const { error: retireError } = await admin
-      .from("game_questions")
-      .update({
-        active: false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", row.id);
-
-    if (retireError) throw retireError;
-    retired++;
-  }
-
-  return {
-    inserted,
-    corrected,
-    retired,
-    sourceNames: birdNames.length,
-  };
-}
-
-function validRecord(r: any): boolean {
-  const category = clean(r?.category) as Category;
-
-  if (!GENERATED_CATEGORIES.includes(category as GeneratedCategory)) return false;
-
-  const species = clean(r?.species);
-  const bengali = clean(r?.bengali);
-  const question = clean(r?.question);
-  const answer = clean(r?.answer);
-
-  if (
-    !species ||
-    !bengali ||
-    !question ||
-    !answer ||
-    !containsBengali(bengali) ||
-    !containsBengali(question)
-  ) {
-    return false;
-  }
-
-  const options = Array.isArray(r?.options)
-    ? r.options.map(clean).filter(Boolean)
-    : [];
-
-  const hints = Array.isArray(r?.hints)
-    ? r.hints.map(clean).filter(Boolean)
-    : [];
-
-  if (
-    (category === "photo" ||
-      category === "audio" ||
-      category === "hint") &&
-    (options.length !== 4 || !options.includes(answer))
-  ) {
-    return false;
-  }
-
-  if (category === "hint" && hints.length !== 3) return false;
-
-  if (!DIFFICULTIES.includes(clean(r?.difficulty) as any)) return false;
-
-  // Hard category boundaries: a record must describe the gameplay it is
-  // stored under. This prevents a word-puzzle prompt from entering photo,
-  // audio, hint or scramble banks even if Gemini returns the wrong category.
-  const wordPhrase = "বাংলা নামটি অক্ষর সাজিয়ে সম্পূর্ণ করুন";
-  if (question.includes(wordPhrase)) return false;
-  if (category === "audio" && !/পাখ|ডাক|শব্দ|কণ্ঠ|গান/.test(question)) return false;
-  if (category === "photo" && !/ছবি|ছবিতে|ছবিটি|প্রাণী|পাখি|সরীসৃপ|উভচর|স্তন্যপায়ী/.test(question)) return false;
-  if (category === "hint" && !/ইঙ্গিত|লক্ষণ|চিহ্ন|চেন|প্রাণী|পাখি/.test(question)) return false;
-
-  return true;
-}
-
-async function enrichMedia(category: Category, species: string) {
-  if (category === "audio") {
-    const audio = await fetchAudio(species);
-
-    return audio
-      ? {
-          audio_url: audio.url,
-          audio_source: audio.source,
-          attribution: audio.attribution,
-        }
-      : null;
-  }
-
-  const image = await fetchImage(species);
-
-  return image
-    ? {
-        image_url: image.url,
-        image_source: image.source,
-        attribution: image.attribution,
-      }
-    : null;
-}
-
-
-
-async function fetchScientificNameForHint(species: string): Promise<string | null> {
-  try {
-    const url = `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(species)}&per_page=10`;
-    const response = await fetch(url, { headers: { "User-Agent": "eAranyakGameGenerator/5.0" } });
-    if (!response.ok) return null;
-    const body = await response.json();
-    const taxon = body?.results?.find((t: any) =>
-      normalize(clean(t?.preferred_common_name)) === normalize(species) ||
-      normalize(clean(t?.name)) === normalize(species),
-    );
-    const scientific = clean(taxon?.name);
-    return scientific || null;
-  } catch (_) {
-    return null;
-  }
-}
-
-function buildVisualOptions(visualSources: any[], index: number, species: string, bengali: string): string[] {
-  const answer = `${bengali} (${species})`;
-  const candidates: string[] = [];
-  for (let offset = 1; offset <= visualSources.length && candidates.length < 3; offset++) {
-    const candidate = visualSources[(index + offset) % visualSources.length];
-    const candidateSpecies = clean(candidate?.species);
-    const candidateBengali = clean(candidate?.bengali);
-    if (!candidateSpecies || !candidateBengali || normalize(candidateSpecies) === normalize(species)) continue;
-    const label = `${candidateBengali} (${candidateSpecies})`;
-    if (!candidates.includes(label)) candidates.push(label);
-  }
-  if (candidates.length < 3) return [];
-  const options = [answer, ...candidates];
-  const shift = index % options.length;
-  return [...options.slice(shift), ...options.slice(0, shift)];
-}
-
-async function repairVisualBank(admin: any): Promise<{
-  photoRetired: number;
-  photoFromWordInsertedOrUpdated: number;
-  scrambleInsertedOrUpdated: number;
-  scrambleRetired: number;
-  universalVisualSpecies: number;
-}> {
-  const { data, error } = await admin
-    .from("game_questions")
-    .select(
-      "id,category,species,bengali,question,options,answer,hints,explanation,difficulty,active,image_url,image_source,audio_url,audio_source,attribution,source,generation_provider,fingerprint",
-    )
-    .in("category", ["photo", "word", "scramble"])
-    .eq("active", true)
-    .order("created_at", { ascending: true });
-
-  if (error) throw error;
-
-  const rows = (data || []) as any[];
-  const wordRows = rows.filter((r) => clean(r.category) === "word");
-  const photoRows = rows.filter((r) => clean(r.category) === "photo" && clean(r.image_url));
-
-  // The visual universe is the union of:
-  //   1. verified PHOTO records, and
-  //   2. every Nature's Book bird record that has a synchronized photograph.
-  // A photograph URL is the identity key. One URL can never identify two species.
-  const visualSources: any[] = [];
-  const seenImages = new Set<string>();
-  const seenSpecies = new Set<string>();
-  let photoRetired = 0;
-
-  // Keep existing generated PHOTO records first so their curated options and
-  // difficulty are retained whenever the same image is already in the bank.
-  for (const row of photoRows) {
-    const imageUrl = clean(row.image_url);
-    const imageKey = imageIdentity(imageUrl);
-    const speciesKey = normalize(clean(row.species));
-    if (!imageUrl || !speciesKey || seenImages.has(imageKey) || seenSpecies.has(speciesKey)) {
-      if (clean(row.id)) {
-        const { error: retireError } = await admin
-          .from("game_questions")
-          .update({ active: false, updated_at: new Date().toISOString() })
-          .eq("id", row.id);
-        if (retireError) throw retireError;
-        photoRetired++;
-      }
-      continue;
-    }
-    seenImages.add(imageKey);
-    seenSpecies.add(speciesKey);
-    visualSources.push(row);
-  }
-
-  // Then add every unique word-bank photograph. These become PHOTO records,
-  // while the original WORD records remain untouched for the Bengali puzzle.
-  let photoFromWordInsertedOrUpdated = 0;
-  for (const row of wordRows) {
-    const species = clean(row.species);
-    const bengali = clean(row.bengali);
-    const speciesKey = normalize(species);
-    if (!species || !bengali || !speciesKey || seenSpecies.has(speciesKey)) {
-      continue;
-    }
-
-    let imageUrl = clean(row.image_url);
-    let imageSource = clean(row.image_source);
-    let attribution = clean(row.attribution);
-
-    // Every verified Nature's Book bird must enter the universal visual pool.
-    // Repair missing images here rather than silently dropping the bird.
-    if (!imageUrl) {
-      const repaired = await fetchWordImage(species);
-      if (repaired) {
-        imageUrl = repaired.url;
-        imageSource = repaired.source;
-        attribution = repaired.attribution || "";
-        const { error: repairError } = await admin
-          .from("game_questions")
-          .update({
-            image_url: imageUrl,
-            image_source: imageSource,
-            attribution: attribution || null,
-            active: true,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", row.id);
-        if (repairError) throw repairError;
-      }
-    }
-
-    if (!imageUrl) continue;
-
-    const imageKey = imageIdentity(imageUrl);
-    // Never let the same photograph identify two different species.
-    if (seenImages.has(imageKey)) {
-      continue;
-    }
-
-    const enrichedRow = {
-      ...row,
-      image_url: imageUrl,
-      image_source: imageSource,
-      attribution,
-    };
-    visualSources.push(enrichedRow);
-    seenImages.add(imageKey);
-    seenSpecies.add(speciesKey);
-  }
-
-  const labelBySpecies = new Map<string, string>();
-  for (const row of visualSources) {
-    labelBySpecies.set(normalize(clean(row.species)), `${clean(row.bengali)} (${clean(row.species)})`);
-  }
-
-  // Difficulty is assigned independently for each visual game. The same
-  // universal image pool is intentionally spread approximately evenly across
-  // easy/medium/hard; source difficulty must never shrink or bias the pool.
-  const difficultyFor = (_row: any, index: number, total: number): string => {
-    if (total <= 0) return "medium";
-    const base = Math.floor(total / DIFFICULTIES.length);
-    const remainder = total % DIFFICULTIES.length;
-    let cursor = 0;
-    for (let bucket = 0; bucket < DIFFICULTIES.length; bucket++) {
-      const size = base + (bucket < remainder ? 1 : 0);
-      if (index < cursor + size) return DIFFICULTIES[bucket];
-      cursor += size;
-    }
-    return "medium";
-  };
-
-  for (let index = 0; index < visualSources.length; index++) {
-    const source = visualSources[index];
-    const category = clean(source.category);
-    const species = clean(source.species);
-    const bengali = clean(source.bengali);
-    const imageUrl = clean(source.image_url);
-    if (!species || !bengali || !imageUrl) continue;
-
-    const speciesKey = normalize(species);
-    // Always build PHOTO options from the complete universal visual pool.
-    // Never reuse stale Gemini options, because they may reference a species
-    // that is not part of the current visual universe.
-    const candidates: string[] = [];
-    for (
-      let offset = 1;
-      offset <= visualSources.length && candidates.length < 3;
-      offset++
-    ) {
-      const candidate = visualSources[(index + offset) % visualSources.length];
-      const candidateKey = normalize(clean(candidate.species));
-      const label = labelBySpecies.get(candidateKey);
-      if (
-        !label ||
-        candidateKey === speciesKey ||
-        candidates.includes(label)
-      ) {
-        continue;
-      }
-      candidates.push(label);
-    }
-
-    if (candidates.length < 3) continue;
-
-    let options: string[] = [`${bengali} (${species})`, ...candidates];
-
-    // Deterministic rotation keeps the answer from always appearing first.
-    const shift = index % options.length;
-    options = [...options.slice(shift), ...options.slice(0, shift)];
-
-    const answer = `${bengali} (${species})`;
-    if (!options.includes(answer)) {
-      // Existing generated photo options may use a slightly different Bengali
-      // label. For universal consistency, normalize them to the verified label.
-      options = [answer, ...options.filter((x) => normalize(x) !== normalize(answer)).slice(0, 3)];
-    }
-    if (options.length !== 4) continue;
-
-    const fingerprint = await sha256(
-      `photo-universal|${speciesKey}|${normalize(imageUrl)}`,
-    );
-
-    const row = {
-      category: "photo",
-      species,
-      bengali,
-      question: "ছবি দেখে চিনুন",
-      options,
-      answer,
-      hints: Array.isArray(source.hints) ? source.hints.map(clean).filter(Boolean) : [],
-      syllables: [],
-      explanation: clean(source.explanation) || null,
-      difficulty: difficultyFor(source, index, visualSources.length),
-      active: true,
-      image_url: imageUrl,
-      image_source: clean(source.image_source) || "iNaturalist",
-      audio_url: null,
-      audio_source: null,
-      attribution: clean(source.attribution) || null,
-      source: category === "word" ? "visual-universal-set" : (clean(source.source) || "visual-universal-set"),
-      generation_provider: category === "word"
-        ? "Visual universal set from Nature's Book image bank"
-        : (clean(source.generation_provider) || "Visual universal set"),
-      fingerprint,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error: upsertError } = await admin
-      .from("game_questions")
-      .upsert(row, { onConflict: "fingerprint" });
-    if (upsertError) throw upsertError;
-
-    if (category === "word") photoFromWordInsertedOrUpdated++;
-  }
-
-  // Every image in the universal PHOTO set must also be available to the
-  // HINT game.  Preserve any existing Gemini-generated hint record; only
-  // synthesize a deterministic fallback when a species has no hint row.
-  const { data: existingHints, error: existingHintsError } = await admin
-    .from("game_questions")
-    .select("id,species,active")
-    .eq("category", "hint");
-  if (existingHintsError) throw existingHintsError;
-
-  const hintSpecies = new Set(
-    ((existingHints || []) as any[])
-      .filter((r) => r.active === true)
-      .map((r) => normalize(clean(r.species)))
-      .filter(Boolean),
-  );
-
-  for (let index = 0; index < visualSources.length; index++) {
-    const source = visualSources[index];
-    const species = clean(source.species);
-    const bengali = clean(source.bengali);
-    if (!species || !bengali) continue;
-
-    const speciesKey = normalize(species);
-    if (hintSpecies.has(speciesKey)) continue;
-
-    const words = species.split(/\s+/).filter(Boolean);
-    const firstInitial = words[0]?.charAt(0).toUpperCase() || "?";
-    const wordCount = words.length;
-    const scientific = await fetchScientificNameForHint(species);
-
-    const hints = [
-      `এটি ভারতীয় বন্যপ্রাণের একটি প্রজাতি।`,
-      `ইংরেজি নামটি ${wordCount}টি শব্দের এবং প্রথম শব্দের প্রথম অক্ষর “${firstInitial}”।`,
-      scientific
-        ? `এর বৈজ্ঞানিক নামের প্রথম অংশটি “${scientific.split(/\s+/)[0]}”।`
-        : `এর বৈজ্ঞানিক নামটি জানলে প্রজাতিটিকে আরও নির্ভুলভাবে শনাক্ত করা যায়।`,
-    ];
-
-    const options = buildVisualOptions(visualSources, index, species, bengali);
-    if (options.length !== 4) continue;
-    const answer = `${bengali} (${species})`;
-    if (!options.includes(answer)) continue;
-
-    const fingerprint = await sha256(
-      `hint-universal|${speciesKey}|${normalize(bengali)}`,
-    );
-
-    const hintRow = {
-      category: "hint",
-      species,
-      bengali,
-      question: "ইঙ্গিত বুঝে চিনুন",
-      options,
-      answer,
-      hints,
-      syllables: [],
-      image_url: clean(source.image_url) || null,
-      audio_url: null,
-      image_source: clean(source.image_source) || null,
-      audio_source: null,
-      attribution: clean(source.attribution) || null,
-      explanation: clean(source.explanation) || null,
-      difficulty: difficultyFor(source, index, visualSources.length),
-      active: true,
-      source: "visual-universal-set",
-      generation_provider: "Visual universal set deterministic hint fallback",
-      fingerprint,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error: hintUpsertError } = await admin
-      .from("game_questions")
-      .upsert(hintRow, { onConflict: "fingerprint" });
-    if (hintUpsertError) throw hintUpsertError;
-  }
-
-  // Reload the active PHOTO universe after the projections above.
-  const { data: activePhotos, error: activePhotoError } = await admin
-    .from("game_questions")
-    .select(
-      "id,species,bengali,question,options,answer,hints,explanation,difficulty,image_url,image_source,attribution,source,generation_provider,fingerprint",
-    )
-    .eq("category", "photo")
-    .eq("active", true)
-    .order("created_at", { ascending: true });
-  if (activePhotoError) throw activePhotoError;
-
-  const active = (activePhotos || []) as any[];
-  const validScrambleFingerprints = new Set<string>();
-  const seenScrambleImages = new Set<string>();
-  let scrambleInsertedOrUpdated = 0;
-  let scrambleRetired = 0;
-
-  for (const photo of active) {
-    const imageUrl = clean(photo.image_url);
-    const species = clean(photo.species);
-    const imageKey = imageIdentity(imageUrl);
-    if (!imageUrl || !species || seenScrambleImages.has(imageKey)) continue;
-    seenScrambleImages.add(imageKey);
-
-    const fingerprint = await sha256(
-      `scramble|${normalize(species)}|${normalize(imageUrl)}`,
-    );
-    validScrambleFingerprints.add(fingerprint);
-
-    const scrambleRow = {
-      category: "scramble",
-      species,
-      bengali: clean(photo.bengali),
-      question: "ছবিটি জোড়া লাগিয়ে চিনুন",
-      options: [],
-      answer: species,
-      hints: Array.isArray(photo.hints) ? photo.hints.map(clean).filter(Boolean) : [],
-      syllables: [],
-      image_url: imageUrl,
-      audio_url: null,
-      image_source: clean(photo.image_source) || "iNaturalist",
-      audio_source: null,
-      attribution: clean(photo.attribution) || null,
-      explanation: clean(photo.explanation) || null,
-      difficulty: DIFFICULTIES.includes(clean(photo.difficulty) as any)
-        ? clean(photo.difficulty)
-        : "medium",
-      active: true,
-      source: "visual-universal-set",
-      generation_provider: "Visual universal set",
-      fingerprint,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error: upsertError } = await admin
-      .from("game_questions")
-      .upsert(scrambleRow, { onConflict: "fingerprint" });
-    if (upsertError) throw upsertError;
-    scrambleInsertedOrUpdated++;
-  }
-
-  const { data: scrambleRows, error: scrambleReadError } = await admin
-    .from("game_questions")
-    .select("id,fingerprint,image_url,active")
-    .eq("category", "scramble")
-    .eq("active", true);
-  if (scrambleReadError) throw scrambleReadError;
-
-  for (const row of (scrambleRows || []) as any[]) {
-    const fp = clean(row.fingerprint);
-    if (fp && validScrambleFingerprints.has(fp)) continue;
-    if (!clean(row.id)) continue;
     const { error: retireError } = await admin
       .from("game_questions")
       .update({ active: false, updated_at: new Date().toISOString() })
       .eq("id", row.id);
     if (retireError) throw retireError;
-    scrambleRetired++;
+    retired++;
   }
 
-  return {
-    photoRetired,
-    photoFromWordInsertedOrUpdated,
-    scrambleInsertedOrUpdated,
-    scrambleRetired,
-    universalVisualSpecies: visualSources.length,
-  };
+  return { inserted, corrected, retired, sourceNames: birdNames.length };
+}
+
+async function cleanupInvalidActiveRows(admin: any): Promise<number> {
+  const { data, error } = await admin
+    .from("game_questions")
+    .select(
+      "id,category,species,bengali,question,options,hints,image_url,audio_url,source,generation_provider,active",
+    )
+    .eq("active", true);
+
+  if (error) throw error;
+
+  const wordPhrase = "বাংলা নামটি অক্ষর সাজিয়ে সম্পূর্ণ করুন";
+  const invalidIds: string[] = [];
+
+  for (const row of (data || []) as any[]) {
+    const category = clean(row.category).toLowerCase();
+    const species = clean(row.species);
+    const bengali = clean(row.bengali);
+    const question = clean(row.question);
+    const options = Array.isArray(row.options)
+      ? row.options.map(clean).filter(Boolean)
+      : [];
+    const hints = Array.isArray(row.hints)
+      ? row.hints.map(clean).filter(Boolean)
+      : [];
+    const hasImage = clean(row.image_url).length > 0;
+    const hasAudio = clean(row.audio_url).length > 0;
+    const source = clean(row.source).toLowerCase();
+    const provider = clean(row.generation_provider).toLowerCase();
+
+    let invalid = false;
+    if (category === "photo") {
+      invalid = !hasImage || options.length !== 4 || question.includes(wordPhrase);
+    } else if (category === "audio") {
+      invalid = !hasAudio || options.length !== 4 || question.includes(wordPhrase);
+    } else if (category === "hint") {
+      invalid =
+        options.length !== 4 ||
+        hints.length !== 3 ||
+        question.includes(wordPhrase) ||
+        !hintsAreValid(hints, species, bengali);
+    } else if (category === "scramble") {
+      invalid = !hasImage;
+    } else if (category === "word") {
+      invalid =
+        source !== "naturesbook" ||
+        provider !== "nature's book" ||
+        question !== wordPhrase;
+    } else {
+      invalid = true;
+    }
+
+    if (invalid && clean(row.id)) invalidIds.push(clean(row.id));
+  }
+
+  if (!invalidIds.length) return 0;
+
+  const { error: updateError } = await admin
+    .from("game_questions")
+    .update({ active: false, updated_at: new Date().toISOString() })
+    .in("id", invalidIds);
+
+  if (updateError) throw updateError;
+  return invalidIds.length;
 }
 
 Deno.serve(async (req: Request) => {
@@ -1686,9 +1755,6 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "POST required." }, 405);
   }
 
-  // Read the body before authentication so the Supabase Dashboard
-  // Invoke tool can test the function without requiring a custom header.
-  // External callers should continue to use x-game-generator-secret.
   let requestBody: any = {};
   try {
     const rawBody = await req.text();
@@ -1702,24 +1768,17 @@ Deno.serve(async (req: Request) => {
 
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey =
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!apiKey || !supabaseUrl || !serviceRoleKey) {
     return json(
-      {
-        ok: false,
-        error: "Game generator server configuration is incomplete.",
-      },
+      { ok: false, error: "Game generator server configuration is incomplete." },
       500,
     );
   }
 
   try {
-    const admin = createClient(
-      supabaseUrl,
-      serviceRoleKey,
-    );
+    const admin = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: config, error: configError } = await admin
       .from("game_generator_config")
@@ -1738,10 +1797,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Accept the existing database secret, and also the deployed
-    // GAME_GENERATOR_SECRET environment secret. The latter is important
-    // because the dashboard/external test mechanism commonly uses the
-    // environment secret rather than the database copy.
     const configuredSecret = clean(config?.secret);
     const environmentSecret = clean(Deno.env.get("GAME_GENERATOR_SECRET"));
     const suppliedSecret = headerSecret || bodySecret;
@@ -1756,7 +1811,8 @@ Deno.serve(async (req: Request) => {
         {
           ok: false,
           stage: "authorization",
-          error: "Unauthorized. Provide the game generator secret using the x-game-generator-secret header or the JSON field 'secret'.",
+          error:
+            "Unauthorized. Provide the game generator secret using the x-game-generator-secret header or the JSON field 'secret'.",
           hasDatabaseSecret: configuredSecret.length > 0,
           hasEnvironmentSecret: environmentSecret.length > 0,
         },
@@ -1772,14 +1828,14 @@ Deno.serve(async (req: Request) => {
     console.log("generate-game-bank: fetching Nature's Book bird names");
     const parsedBirdNames = await fetchNaturesBookBirdNames();
 
-    console.log(`generate-game-bank: parsed ${parsedBirdNames.length} bird names`);
+    console.log(
+      `generate-game-bank: parsed ${parsedBirdNames.length} bird names`,
+    );
     const birdValidation = await filterToVerifiedBirds(parsedBirdNames);
     const birdNames = birdValidation.birds;
     console.log(`generate-game-bank: verified ${birdNames.length} bird names`);
-    const wordSync = await syncWordBank(
-      admin,
-      birdNames,
-    );
+
+    const wordSync = await syncWordBank(admin, birdNames);
     console.log("generate-game-bank: word bank synchronized", wordSync);
 
     if (requestBody?.sync_words_only === true) {
@@ -1788,7 +1844,11 @@ Deno.serve(async (req: Request) => {
         syncOnly: true,
         wordSync,
         cleanedInvalid,
-        birdValidation: { parsed: parsedBirdNames.length, verified: birdNames.length, rejected: birdValidation.rejected },
+        birdValidation: {
+          parsed: parsedBirdNames.length,
+          verified: birdNames.length,
+          rejected: birdValidation.rejected,
+        },
       });
     }
 
@@ -1800,11 +1860,9 @@ Deno.serve(async (req: Request) => {
     const audioRepair = await repairAudioBank(admin, birdNames);
     console.log("generate-game-bank: bird-call bank repaired", audioRepair);
 
-    console.log("generate-game-bank: rebalancing difficulty levels");
-    const difficultyRepairBefore = await rebalanceDifficulty(admin);
-    console.log("generate-game-bank: difficulty levels rebalanced", difficultyRepairBefore);
-
-    console.log(`generate-game-bank: generating ${GENERATION_COUNT} supplemental records with ${MODEL}`);
+    console.log(
+      `generate-game-bank: generating ${GENERATION_COUNT} supplemental records with ${MODEL}`,
+    );
     const generated = await geminiGenerate(apiKey);
 
     const { data: activePhotoRows, error: activePhotoError } = await admin
@@ -1829,17 +1887,21 @@ Deno.serve(async (req: Request) => {
       ["hint", new Set<string>()],
     ]);
 
+    // HINT records must be restricted to species already present in the
+    // visual pool.  visualSpecies is populated below as photo records land.
+    const visualSpecies = new Set<string>();
+
     let inserted = 0;
     let rejected = 0;
     let noMedia = 0;
     let duplicateMedia = 0;
     let duplicateSpecies = 0;
     let hintOutsideVisualSet = 0;
-
-    const visualSpecies = new Set<string>();
+    let badHints = 0;
 
     for (const raw of generated) {
       if (!validRecord(raw)) {
+        if (clean(raw?.category) === "hint") badHints++;
         rejected++;
         continue;
       }
@@ -1855,7 +1917,11 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      if (category === "hint" && visualSpecies.size > 0 && !visualSpecies.has(speciesKey)) {
+      if (
+        category === "hint" &&
+        visualSpecies.size > 0 &&
+        !visualSpecies.has(speciesKey)
+      ) {
         hintOutsideVisualSet++;
         continue;
       }
@@ -1894,25 +1960,43 @@ Deno.serve(async (req: Request) => {
 
       categorySpecies.add(speciesKey);
 
-      const difficulty = DIFFICULTIES.includes(clean(raw.difficulty) as any)
-        ? clean(raw.difficulty)
-        : "medium";
-
+      // Gemini supplied options; shuffle before persisting so the answer
+      // is not always first.
+      const rawOptions = Array.isArray(raw.options)
+        ? raw.options.map(clean).filter(Boolean)
+        : [];
+      const answer = clean(raw.answer);
       const fingerprint = await sha256(
         `${category}|${normalize(question)}|${speciesKey}|${normalize(bengali)}`,
       );
+
+      let options = rawOptions;
+      if (
+        (category === "photo" || category === "audio" || category === "hint") &&
+        rawOptions.length === 4
+      ) {
+        options = deterministicShuffle(rawOptions, fingerprint);
+        if (!options.includes(answer)) {
+          // Answer string didn't survive the round-trip — reject rather
+          // than silently insert a broken row.
+          rejected++;
+          continue;
+        }
+      }
 
       const row: any = {
         category,
         species,
         bengali,
         question,
-        options: Array.isArray(raw.options) ? raw.options.map(clean) : [],
-        answer: clean(raw.answer),
+        options,
+        answer,
         hints: Array.isArray(raw.hints) ? raw.hints.map(clean) : [],
         syllables: Array.isArray(raw.syllables) ? raw.syllables.map(clean) : [],
         explanation: clean(raw.explanation) || null,
-        difficulty,
+        difficulty: DIFFICULTIES.includes(clean(raw.difficulty) as any)
+          ? clean(raw.difficulty)
+          : "medium",
         active: true,
         source: "gemini",
         generation_provider: `Gemini ${MODEL} with retry/fallback`,
@@ -1933,7 +2017,12 @@ Deno.serve(async (req: Request) => {
 
     console.log("generate-game-bank: final universal visual-bank repair");
     const afterRepair = await repairVisualBank(admin);
-    const difficultyRepairAfter = await rebalanceDifficulty(admin);
+
+    // Single authoritative difficulty pass — replaces all previous
+    // difficultyForIndex / difficultyFor / per-run labels.
+    console.log("generate-game-bank: rebalancing difficulty across all categories");
+    const difficultyBank = await rebalanceAllCategories(admin);
+    console.log("generate-game-bank: difficulty bank", difficultyBank);
 
     return json({
       ok: true,
@@ -1942,19 +2031,14 @@ Deno.serve(async (req: Request) => {
       received: generated.length,
       inserted,
       rejected,
+      badHints,
       noMedia,
       duplicateMedia,
       duplicateSpecies,
       hintOutsideVisualSet,
-      visualBank: {
-        before: beforeRepair,
-        after: afterRepair,
-      },
+      visualBank: { before: beforeRepair, after: afterRepair },
       audioBank: audioRepair,
-      difficultyBank: {
-        beforeSupplementalGeneration: difficultyRepairBefore,
-        afterSupplementalGeneration: difficultyRepairAfter,
-      },
+      difficultyBank,
       wordSync,
       cleanedInvalid,
       birdValidation: {
@@ -1963,17 +2047,9 @@ Deno.serve(async (req: Request) => {
         rejected: birdValidation.rejected,
       },
     });
-
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("generate-game-bank failed:", message, e);
-    return json(
-      {
-        ok: false,
-        stage: "generation",
-        error: message,
-      },
-      500,
-    );
+    return json({ ok: false, stage: "generation", error: message }, 500);
   }
 });

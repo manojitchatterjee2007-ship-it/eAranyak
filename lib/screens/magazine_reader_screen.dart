@@ -10,9 +10,13 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/config.dart';
+import '../models/content_protection_models.dart';
 import '../services/sound_service.dart';
 import '../services/forest_ambience_service.dart';
+import '../services/content_protection_service.dart';
+import '../services/protected_asset_service.dart';
 import '../widgets/keyboard_press_effect.dart';
+import '../widgets/protected_watermark.dart';
 
 enum ReaderViewState { spread, single, zoomed }
 
@@ -60,6 +64,11 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   void initState() {
     super.initState();
     _currentPage = widget.initialPage;
+    unawaited(ContentProtectionService.enable(
+      scope: ContentProtectionScope.magazine,
+      contentId: widget.magazineId,
+      userId: widget.userEmail,
+    ));
 
     // Magazine Reader is always silent with respect to forest ambience.
     // Page-flip audio remains independently controlled and defaults to ON.
@@ -91,6 +100,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
     _pageFlipAudioPlayer.stop();
     _pageFlipAudioPlayer.dispose();
     unawaited(ForestAmbienceService.stopAmbience());
+    unawaited(ContentProtectionService.disable());
     _zoomController.dispose();
     super.dispose();
   }
@@ -123,10 +133,14 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
           .order('page_number', ascending: true);
       final List<String> urls = [];
       for (final p in pages) {
-        final signedUrl = await _supabase.storage
-            .from('magazine_pages')
-            .createSignedUrl(p['storage_path'], 120);
-        urls.add(signedUrl);
+        final signedUrl = await ProtectedAssetService.getSignedUrl(
+          bucket: 'magazine_pages',
+          storagePath: p['storage_path'],
+          expiresInSeconds: 120,
+        );
+        if (signedUrl != null) {
+          urls.add(signedUrl);
+        }
       }
       _signedUrls = urls;
       _buildFlipbookPages();
@@ -495,21 +509,9 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                   if (_viewState == ReaderViewState.zoomed) 
                     _buildCustomZoomView(context),
 
-                  // Watermark overlay
-                  IgnorePointer(
-                    child: Center(
-                      child: Transform.rotate(
-                        angle: -0.45,
-                        child: Text(
-                          widget.userEmail,
-                          style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold,
-                            color: Colors.white.withOpacity(0.08), letterSpacing: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Dynamic visible watermark: useful on platforms where the OS
+                  // cannot guarantee screenshot blocking (for example Windows).
+                  ProtectedWatermark(identity: widget.userEmail),
                   
                   // UI Controls
                   if (_showControls) ...[
@@ -612,6 +614,10 @@ class _AranyakPdfReaderScreenState extends State<AranyakPdfReaderScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(ContentProtectionService.enable(
+      scope: ContentProtectionScope.bookPreview,
+      contentId: widget.assetPath,
+    ));
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _openPdf();
@@ -674,6 +680,7 @@ class _AranyakPdfReaderScreenState extends State<AranyakPdfReaderScreen> {
 
   @override
   void dispose() {
+    unawaited(ContentProtectionService.disable());
     _scrollController.dispose();
     _document?.close();
     super.dispose();
@@ -780,8 +787,11 @@ class _AranyakPdfReaderScreenState extends State<AranyakPdfReaderScreen> {
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ListView.builder(
+          controller: _scrollController,
       padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: _pageCount,
       itemBuilder: (context, index) {
@@ -840,7 +850,10 @@ class _AranyakPdfReaderScreenState extends State<AranyakPdfReaderScreen> {
             );
           },
         );
-      },
+        },
+        ),
+        const ProtectedWatermark(identity: 'eআরণ্যক PREVIEW'),
+      ],
     );
   }
 }

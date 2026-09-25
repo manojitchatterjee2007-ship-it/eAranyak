@@ -14,6 +14,22 @@ function mondayUtc(date = new Date()): string {
   return d.toISOString().slice(0, 10);
 }
 
+// ---------------------------------------------------------------------------
+// Fisher-Yates shuffle. Used to randomize option order at the moment a
+// question is selected for weekly play — this is what actually fixes
+// "the correct answer is almost always the first option": nothing upstream
+// (whatever originally generated the question) needs to change, because we
+// re-shuffle right before publishing regardless of how it was stored.
+// ---------------------------------------------------------------------------
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 async function topUpGameBankIfNeeded(admin: any) {
   const counts: Record<string, number> = {};
   for (const category of CATEGORIES) {
@@ -102,9 +118,55 @@ async function sendFcm(sa:any,token:string,title:string,body:string,data:Record<
 
 async function imageForSpecies(species:string){ try{ const r=await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(species)}&per_page=1`,{headers:{"User-Agent":"eAranyakGameRotator/1.0"}}); if(!r.ok)return null; const b=await r.json(); const p=b?.results?.[0]?.default_photo; const url=p?.medium_url||p?.url; if(!url)return null; return {image_url:String(url).replace("square","medium"),image_source:"iNaturalist",attribution:p?.attribution?String(p.attribution):null}; }catch(_){return null;} }
 function audioRank(mime:string,url:string){const m=mime.toLowerCase(),u=url.toLowerCase(); if(m==='audio/mpeg'||u.endsWith('.mp3'))return 0;if(m==='audio/wav'||m==='audio/x-wav'||u.endsWith('.wav'))return 1;if(m.includes('ogg')||m.includes('opus')||u.endsWith('.ogg')||u.endsWith('.oga')||u.endsWith('.opus'))return 2;return m.startsWith('audio/')?3:99;}
-async function audioForSpecies(species:string){ try{for(const term of [`"${species}" filetype:audio`,`${species} bird filetype:audio`]){const u=new URL('https://commons.wikimedia.org/w/api.php');u.search=new URLSearchParams({action:'query',format:'json',generator:'search',gsrnamespace:'6',gsrsearch:term,gsrlimit:'30',prop:'imageinfo',iiprop:'url|mime|extmetadata'}).toString();const r=await fetch(u,{headers:{'User-Agent':'eAranyakGameRotator/1.0'}});if(!r.ok)continue;const b=await r.json();const pages=b?.query?.pages;if(!pages)continue;const cs:any[]=[];for(const page of Object.values(pages) as any[]){const info=page?.imageinfo?.[0];const url=info?.url?.toString().trim(),mime=info?.mime?.toString().trim();if(!url||!mime?.startsWith('audio/'))continue;const title=page?.title?.toString().toLowerCase()||'';let relevance=title.includes(species.toLowerCase())?100:0;if(title.includes('call'))relevance+=20;if(title.includes('song'))relevance+=10;cs.push({url,mime,relevance,meta:info?.extmetadata});}cs.sort((a,b)=>b.relevance-a.relevance||audioRank(a.mime,a.url)-audioRank(b.mime,b.url));if(!cs.length)continue;const best=cs[0],m=best.meta||{};const artist=m.Artist?.value||m.Credit?.value||m.Creator?.value;const license=m.LicenseShortName?.value||m.UsageTerms?.value;return {audio_url:best.url,audio_source:'Wikimedia Commons',attribution:[artist&&`Recorded by ${artist}`,license,'Wikimedia Commons'].filter(Boolean).join(' • ')||null};}}catch(_){return null;} }
 
-async function ensureMedia(admin:any,row:any){ if(row.category==='hint')return true; if(row.category==='audio'){ if(row.audio_url)return true; const media=await audioForSpecies(row.species); if(!media)return false; const {error}=await admin.from('game_questions').update(media).eq('id',row.id); return !error; } if(row.image_url)return true; const media=await imageForSpecies(row.species); if(!media)return false; const {error}=await admin.from('game_questions').update(media).eq('id',row.id); return !error; }
+async function audioFromWikimedia(species:string){ try{for(const term of [`"${species}" filetype:audio`,`${species} bird filetype:audio`]){const u=new URL('https://commons.wikimedia.org/w/api.php');u.search=new URLSearchParams({action:'query',format:'json',generator:'search',gsrnamespace:'6',gsrsearch:term,gsrlimit:'30',prop:'imageinfo',iiprop:'url|mime|extmetadata'}).toString();const r=await fetch(u,{headers:{'User-Agent':'eAranyakGameRotator/1.0'}});if(!r.ok)continue;const b=await r.json();const pages=b?.query?.pages;if(!pages)continue;const cs:any[]=[];for(const page of Object.values(pages) as any[]){const info=page?.imageinfo?.[0];const url=info?.url?.toString().trim(),mime=info?.mime?.toString().trim();if(!url||!mime?.startsWith('audio/'))continue;const title=page?.title?.toString().toLowerCase()||'';let relevance=title.includes(species.toLowerCase())?100:0;if(title.includes('call'))relevance+=20;if(title.includes('song'))relevance+=10;cs.push({url,mime,relevance,meta:info?.extmetadata});}cs.sort((a,b)=>b.relevance-a.relevance||audioRank(a.mime,a.url)-audioRank(b.mime,b.url));if(!cs.length)continue;const best=cs[0],m=best.meta||{};const artist=m.Artist?.value||m.Credit?.value||m.Creator?.value;const license=m.LicenseShortName?.value||m.UsageTerms?.value;return {audio_url:best.url,audio_source:'Wikimedia Commons',attribution:[artist&&`Recorded by ${artist}`,license,'Wikimedia Commons'].filter(Boolean).join(' • ')||null};}}catch(_){} return null; }
+
+// Xeno-canto is THE dedicated bird-call archive — far broader species
+// coverage than Wikimedia Commons, which is why audio was consistently
+// scarcer than the other categories. Requires a free API key (register at
+// xeno-canto.org -> verify email -> Account page -> API key) set as the
+// XENO_CANTO_API_KEY secret. Tried first; falls back to Wikimedia Commons.
+async function audioFromXenoCanto(species:string){
+  const key = Deno.env.get('XENO_CANTO_API_KEY');
+  if (!key) return null;
+  try {
+    const u = new URL('https://xeno-canto.org/api/3/recordings');
+    u.search = new URLSearchParams({ query: `en:"${species}"`, key }).toString();
+    const r = await fetch(u, { headers: { 'User-Agent': 'eAranyakGameRotator/1.0' } });
+    if (!r.ok) return null;
+    const b = await r.json();
+    const recordings: any[] = Array.isArray(b?.recordings) ? b.recordings : [];
+    if (!recordings.length) return null;
+
+    // Prefer higher-quality ("A"/"B" rated), shorter (quicker to load in-app) recordings.
+    recordings.sort((a, b) => {
+      const qa = String(a?.q ?? 'E'), qb = String(b?.q ?? 'E');
+      if (qa !== qb) return qa.localeCompare(qb); // 'A' < 'B' < ... < 'E'
+      return (parseFloat(a?.length) || 999) - (parseFloat(b?.length) || 999);
+    });
+
+    const best = recordings[0];
+    const fileUrl = best?.file ? String(best.file) : null;
+    if (!fileUrl) return null;
+
+    const recordist = best?.rec ? String(best.rec) : null;
+    const license = best?.lic ? String(best.lic).replace(/^\/\//, 'https://') : null;
+
+    return {
+      audio_url: fileUrl.startsWith('http') ? fileUrl : `https:${fileUrl}`,
+      audio_source: 'Xeno-canto',
+      attribution: [recordist && `Recorded by ${recordist}`, 'Xeno-canto', license].filter(Boolean).join(' • ') || null,
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+async function audioForSpecies(species:string){
+  return (await audioFromXenoCanto(species)) ?? (await audioFromWikimedia(species));
+}
+
+async function ensureMedia(admin:any,row:any){ if(row.category==='hint')return true; if(row.category==='audio'){ if(row.audio_url)return true; const media=await audioForSpecies(row.species); if(!media)return false; const {error}=await admin.from('game_questions').update(media).eq('id',row.id); if(!error){row.audio_url=media.audio_url;row.audio_source=media.audio_source;row.attribution=media.attribution;} return !error; } if(row.image_url)return true; const media=await imageForSpecies(row.species); if(!media)return false; const {error}=await admin.from('game_questions').update(media).eq('id',row.id); if(!error){row.image_url=media.image_url;row.image_source=media.image_source;row.attribution=media.attribution;} return !error; }
 
 
 async function rebalanceActiveDifficulties(admin:any) {
@@ -144,7 +206,16 @@ Deno.serve(async(req:Request)=>{ if(req.method==='OPTIONS')return new Response('
 
 const bankBefore = await topUpGameBankIfNeeded(admin);
 
+// Rebalance BEFORE this week's selection, not just after. Previously this
+// only ran at the very end of the run, which meant any category that had
+// just been topped up (audio, most often, since it was chronically short)
+// was drawn from using whatever raw/arbitrary difficulty the generator
+// originally assigned — a full week out of date. Rebalancing here first
+// means this week's own picks come from freshly-fair thirds.
+const difficultyBalanceBefore = await rebalanceActiveDifficulties(admin);
+
 const selected: any[] = [];
+const selectedRows: Record<string, any> = {};
 const usageCutoff = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
 
 for (const category of CATEGORIES) {
@@ -169,14 +240,16 @@ for (const category of CATEGORIES) {
     let got = 0;
     for (const row of pool) {
       if (got >= need) break;
-      if (await ensureMedia(admin, row)) { selected.push({ category, id: row.id }); got++; }
+      if (await ensureMedia(admin, row)) { selected.push({ category, id: row.id }); selectedRows[row.id] = row; got++; }
     }
     if (got < need) throw new Error(`Not enough playable ${category} questions. Need ${need}, found ${got}.`);
     continue;
   }
 
   // Weekly play should itself expose an approximately even difficulty mix:
-  // 8 questions => 3/3/2; 4 questions => 2/1/1.
+  // 8 questions => 3/3/2; 4 questions => 2/1/1. (Not a strict requirement —
+  // if one bucket runs short, the fill-in pass below just pulls from
+  // whatever's left, so it degrades to "close enough" rather than failing.)
   const base = Math.floor(need / 3);
   const rem = need % 3;
   const targets = { easy: base + (rem > 0 ? 1 : 0), medium: base + (rem > 1 ? 1 : 0), hard: base };
@@ -190,6 +263,7 @@ for (const category of CATEGORIES) {
       if (chosenIds.has(row.id) || row.difficulty !== difficulty) continue;
       if (await ensureMedia(admin, row)) {
         selected.push({ category, id: row.id });
+        selectedRows[row.id] = row;
         chosenIds.add(row.id);
         taken++;
         got++;
@@ -205,6 +279,7 @@ for (const category of CATEGORIES) {
       if (chosenIds.has(row.id)) continue;
       if (await ensureMedia(admin, row)) {
         selected.push({ category, id: row.id });
+        selectedRows[row.id] = row;
         chosenIds.add(row.id);
         got++;
       }
@@ -215,12 +290,46 @@ for (const category of CATEGORIES) {
 }
 
 for(const s of selected){await admin.from('game_questions').update({times_used:((await admin.from('game_questions').select('times_used').eq('id',s.id).single()).data?.times_used??0)+1,last_used_at:new Date().toISOString()}).eq('id',s.id);}
-const grouped:Record<string,string[]>={};for(const s of selected)(grouped[s.category]??=[]).push(s.id);
-const rows=CATEGORIES.map(category=>({week_start:weekStart,category,payload:{version:2,question_ids:grouped[category]||[]},question_ids:grouped[category]||[],generated_at:new Date().toISOString(),selection_version:2}));
+
+const grouped:Record<string,string[]>={};
+const groupedQuestions:Record<string,any[]>={};
+for(const s of selected){
+  (grouped[s.category]??=[]).push(s.id);
+  const row = selectedRows[s.id];
+  // Shuffle options HERE, once, at publish time — this is what fixes the
+  // "correct answer is almost always first" bug, regardless of what order
+  // whatever generated the row originally wrote them in. The correct
+  // answer is tracked by its actual text value, not by array position, so
+  // shuffling never breaks correctness-checking on the client.
+  const shuffledOptions = Array.isArray(row?.options) ? shuffle(row.options) : row?.options;
+  const snapshot = {
+    id: row.id,
+    category: row.category,
+    species: row.species,
+    bengali: row.bengali,
+    question: row.question,
+    options: shuffledOptions,
+    answer: row.answer,
+    hints: row.hints,
+    syllables: row.syllables,
+    image_url: row.image_url,
+    audio_url: row.audio_url,
+    image_source: row.image_source,
+    audio_source: row.audio_source,
+    attribution: row.attribution,
+    difficulty: row.difficulty,
+  };
+  (groupedQuestions[s.category]??=[]).push(snapshot);
+}
+
+// payload now carries the fully-shuffled, frozen question content for the
+// week (not just IDs) — this also makes an in-progress week immune to any
+// later rebalance/trim touching the same rows mid-week.
+const rows=CATEGORIES.map(category=>({week_start:weekStart,category,payload:{version:3,question_ids:grouped[category]||[],questions:groupedQuestions[category]||[]},question_ids:grouped[category]||[],generated_at:new Date().toISOString(),selection_version:3}));
 const {error:upsertError}=await admin.from('weekly_challenges').upsert(rows,{onConflict:'week_start,category'});if(upsertError)throw upsertError;
 await admin.from('weekly_challenges').delete().neq('week_start',weekStart);
 const retired = await trimActiveBank(admin);
-const difficultyBalance = await rebalanceActiveDifficulties(admin);
+const difficultyBalanceAfter = await rebalanceActiveDifficulties(admin);
 let notified=0;const sa=loadServiceAccount();if(sa){const {data:tokens}=await admin.from('device_tokens').select('token');for(const row of tokens||[]){try{const res=await sendFcm(sa,row.token,'নতুন সাপ্তাহিক চ্যালেঞ্জ! (New Weekly Challenges)','এই সপ্তাহের প্রকৃতি-খেলা এসেছে — খেলতে ট্যাপ করুন।',{type:'game'});if(res.ok)notified++;}catch(_){}}}
-return new Response(JSON.stringify({ok:true,weekStart,selected:grouped,bankBefore,retired,difficultyBalance,notified}),{headers:{...cors,'Content-Type':'application/json'}});
+return new Response(JSON.stringify({ok:true,weekStart,selected:grouped,bankBefore,retired,difficultyBalanceBefore,difficultyBalanceAfter,notified}),{headers:{...cors,'Content-Type':'application/json'}});
 }catch(e){return new Response(JSON.stringify({ok:false,error:e instanceof Error?e.message:String(e)}),{status:500,headers:{...cors,'Content-Type':'application/json'}});}});

@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import '../core/config.dart';
+import '../models/content_protection_models.dart';
 import '../models/wildlife_gallery_item.dart';
+import '../services/content_protection_service.dart';
+import '../services/protected_asset_service.dart';
 import '../widgets/keyboard_press_effect.dart';
+import '../widgets/protected_content.dart';
+import '../widgets/protected_image.dart';
 import '../widgets/scientific_text.dart';
 
 class WildlifeGalleryScreen extends StatefulWidget {
@@ -221,16 +225,13 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
               itemCount: _items.length,
               itemBuilder: (context, index) {
                 final item = _items[index];
-                final publicUrl = supabase.storage
-                    .from('wildlife_gallery')
-                    .getPublicUrl(item.storagePath);
 
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Image Card
+                      // Protected Image Card with Signed Short-Lived URL
                       KeyboardPressEffect(
                         onTap: () {
                           Navigator.push(
@@ -244,22 +245,10 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                             ),
                           );
                         },
-                        child: CachedNetworkImage(
-                          imageUrl: publicUrl,
+                        child: ProtectedImage(
+                          bucket: 'wildlife_gallery',
+                          storagePath: item.storagePath,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => const Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Color(0xFF00E676),
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          ),
-                          errorWidget: (_, __, ___) => const Center(
-                            child: Icon(Icons.broken_image, color: Colors.white38),
-                          ),
                         ),
                       ),
 
@@ -391,6 +380,11 @@ class _FullscreenProtectedImageViewerState
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    unawaited(ContentProtectionService.enable(
+      scope: ContentProtectionScope.gallery,
+      contentId: widget.items[widget.initialIndex].id,
+      userId: widget.userEmail,
+    ));
   }
 
   void _nextPhoto() {
@@ -398,6 +392,11 @@ class _FullscreenProtectedImageViewerState
       setState(() {
         _currentIndex++;
       });
+      unawaited(ContentProtectionService.enable(
+        scope: ContentProtectionScope.gallery,
+        contentId: widget.items[_currentIndex].id,
+        userId: widget.userEmail,
+      ));
     }
   }
 
@@ -406,6 +405,11 @@ class _FullscreenProtectedImageViewerState
       setState(() {
         _currentIndex--;
       });
+      unawaited(ContentProtectionService.enable(
+        scope: ContentProtectionScope.gallery,
+        contentId: widget.items[_currentIndex].id,
+        userId: widget.userEmail,
+      ));
     }
   }
 
@@ -418,11 +422,14 @@ class _FullscreenProtectedImageViewerState
   }
 
   @override
+  void dispose() {
+    unawaited(ContentProtectionService.disable());
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final item = widget.items[_currentIndex];
-    final publicUrl = supabase.storage
-        .from('wildlife_gallery')
-        .getPublicUrl(item.storagePath);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -446,157 +453,182 @@ class _FullscreenProtectedImageViewerState
           ),
         ],
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Zoomable Photo View
-          GestureDetector(
-            onTap: () {
-              setState(() => _showDetails = !_showDetails);
-            },
-            child: PhotoView(
-              imageProvider: CachedNetworkImageProvider(publicUrl),
-              minScale: PhotoViewComputedScale.contained,
-              maxScale: PhotoViewComputedScale.contained * 3.0,
-            ),
-          ),
-
-          // Previous Navigation Button
-          if (_currentIndex > 0)
-            Positioned(
-              left: 14,
-              top: 0,
-              bottom: 0,
-              child: Center(
-                child: CircleAvatar(
-                  backgroundColor: Colors.black54,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 20),
-                    onPressed: _prevPhoto,
-                  ),
+      body: ProtectedContent(
+        scope: ContentProtectionScope.gallery,
+        contentId: item.id,
+        userIdentity: widget.userEmail,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Zoomable Protected Photo View with Signed URL
+            GestureDetector(
+              onTap: () {
+                setState(() => _showDetails = !_showDetails);
+              },
+              child: FutureBuilder<String?>(
+                future: ProtectedAssetService.getSignedUrl(
+                  bucket: 'wildlife_gallery',
+                  storagePath: item.storagePath,
+                  expiresInSeconds: 120,
                 ),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: Color(0xFF00E676)),
+                    );
+                  }
+                  final signedUrl = snapshot.data;
+                  if (signedUrl == null) {
+                    return const Center(
+                      child: Icon(Icons.broken_image, color: Colors.white38, size: 48),
+                    );
+                  }
+                  return PhotoView(
+                    imageProvider: NetworkImage(signedUrl),
+                    minScale: PhotoViewComputedScale.contained,
+                    maxScale: PhotoViewComputedScale.contained * 3.0,
+                  );
+                },
               ),
             ),
 
-          // Next Navigation Button
-          if (_currentIndex < widget.items.length - 1)
-            Positioned(
-              right: 14,
-              top: 0,
-              bottom: 0,
-              child: Center(
-                child: CircleAvatar(
-                  backgroundColor: Colors.black54,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Colors.white, size: 20),
-                    onPressed: _nextPhoto,
+            // Previous Navigation Button
+            if (_currentIndex > 0)
+              Positioned(
+                left: 14,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black54,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white, size: 20),
+                      onPressed: _prevPhoto,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-          // Bottom Metadata Drawer / Overlay
-          if (_showDetails)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF142419).withValues(alpha: 0.92),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+            // Next Navigation Button
+            if (_currentIndex < widget.items.length - 1)
+              Positioned(
+                right: 14,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black54,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios_rounded,
+                          color: Colors.white, size: 20),
+                      onPressed: _nextPhoto,
+                    ),
+                  ),
                 ),
-                child: SafeArea(
-                  top: false,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      ScientificText(
-                        item.displayTitle,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+              ),
+
+            // Bottom Metadata Drawer / Overlay
+            if (_showDetails)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF142419).withValues(alpha: 0.92),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        ScientificText(
+                          item.displayTitle,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
+                        const SizedBox(height: 6),
 
-                      // Metadata Row (Photographer, Location, Category, Date)
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 6,
-                        children: [
-                          if (item.photographerCredit != null &&
-                              item.photographerCredit!.isNotEmpty)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.camera_alt_rounded,
-                                    size: 13, color: Color(0xFF00E676)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  item.photographerCredit!,
-                                  style: const TextStyle(
-                                      color: Color(0xFF00E676),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          if (item.location != null && item.location!.isNotEmpty)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.location_on_rounded,
-                                    size: 13, color: Color(0xFF81C784)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  item.location!,
-                                  style: const TextStyle(
-                                      color: Color(0xFF81C784), fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          if (item.category != null && item.category!.isNotEmpty)
+                        // Metadata Row
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 6,
+                          children: [
+                            if (item.photographerCredit != null &&
+                                item.photographerCredit!.isNotEmpty)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.camera_alt_rounded,
+                                      size: 13, color: Color(0xFF00E676)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.photographerCredit!,
+                                    style: const TextStyle(
+                                        color: Color(0xFF00E676),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            if (item.location != null && item.location!.isNotEmpty)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.location_on_rounded,
+                                      size: 13, color: Color(0xFF81C784)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.location!,
+                                    style: const TextStyle(
+                                        color: Color(0xFF81C784), fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            if (item.category != null && item.category!.isNotEmpty)
+                              Text(
+                                '📁 ${item.category}',
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12),
+                              ),
                             Text(
-                              '📁 ${item.category}',
+                              '📅 ${_formatDate(item.publishedAt ?? item.createdAt)}',
                               style: const TextStyle(
-                                  color: Colors.white70, fontSize: 12),
+                                  color: Colors.white38, fontSize: 12),
                             ),
-                          Text(
-                            '📅 ${_formatDate(item.publishedAt ?? item.createdAt)}',
+                          ],
+                        ),
+
+                        // Description / Caption
+                        if (item.displayDescription.isNotEmpty &&
+                            item.displayDescription != item.displayTitle) ...[
+                          const SizedBox(height: 8),
+                          ScientificText(
+                            item.displayDescription,
+                            selectable: true,
                             style: const TextStyle(
-                                color: Colors.white38, fontSize: 12),
+                              color: Colors.white70,
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
                           ),
                         ],
-                      ),
-
-                      // Description / Caption
-                      if (item.displayDescription.isNotEmpty &&
-                          item.displayDescription != item.displayTitle) ...[
-                        const SizedBox(height: 8),
-                        ScientificText(
-                          item.displayDescription,
-                          selectable: true,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
