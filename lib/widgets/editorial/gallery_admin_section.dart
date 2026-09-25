@@ -76,7 +76,6 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
         }
       } else {
         await _galleryService.publishGalleryItem(item.id);
-        // Publishing Rule: Send notification ONLY when transitioning from unpublished to published!
         await AppNotifier.notify(
           title: 'নতুন ছবি যোগ হয়েছে! (New Gallery Photo)',
           body: item.displayTitle.isNotEmpty
@@ -142,12 +141,69 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
     }
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(color: Color(0xFF81C784), fontWeight: FontWeight.bold, fontSize: 14),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.grey),
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        ),
+      ),
+    );
+  }
+
   void _showAddOrEditDialog({WildlifeGalleryItem? existingItem}) {
     final isEditing = existingItem != null;
+    
+    // PHOTO
     final titleCtrl = TextEditingController(text: existingItem?.title ?? '');
-    final descriptionCtrl = TextEditingController(text: existingItem?.description ?? existingItem?.caption ?? '');
-    final locationCtrl = TextEditingController(text: existingItem?.location ?? '');
+    final captionCtrl = TextEditingController(text: existingItem?.caption ?? '');
+    final descriptionCtrl = TextEditingController(text: existingItem?.description ?? '');
+    final bengaliDescriptionCtrl = TextEditingController(text: existingItem?.bengaliDescription ?? '');
+    
+    // PHOTOGRAPHER
     final creditCtrl = TextEditingController(text: existingItem?.photographerCredit ?? '');
+    final profileLinkCtrl = TextEditingController(text: existingItem?.photographerProfileLink ?? '');
+    
+    // PHOTOGRAPHY
+    final cameraCtrl = TextEditingController(text: existingItem?.camera ?? '');
+    final lensCtrl = TextEditingController(text: existingItem?.lens ?? '');
+    final focalLengthCtrl = TextEditingController(text: existingItem?.focalLength ?? '');
+    final apertureCtrl = TextEditingController(text: existingItem?.aperture ?? '');
+    final shutterSpeedCtrl = TextEditingController(text: existingItem?.shutterSpeed ?? '');
+    final isoCtrl = TextEditingController(text: existingItem?.iso ?? '');
+    
+    // WILDLIFE
+    final commonNameCtrl = TextEditingController(text: existingItem?.commonName ?? '');
+    final scientificNameCtrl = TextEditingController(text: existingItem?.scientificName ?? '');
+    final speciesDescCtrl = TextEditingController(text: existingItem?.speciesDescription ?? '');
+    final iucnStatusCtrl = TextEditingController(text: existingItem?.iucnStatus ?? '');
+    
+    // LOCATION
+    final locationCtrl = TextEditingController(text: existingItem?.location ?? '');
+    final districtCtrl = TextEditingController(text: existingItem?.district ?? '');
+    final stateCtrl = TextEditingController(text: existingItem?.state ?? '');
+    final countryCtrl = TextEditingController(text: existingItem?.country ?? '');
+    final latCtrl = TextEditingController(text: existingItem?.latitude?.toString() ?? '');
+    final lngCtrl = TextEditingController(text: existingItem?.longitude?.toString() ?? '');
+    
+    // EDITORIAL
     final categoryCtrl = TextEditingController(text: existingItem?.category ?? 'Wildlife');
     int priority = existingItem?.editorialPriority ?? 10;
     bool isFeatured = existingItem?.isFeatured ?? false;
@@ -169,7 +225,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
               content: SizedBox(
-                width: 550,
+                width: 600,
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -193,7 +249,6 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                           ),
                         ),
 
-                      // Pick Image Button
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2E7D32),
@@ -201,14 +256,9 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                         onPressed: isUploading
                             ? null
                             : () async {
-                                // file_picker 13.x: single-file pick, null = cancelled.
-                                final picked = await FilePicker.pickFile(
-                                  type: FileType.image,
-                                );
+                                final picked = await FilePicker.pickFile(type: FileType.image);
                                 if (picked != null) {
-                                  setDialogState(() {
-                                    selectedFile = picked;
-                                  });
+                                  setDialogState(() => selectedFile = picked);
                                 }
                               },
                         icon: const Icon(Icons.photo_library_rounded, color: Colors.white),
@@ -219,73 +269,89 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      
+                      _buildSectionHeader('PHOTO / ছবি'),
+                      _buildTextField(titleCtrl, 'Title (শিরোনাম) *'),
+                      _buildTextField(captionCtrl, 'Caption (ক্যাপশন)'),
+                      _buildTextField(descriptionCtrl, 'Description (ইংরেজি বর্ণনা)', maxLines: 2),
+                      _buildTextField(bengaliDescriptionCtrl, 'Bengali Description (বাংলা বর্ণনা)', maxLines: 2),
 
-                      TextField(
-                        controller: titleCtrl,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          labelText: 'Title (শিরোনাম) *',
-                          labelStyle: TextStyle(color: Colors.grey),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      TextField(
-                        controller: descriptionCtrl,
-                        maxLines: 3,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          labelText: 'Description / Caption (বর্ণনা)',
-                          labelStyle: TextStyle(color: Colors.grey),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
+                      _buildSectionHeader('PHOTOGRAPHER / আলোকচিত্রী'),
                       Row(
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: locationCtrl,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                labelText: 'Location (স্থান)',
-                                labelStyle: TextStyle(color: Colors.grey),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TextField(
-                              controller: creditCtrl,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                labelText: 'Photographer (আলোকচিত্রী)',
-                                labelStyle: TextStyle(color: Colors.grey),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
+                          Expanded(child: _buildTextField(creditCtrl, 'Name (নাম)')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(profileLinkCtrl, 'Profile Link (লিঙ্ক)')),
                         ],
                       ),
-                      const SizedBox(height: 12),
 
+                      _buildSectionHeader('PHOTOGRAPHY / ফটোগ্রাফি'),
                       Row(
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: categoryCtrl,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                labelText: 'Category (বিভাগ)',
-                                labelStyle: TextStyle(color: Colors.grey),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
+                          Expanded(child: _buildTextField(cameraCtrl, 'Camera (ক্যামেরা)')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(lensCtrl, 'Lens (লেন্স)')),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(focalLengthCtrl, 'Focal Length')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(apertureCtrl, 'Aperture (f/)')),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(shutterSpeedCtrl, 'Shutter Speed')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(isoCtrl, 'ISO')),
+                        ],
+                      ),
+
+                      _buildSectionHeader('WILDLIFE / বন্যপ্রাণী'),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(commonNameCtrl, 'Common Name')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(scientificNameCtrl, 'Scientific Name')),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(iucnStatusCtrl, 'IUCN Status')),
+                          const SizedBox(width: 8),
+                          Expanded(child: const SizedBox.shrink()),
+                        ],
+                      ),
+                      _buildTextField(speciesDescCtrl, 'Species Description', maxLines: 2),
+
+                      _buildSectionHeader('LOCATION / স্থান'),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(locationCtrl, 'Location')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(districtCtrl, 'District')),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(stateCtrl, 'State')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(countryCtrl, 'Country')),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(latCtrl, 'Latitude')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(lngCtrl, 'Longitude')),
+                        ],
+                      ),
+
+                      _buildSectionHeader('EDITORIAL / সম্পাদনা'),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(categoryCtrl, 'Category (বিভাগ)')),
                           const SizedBox(width: 10),
                           Expanded(
                             child: DropdownButtonFormField<int>(
@@ -295,6 +361,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                               decoration: const InputDecoration(
                                 labelText: 'Priority (অগ্রাধিকার)',
                                 border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12),
                               ),
                               items: [1, 5, 10, 20, 50, 100]
                                   .map((p) => DropdownMenuItem(value: p, child: Text('$p')))
@@ -314,7 +381,6 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                         title: const Text('Featured Photo (বিশেষ স্লাইডে দেখান)', style: TextStyle(color: Colors.white)),
                         onChanged: (val) => setDialogState(() => isFeatured = val),
                       ),
-
                       SwitchListTile(
                         value: isPublished,
                         activeTrackColor: const Color(0xFF00E676),
@@ -375,9 +441,27 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                               final updated = await _galleryService.updateGalleryItem(
                                 id: existingItem.id,
                                 title: titleCtrl.text.trim(),
+                                caption: captionCtrl.text.trim(),
                                 description: descriptionCtrl.text.trim(),
+                                bengaliDescription: bengaliDescriptionCtrl.text.trim(),
                                 location: locationCtrl.text.trim(),
+                                district: districtCtrl.text.trim(),
+                                state: stateCtrl.text.trim(),
+                                country: countryCtrl.text.trim(),
+                                latitude: double.tryParse(latCtrl.text.trim()),
+                                longitude: double.tryParse(lngCtrl.text.trim()),
                                 photographerCredit: creditCtrl.text.trim(),
+                                photographerProfileLink: profileLinkCtrl.text.trim(),
+                                camera: cameraCtrl.text.trim(),
+                                lens: lensCtrl.text.trim(),
+                                aperture: apertureCtrl.text.trim(),
+                                shutterSpeed: shutterSpeedCtrl.text.trim(),
+                                iso: isoCtrl.text.trim(),
+                                focalLength: focalLengthCtrl.text.trim(),
+                                commonName: commonNameCtrl.text.trim(),
+                                scientificName: scientificNameCtrl.text.trim(),
+                                speciesDescription: speciesDescCtrl.text.trim(),
+                                iucnStatus: iucnStatusCtrl.text.trim(),
                                 category: categoryCtrl.text.trim(),
                                 priority: priority,
                                 isFeatured: isFeatured,
@@ -386,7 +470,6 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                 oldStoragePath: existingItem.storagePath,
                               );
 
-                              // Trigger notification ONLY if transitioned from draft -> published
                               if (!existingItem.isPublished && isPublished) {
                                 await AppNotifier.notify(
                                   title: '📸 নতুন গ্যালারি চিত্র: ${updated.displayTitle}',
@@ -399,9 +482,27 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                             } else {
                               final created = await _galleryService.createGalleryItem(
                                 title: titleCtrl.text.trim(),
+                                caption: captionCtrl.text.trim(),
                                 description: descriptionCtrl.text.trim(),
+                                bengaliDescription: bengaliDescriptionCtrl.text.trim(),
                                 location: locationCtrl.text.trim(),
+                                district: districtCtrl.text.trim(),
+                                state: stateCtrl.text.trim(),
+                                country: countryCtrl.text.trim(),
+                                latitude: double.tryParse(latCtrl.text.trim()),
+                                longitude: double.tryParse(lngCtrl.text.trim()),
                                 photographerCredit: creditCtrl.text.trim(),
+                                photographerProfileLink: profileLinkCtrl.text.trim(),
+                                camera: cameraCtrl.text.trim(),
+                                lens: lensCtrl.text.trim(),
+                                aperture: apertureCtrl.text.trim(),
+                                shutterSpeed: shutterSpeedCtrl.text.trim(),
+                                iso: isoCtrl.text.trim(),
+                                focalLength: focalLengthCtrl.text.trim(),
+                                commonName: commonNameCtrl.text.trim(),
+                                scientificName: scientificNameCtrl.text.trim(),
+                                speciesDescription: speciesDescCtrl.text.trim(),
+                                iucnStatus: iucnStatusCtrl.text.trim(),
                                 category: categoryCtrl.text.trim(),
                                 priority: priority,
                                 isFeatured: isFeatured,
@@ -409,7 +510,6 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                 storagePath: newPath!,
                               );
 
-                              // Trigger notification ONLY if created directly in published state
                               if (isPublished) {
                                 await AppNotifier.notify(
                                   title: '📸 নতুন গ্যালারি চিত্র: ${created.displayTitle}',
@@ -473,7 +573,14 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
               const SizedBox(height: 12),
               if (item.displayDescription.isNotEmpty)
                 Text(item.displayDescription, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              if (item.bengaliDescription != null && item.bengaliDescription!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(item.bengaliDescription!, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                ),
               const SizedBox(height: 8),
+              if (item.commonName != null && item.commonName!.isNotEmpty)
+                Text('🐾 Species: ${item.commonName} ${item.scientificName != null ? '(${item.scientificName})' : ''}', style: const TextStyle(color: Color(0xFF81C784), fontSize: 12)),
               if (item.location != null && item.location!.isNotEmpty)
                 Text('📍 Location: ${item.location}', style: const TextStyle(color: Color(0xFF81C784), fontSize: 12)),
               if (item.photographerCredit != null && item.photographerCredit!.isNotEmpty)
@@ -593,7 +700,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(color: statusColor.withValues(alpha: 0.4)),
+                  side: BorderSide(color: statusColor.withOpacity(0.4)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -639,7 +746,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withValues(alpha: 0.2),
+                                    color: statusColor.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(color: statusColor, width: 0.8),
                                   ),
@@ -652,7 +759,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.amber.withValues(alpha: 0.2),
+                                      color: Colors.amber.withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: const Text('⭐ Featured', style: TextStyle(fontSize: 10, color: Colors.amber)),

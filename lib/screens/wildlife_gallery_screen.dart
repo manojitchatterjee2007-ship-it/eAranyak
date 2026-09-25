@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/config.dart';
 import '../models/content_protection_models.dart';
 import '../models/wildlife_gallery_item.dart';
@@ -263,7 +264,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withValues(alpha: 0.85),
+                                Colors.black.withOpacity(0.85),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -307,7 +308,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
+                              color: Colors.black.withOpacity(0.7),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: const Color(0xFFFFD54F)),
                             ),
@@ -334,7 +335,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                               width: 30,
                               height: 30,
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.55),
+                                color: Colors.black.withOpacity(0.55),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Colors.redAccent),
                               ),
@@ -421,6 +422,61 @@ class _FullscreenProtectedImageViewerState
     return '$day/$month/$year';
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xFF00E676),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetadataItem(String? label, String? value, {bool isLink = false}) {
+    if (value == null || value.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (label != null)
+            Text(
+              '$label: ',
+              style: const TextStyle(color: Colors.white54, fontSize: 13),
+            ),
+          Expanded(
+            child: isLink
+                ? GestureDetector(
+                    onTap: () async {
+                      final url = Uri.tryParse(value);
+                      if (url != null && await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    },
+                    child: Text(
+                      value,
+                      style: const TextStyle(
+                        color: Colors.lightBlueAccent,
+                        fontSize: 13,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  )
+                : ScientificText(
+                    value,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     unawaited(ContentProtectionService.disable());
@@ -430,6 +486,9 @@ class _FullscreenProtectedImageViewerState
   @override
   Widget build(BuildContext context) {
     final item = widget.items[_currentIndex];
+    final hasSpecies = (item.commonName?.isNotEmpty ?? false) || (item.scientificName?.isNotEmpty ?? false) || (item.speciesDescription?.isNotEmpty ?? false) || (item.iucnStatus?.isNotEmpty ?? false);
+    final hasPhotography = (item.camera?.isNotEmpty ?? false) || (item.lens?.isNotEmpty ?? false) || (item.iso?.isNotEmpty ?? false) || (item.aperture?.isNotEmpty ?? false) || (item.shutterSpeed?.isNotEmpty ?? false) || (item.focalLength?.isNotEmpty ?? false);
+    final hasLocation = (item.location?.isNotEmpty ?? false) || (item.district?.isNotEmpty ?? false) || (item.state?.isNotEmpty ?? false) || (item.country?.isNotEmpty ?? false);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -535,94 +594,139 @@ class _FullscreenProtectedImageViewerState
                 right: 0,
                 bottom: 0,
                 child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.5,
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF142419).withValues(alpha: 0.92),
+                    color: const Color(0xFF142419).withOpacity(0.92),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                    border: Border.all(color: const Color(0xFF00E676).withOpacity(0.3)),
                   ),
                   child: SafeArea(
                     top: false,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        ScientificText(
-                          item.displayTitle,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Metadata Row
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 6,
-                          children: [
-                            if (item.photographerCredit != null &&
-                                item.photographerCredit!.isNotEmpty)
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.camera_alt_rounded,
-                                      size: 13, color: Color(0xFF00E676)),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    item.photographerCredit!,
-                                    style: const TextStyle(
-                                        color: Color(0xFF00E676),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                            if (item.location != null && item.location!.isNotEmpty)
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.location_on_rounded,
-                                      size: 13, color: Color(0xFF81C784)),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    item.location!,
-                                    style: const TextStyle(
-                                        color: Color(0xFF81C784), fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            if (item.category != null && item.category!.isNotEmpty)
-                              Text(
-                                '📁 ${item.category}',
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 12),
-                              ),
-                            Text(
-                              '📅 ${_formatDate(item.publishedAt ?? item.createdAt)}',
-                              style: const TextStyle(
-                                  color: Colors.white38, fontSize: 12),
-                            ),
-                          ],
-                        ),
-
-                        // Description / Caption
-                        if (item.displayDescription.isNotEmpty &&
-                            item.displayDescription != item.displayTitle) ...[
-                          const SizedBox(height: 8),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
                           ScientificText(
-                            item.displayDescription,
-                            selectable: true,
+                            item.displayTitle,
                             style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              height: 1.4,
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
                             ),
+                          ),
+                          const SizedBox(height: 6),
+
+                          // Description / Caption
+                          if (item.displayDescription.isNotEmpty &&
+                              item.displayDescription != item.displayTitle)
+                            ScientificText(
+                              item.displayDescription,
+                              selectable: true,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
+                            ),
+                            
+                          if (item.bengaliDescription != null && item.bengaliDescription!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                item.bengaliDescription!,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+
+                          // WILDLIFE INFO
+                          if (hasSpecies) ...[
+                            _buildSectionTitle('SPECIES / প্রজাতি'),
+                            _buildMetadataItem('Common Name', item.commonName),
+                            _buildMetadataItem('Scientific Name', item.scientificName),
+                            _buildMetadataItem('Description', item.speciesDescription),
+                            if (item.iucnStatus?.isNotEmpty ?? false)
+                              Container(
+                                margin: const EdgeInsets.only(top: 4, bottom: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.redAccent, width: 0.8),
+                                ),
+                                child: Text(
+                                  'IUCN: ${item.iucnStatus}',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                                ),
+                              ),
+                          ],
+
+                          // PHOTOGRAPHER & PHOTOGRAPHY INFO
+                          if (item.photographerCredit != null || hasPhotography) ...[
+                            _buildSectionTitle('PHOTOGRAPHY / আলোকচিত্র'),
+                            _buildMetadataItem('Photographer', item.photographerCredit),
+                            _buildMetadataItem('Profile', item.photographerProfileLink, isLink: true),
+                            if (hasPhotography) ...[
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 6,
+                                children: [
+                                  if (item.camera?.isNotEmpty ?? false)
+                                    Text('📷 ${item.camera}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  if (item.lens?.isNotEmpty ?? false)
+                                    Text('🔍 ${item.lens}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  if (item.focalLength?.isNotEmpty ?? false)
+                                    Text('📏 ${item.focalLength}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  if (item.aperture?.isNotEmpty ?? false)
+                                    Text('ƒ/${item.aperture}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  if (item.shutterSpeed?.isNotEmpty ?? false)
+                                    Text('⏱ ${item.shutterSpeed}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  if (item.iso?.isNotEmpty ?? false)
+                                    Text('ISO ${item.iso}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                ],
+                              ),
+                            ]
+                          ],
+
+                          // LOCATION INFO
+                          if (hasLocation) ...[
+                            _buildSectionTitle('LOCATION / স্থান'),
+                            _buildMetadataItem('Location', item.location),
+                            _buildMetadataItem('District', item.district),
+                            _buildMetadataItem('State', item.state),
+                            _buildMetadataItem('Country', item.country),
+                          ],
+                          
+                          const SizedBox(height: 12),
+                          // Other Metadata
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 6,
+                            children: [
+                              if (item.category != null && item.category!.isNotEmpty)
+                                Text(
+                                  '📁 ${item.category}',
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 11),
+                                ),
+                              Text(
+                                '📅 ${_formatDate(item.publishedAt ?? item.createdAt)}',
+                                style: const TextStyle(
+                                    color: Colors.white38, fontSize: 11),
+                              ),
+                            ],
                           ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
