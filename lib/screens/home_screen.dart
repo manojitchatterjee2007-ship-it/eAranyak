@@ -6,12 +6,15 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cube_transition_plus/cube_transition_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../core/config.dart';
+import '../models/daily_wildlife_feature.dart';
+import '../screens/daily_wildlife_screen.dart';
 import '../services/sound_service.dart';
 import '../services/forest_ambience_service.dart';
 import '../services/app_notification_service.dart';
@@ -2801,6 +2804,100 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildDailyWildlifeSection() {
+    return FutureBuilder(
+      future: supabase
+          .from('daily_wildlife_features')
+          .select('*')
+          .eq('is_published', true)
+          .lte('scheduled_publish_at', DateTime.now().toIso8601String())
+          .order('feature_date', ascending: false)
+          .limit(1)
+          .maybeSingle(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const SizedBox.shrink();
+        }
+        
+        final feature = DailyWildlifeFeature.fromJson(snapshot.data as Map<String, dynamic>);
+        return Padding(
+          padding: const EdgeInsets.only(left: 18, right: 18, bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: Color(0xFF00E676), size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'আজকের বন্যপ্রাণী (Daily Feature)',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              KeyboardPressEffect(
+                onTap: () {
+                  SoundService.playButtonSound();
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => DailyWildlifeScreen(feature: feature),
+                  ));
+                },
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: const Color(0xFF142419),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (feature.watercolourImageUrl != null)
+                        CachedNetworkImage(
+                          imageUrl: feature.watercolourImageUrl!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )
+                      else if (feature.originalImageUrl != null)
+                        CachedNetworkImage(
+                          imageUrl: feature.originalImageUrl!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              feature.titleBn ?? feature.title,
+                              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            if (feature.scientificName != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                feature.scientificName!,
+                                style: const TextStyle(color: Colors.white70, fontSize: 14, fontStyle: FontStyle.italic),
+                              ),
+                            ]
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildLiveWildlifeRibbon() {
     return Padding(
       padding: const EdgeInsets.only(left: 18, right: 18, bottom: 18),
@@ -2937,6 +3034,9 @@ class HomeScreenState extends State<HomeScreen> {
           children: [
             // 1) LIVE WILDLIFE OBSERVATIONS
             _buildLiveWildlifeRibbon(),
+
+            // 1.5) DAILY WILDLIFE FEATURE
+            _buildDailyWildlifeSection(),
 
             // 2) CONTINUE READING SECTION
             if (_lastReadMagId != null && _lastReadTotalPages > 0) ...[

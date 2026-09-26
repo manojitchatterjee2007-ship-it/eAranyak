@@ -24,6 +24,8 @@ import '../widgets/editorial/gallery_admin_section.dart';
 import '../widgets/editorial/podcast_admin_section.dart';
 import '../widgets/editorial/vlog_admin_section.dart';
 import '../widgets/editorial/tutorial_admin_section.dart';
+import '../widgets/editorial/daily_wildlife_admin_section.dart';
+import '../widgets/editorial/about_us_admin_section.dart';
 
 class UploadTask {
   final String id;
@@ -2017,6 +2019,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 7: return VlogAdminSection(onUploadComplete: widget.onUploadComplete);
       case 8: return _buildNotificationAdminSection();
       case 9: return _buildOnlineBookAdminSection();
+      case 10: return const DailyWildlifeAdminSection();
+      case 11: return const AboutUsAdminSection();
       default: return const SizedBox.shrink();
     }
   }
@@ -2036,6 +2040,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       NavigationRailDestination(icon: Icon(Icons.video_library_rounded), label: Text('Vlogs')),
       NavigationRailDestination(icon: Icon(Icons.notifications_rounded), label: Text('Notifs')),
       NavigationRailDestination(icon: Icon(Icons.book_rounded), label: Text('Books')),
+      NavigationRailDestination(icon: Icon(Icons.pets_rounded), label: Text('Wildlife')),
+      NavigationRailDestination(icon: Icon(Icons.info_outline_rounded), label: Text('About')),
     ];
 
     if (isDesktop) {
