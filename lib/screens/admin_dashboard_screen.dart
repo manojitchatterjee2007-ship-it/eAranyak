@@ -295,11 +295,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String? _publishError;
   Map<String, dynamic>? _newsPreview;
   List<Map<String, dynamic>> _adminNews = [];
+  String _adminNewsFilter = 'all';
 
   // --- Writing Submissions State ---
   final WritingSubmissionService _writingSubmissionService = WritingSubmissionService();
   List<WritingSubmission> _adminSubmissions = [];
   bool _loadingSubmissions = false;
+
+  int _totalGalleryCount = 0;
+  int _totalTutorialCount = 0;
+  int _draftTutorialCount = 0;
+  int _totalPodcastCount = 0;
+  int _totalVlogCount = 0;
+  int _unpublishedNewsCount = 0;
 
   @override
   void initState() {
@@ -337,9 +345,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     _loadAdminNotifications();
     _loadAdminOnlineBooks();
     _loadAdminAnalytics();
+    _loadAdditionalDashboardCounts();
+  }
+
+  Future<void> _loadAdditionalDashboardCounts() async {
+    try {
+      final galleryRes = await supabase.from('wildlife_gallery').count();
+      
+      final tutRes = await supabase.from('tutorials').count();
+      final tutDraftRes = await supabase.from('tutorials').count(CountOption.exact).eq('is_published', false);
+      
+      final podRes = await supabase.from('podcasts').count();
+      final vlogRes = await supabase.from('vlogs').count();
+      
+      final unpubNewsRes = await supabase.from('wildlife_news').count(CountOption.exact).eq('is_published', false);
+
+      if (mounted) {
+        setState(() {
+          _totalGalleryCount = galleryRes;
+          _totalTutorialCount = tutRes;
+          _draftTutorialCount = tutDraftRes;
+          _totalPodcastCount = podRes;
+          _totalVlogCount = vlogRes;
+          _unpublishedNewsCount = unpubNewsRes;
+        });
+      }
+    } catch (_) {}
   }
 
   String _adminSubmissionStatusFilter = 'all';
+  String _adminSubmissionSearchQuery = '';
 
   Future<void> _loadAdminSubmissions() async {
     setState(() => _loadingSubmissions = true);
@@ -363,6 +398,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   List<OnlineBook> _adminOnlineBooks = [];
   bool _loadingOnlineBooks = false;
   String _adminBookFilter = 'all';
+  String _adminBookSearchQuery = '';
 
   // --- Analytics State ---
   final AnalyticsService _analyticsService = AnalyticsService();
@@ -760,15 +796,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 mainAxisSpacing: 10,
                 childAspectRatio: isWide ? 1.6 : 1.3,
                 children: [
-                  _buildDashboardStatCard('📰 Wildlife News', '$pubNews', 'প্রকাশিত সংবাদ', const Color(0xFF2E7D32)),
+                  _buildDashboardStatCard('📰 Wildlife News', '$_unpublishedNewsCount Draft', '$pubNews Published', const Color(0xFF2E7D32)),
                   _buildDashboardStatCard('✍️ Articles', '$pendingArticles Pending', '$pubArticles Published', const Color(0xFF00897B)),
+                  _buildDashboardStatCard('🖼️ Gallery', '$_totalGalleryCount', 'সংগৃহীত ছবি', const Color(0xFF3949AB)),
+                  _buildDashboardStatCard('🎓 Tutorials', '$_draftTutorialCount Draft', '$_totalTutorialCount Total', const Color(0xFF8E24AA)),
+                  _buildDashboardStatCard('🎙️ Podcasts', '$_totalPodcastCount', 'পডকাস্ট পর্ব', const Color(0xFFF4511E)),
+                  _buildDashboardStatCard('📹 Vlogs', '$_totalVlogCount', 'ভিডিও ব্লগ', const Color(0xFFD81B60)),
                   _buildDashboardStatCard('🔔 Notifications', '$pubNotifs', 'প্রকাশিত বিজ্ঞপ্তি', const Color(0xFF1B5E20)),
-                  _buildDashboardStatCard('📚 Online Books', '$pubBooks', 'ক্যাটালগ বই', const Color(0xFFE65100)),
+                  _buildDashboardStatCard('📚 Books', '$pubBooks', 'ক্যাটালগ বই', const Color(0xFFE65100)),
                 ],
               );
             },
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
+          const Text('Quick Navigation / কুইক অ্যাকশন', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildQuickNavButton('Review Articles', 2, Icons.article_rounded),
+              _buildQuickNavButton('Manage Gallery', 4, Icons.photo_library_rounded),
+              _buildQuickNavButton('Publish Magazines', 3, Icons.menu_book_rounded),
+              _buildQuickNavButton('New Notification', 8, Icons.add_alert_rounded),
+            ],
+          ),
+          const SizedBox(height: 16),
 
           // Analytics Ribbon
           Container(
@@ -801,6 +854,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuickNavButton(String label, int index, IconData icon) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF142419),
+        side: const BorderSide(color: Color(0xFF00E676)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      onPressed: () {
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      icon: Icon(icon, size: 18, color: const Color(0xFF00E676)),
+      label: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
     );
   }
 
@@ -906,6 +976,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ),
         const SizedBox(height: 12),
+        TextField(
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+          decoration: const InputDecoration(
+            hintText: 'বইয়ের নাম বা লেখক খুঁজুন...',
+            hintStyle: TextStyle(color: Colors.white38),
+            prefixIcon: Icon(Icons.search, color: Colors.white38, size: 20),
+            filled: true,
+            fillColor: Color(0xFF121B12),
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) {
+            setState(() {
+              _adminBookSearchQuery = val.toLowerCase();
+            });
+          },
+        ),
+        const SizedBox(height: 12),
 
         if (_loadingOnlineBooks)
           const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
@@ -915,13 +1003,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: Text('এই বিভাগে কোনো বই পাওয়া যায়নি।', style: TextStyle(color: Colors.grey)),
           )
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _adminOnlineBooks.length,
-            itemBuilder: (context, index) {
-              final book = _adminOnlineBooks[index];
-              final statusColor = book.isPublished ? const Color(0xFF00E676) : Colors.amber;
+          Builder(
+            builder: (context) {
+              final filteredBooks = _adminOnlineBooks.where((b) {
+                if (_adminBookSearchQuery.isEmpty) return true;
+                return b.title.toLowerCase().contains(_adminBookSearchQuery) ||
+                    (b.author?.toLowerCase().contains(_adminBookSearchQuery) ?? false);
+              }).toList();
+
+              if (filteredBooks.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Text('কোনো বই পাওয়া যায়নি।', style: TextStyle(color: Colors.grey)),
+                );
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredBooks.length,
+                itemBuilder: (context, index) {
+                  final book = filteredBooks[index];
+                  final statusColor = book.isPublished ? const Color(0xFF00E676) : Colors.amber;
               final statusText = book.isPublished ? 'প্রকাশিত' : 'খসড়া';
 
               return Card(
@@ -1088,7 +1191,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               );
             },
-          ),
+          );
+        }),
       ],
     );
   }
@@ -1453,9 +1557,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _loadAdminNews() async {
     try {
-      final res = await supabase
+      var query = supabase
           .from('wildlife_news')
-          .select('id, article_id, title, bengali_headline, source, source_name, source_url, image_url, created_at, published_at, is_published, publication_source, editorial_priority')
+          .select('id, article_id, title, bengali_headline, bengali_dek, bengali_body, source, source_name, source_url, image_url, image_credit, created_at, published_at, is_published, publication_source, editorial_priority');
+          
+      if (_adminNewsFilter == 'published') {
+        query = query.eq('is_published', true);
+      } else if (_adminNewsFilter == 'draft') {
+        query = query.eq('is_published', false);
+      }
+
+      final res = await query
           .order('editorial_priority', ascending: false)
           .order('published_at', ascending: false)
           .limit(50);
@@ -1672,6 +1784,114 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _editNewsDialog(Map<String, dynamic> news) async {
+    final headlineCtrl = TextEditingController(text: (news['bengali_headline'] ?? news['title'] ?? '').toString());
+    final dekCtrl = TextEditingController(text: (news['bengali_dek'] ?? '').toString());
+    final bodyCtrl = TextEditingController(text: (news['bengali_body'] ?? '').toString());
+    final sourceNameCtrl = TextEditingController(text: (news['source_name'] ?? news['source'] ?? '').toString());
+    final priorityCtrl = TextEditingController(text: (news['editorial_priority'] ?? 10).toString());
+    
+    bool isSaving = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDlgState) => AlertDialog(
+          backgroundColor: const Color(0xFF18221B),
+          title: const Text('✏️ Edit News Article', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: 600,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: headlineCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Headline (বাংলা শিরোনাম)', labelStyle: TextStyle(color: Colors.grey), border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: dekCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Snippet (সংক্ষিপ্তসার)', labelStyle: TextStyle(color: Colors.grey), border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: bodyCtrl,
+                    maxLines: 8,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Full Body (মূল সংবাদ)', labelStyle: TextStyle(color: Colors.grey), border: OutlineInputBorder(), alignLabelWithHint: true),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: sourceNameCtrl,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(labelText: 'Source Name', labelStyle: TextStyle(color: Colors.grey), border: OutlineInputBorder()),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: priorityCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(labelText: 'Priority', labelStyle: TextStyle(color: Colors.grey), border: OutlineInputBorder()),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (isSaving)
+                    const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Center(child: CircularProgressIndicator(color: Color(0xFF00E676))),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSaving ? null : () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
+              onPressed: isSaving ? null : () async {
+                setDlgState(() => isSaving = true);
+                try {
+                  await supabase.from('wildlife_news').update({
+                    'bengali_headline': headlineCtrl.text.trim(),
+                    'bengali_dek': dekCtrl.text.trim(),
+                    'bengali_body': bodyCtrl.text.trim(),
+                    'source_name': sourceNameCtrl.text.trim(),
+                    'editorial_priority': int.tryParse(priorityCtrl.text.trim()) ?? 10,
+                  }).eq('id', news['id']);
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('News updated successfully! / সংবাদ সংরক্ষিত হয়েছে।')));
+                  }
+                  _loadAdminNews();
+                } catch (e) {
+                  setDlgState(() => isSaving = false);
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating news: $e')));
+                  }
+                }
+              },
+              child: const Text('Save', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickAndUploadMultiplePdfs() async {
     final issueString = '$_startMonth - $_endMonth $_selectedYear';
     // file_picker 13.x: `pickFiles()` itself returns the picked files (multiple
@@ -1803,45 +2023,105 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        NavigationRail(
-          backgroundColor: const Color(0xFF142419),
-          selectedIndex: _selectedTabIndex,
-          onDestinationSelected: (int index) {
-            setState(() {
-              _selectedTabIndex = index;
-            });
-          },
-          labelType: NavigationRailLabelType.all,
-          selectedLabelTextStyle: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 11),
-          unselectedLabelTextStyle: const TextStyle(color: Colors.white70, fontSize: 11),
-          selectedIconTheme: const IconThemeData(color: Color(0xFF00E676)),
-          unselectedIconTheme: const IconThemeData(color: Colors.white70),
-          destinations: const [
-            NavigationRailDestination(icon: Icon(Icons.dashboard_rounded), label: Text('Dashboard')),
-            NavigationRailDestination(icon: Icon(Icons.newspaper_rounded), label: Text('News')),
-            NavigationRailDestination(icon: Icon(Icons.article_rounded), label: Text('Articles')),
-            NavigationRailDestination(icon: Icon(Icons.menu_book_rounded), label: Text('Magazines')),
-            NavigationRailDestination(icon: Icon(Icons.photo_library_rounded), label: Text('Gallery')),
-            NavigationRailDestination(icon: Icon(Icons.school_rounded), label: Text('Tutorials')),
-            NavigationRailDestination(icon: Icon(Icons.podcasts_rounded), label: Text('Podcasts')),
-            NavigationRailDestination(icon: Icon(Icons.video_library_rounded), label: Text('Vlogs')),
-            NavigationRailDestination(icon: Icon(Icons.notifications_rounded), label: Text('Notifs')),
-            NavigationRailDestination(icon: Icon(Icons.book_rounded), label: Text('Books')),
-          ],
-        ),
-        const VerticalDivider(thickness: 1, width: 1, color: Colors.white24),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              _buildSelectedTabContent(),
-            ],
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+
+    final destinations = const [
+      NavigationRailDestination(icon: Icon(Icons.dashboard_rounded), label: Text('Dashboard')),
+      NavigationRailDestination(icon: Icon(Icons.newspaper_rounded), label: Text('News')),
+      NavigationRailDestination(icon: Icon(Icons.article_rounded), label: Text('Articles')),
+      NavigationRailDestination(icon: Icon(Icons.menu_book_rounded), label: Text('Magazines')),
+      NavigationRailDestination(icon: Icon(Icons.photo_library_rounded), label: Text('Gallery')),
+      NavigationRailDestination(icon: Icon(Icons.school_rounded), label: Text('Tutorials')),
+      NavigationRailDestination(icon: Icon(Icons.podcasts_rounded), label: Text('Podcasts')),
+      NavigationRailDestination(icon: Icon(Icons.video_library_rounded), label: Text('Vlogs')),
+      NavigationRailDestination(icon: Icon(Icons.notifications_rounded), label: Text('Notifs')),
+      NavigationRailDestination(icon: Icon(Icons.book_rounded), label: Text('Books')),
+    ];
+
+    if (isDesktop) {
+      return Row(
+        children: [
+          NavigationRail(
+            backgroundColor: const Color(0xFF142419),
+            selectedIndex: _selectedTabIndex,
+            onDestinationSelected: (int index) {
+              setState(() {
+                _selectedTabIndex = index;
+              });
+            },
+            labelType: NavigationRailLabelType.all,
+            selectedLabelTextStyle: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 11),
+            unselectedLabelTextStyle: const TextStyle(color: Colors.white70, fontSize: 11),
+            selectedIconTheme: const IconThemeData(color: Color(0xFF00E676)),
+            unselectedIconTheme: const IconThemeData(color: Colors.white70),
+            destinations: destinations,
           ),
-        ),
-      ],
-    );
+          const VerticalDivider(thickness: 1, width: 1, color: Colors.white24),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                _buildSelectedTabContent(),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Column(
+        children: [
+          Container(
+            width: double.infinity,
+            color: const Color(0xFF142419),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: List.generate(destinations.length, (index) {
+                  final dest = destinations[index];
+                  final isSelected = _selectedTabIndex == index;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: (dest.label as Text),
+                      avatar: Icon(
+                        (dest.icon as Icon).icon,
+                        size: 16,
+                        color: isSelected ? Colors.black : Colors.white70,
+                      ),
+                      selected: isSelected,
+                      selectedColor: const Color(0xFF00E676),
+                      backgroundColor: const Color(0xFF18221B),
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.black : Colors.white70,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _selectedTabIndex = index;
+                          });
+                        }
+                      },
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: Colors.white24),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildSelectedTabContent(),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildMagazineAdminSection() {
@@ -2388,6 +2668,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ),
         const SizedBox(height: 12),
+        TextField(
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+          decoration: const InputDecoration(
+            hintText: 'লেখার শিরোনাম বা লেখকের নাম খুঁজুন...',
+            hintStyle: TextStyle(color: Colors.white38),
+            prefixIcon: Icon(Icons.search, color: Colors.white38, size: 20),
+            filled: true,
+            fillColor: Color(0xFF121B12),
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) {
+            setState(() {
+              _adminSubmissionSearchQuery = val.toLowerCase();
+            });
+          },
+        ),
+        const SizedBox(height: 12),
 
         if (_loadingSubmissions)
           const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
@@ -2397,13 +2695,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: Text('এই বিভাগে কোনো পাঠানো লেখা নেই।', style: TextStyle(color: Colors.grey)),
           )
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _adminSubmissions.length,
-            itemBuilder: (context, index) {
-              final sub = _adminSubmissions[index];
-              Color statusColor;
+          Builder(
+            builder: (context) {
+              final filteredSubmissions = _adminSubmissions.where((s) {
+                if (_adminSubmissionSearchQuery.isEmpty) return true;
+                return s.title.toLowerCase().contains(_adminSubmissionSearchQuery) ||
+                    s.authorName.toLowerCase().contains(_adminSubmissionSearchQuery);
+              }).toList();
+
+              if (filteredSubmissions.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Text('এই বিভাগে কোনো পাঠানো লেখা নেই।', style: TextStyle(color: Colors.grey)),
+                );
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredSubmissions.length,
+                itemBuilder: (context, index) {
+                  final sub = filteredSubmissions[index];
+                  Color statusColor;
               String statusText;
               switch (sub.status) {
                 case 'approved':
@@ -2630,8 +2943,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               );
             },
-          ),
-
+          );
+        }),
         const SizedBox(height: 36),
         const Divider(color: Colors.white24),
         const SizedBox(height: 16),
@@ -2655,6 +2968,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: const Icon(Icons.refresh_rounded, color: Color(0xFF00E676)),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              {'id': 'all', 'label': 'সবগুলো'},
+              {'id': 'published', 'label': 'প্রকাশিত'},
+              {'id': 'draft', 'label': 'খসড়া'},
+            ].map((filter) {
+              final isSelected = _adminNewsFilter == filter['id'];
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(
+                    filter['label']!,
+                    style: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white70,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 12,
+                    ),
+                  ),
+                  selected: isSelected,
+                  selectedColor: const Color(0xFF00E676),
+                  backgroundColor: const Color(0xFF18221B),
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() {
+                        _adminNewsFilter = filter['id']!;
+                      });
+                      _loadAdminNews();
+                    }
+                  },
+                ),
+              );
+            }).toList(),
+          ),
         ),
         const SizedBox(height: 12),
         if (_adminNews.isEmpty)
@@ -2773,6 +3123,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         // Action Buttons
                         Row(
                           children: [
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                foregroundColor: const Color(0xFF81C784),
+                              ),
+                              onPressed: () => _editNewsDialog(news),
+                              icon: const Icon(Icons.edit_note_rounded, size: 16),
+                              label: const Text('Edit / সম্পাদনা', style: TextStyle(fontSize: 12)),
+                            ),
                             if (isPub)
                               TextButton.icon(
                                 style: TextButton.styleFrom(
