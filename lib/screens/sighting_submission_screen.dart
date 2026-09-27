@@ -8,9 +8,6 @@ import '../services/citizen_science_service.dart';
 import '../services/sighting_validation.dart';
 import '../services/sound_service.dart';
 import '../widgets/citizen_science/sighting_card.dart';
-import 'contributor_profile_screen.dart';
-import 'citizen_science_screen.dart';
-import 'sighting_detail_screen.dart';
 
 /// Bengali-first "রিপোর্ট করুন" wizard: three short steps, no taxonomy
 /// knowledge required, with an explicit location-privacy choice.
@@ -39,41 +36,30 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
   final TextEditingController _stateCtrl = TextEditingController();
   final TextEditingController _countryCtrl = TextEditingController(text: 'India');
   final TextEditingController _behaviourCtrl = TextEditingController();
-  final TextEditingController _countCtrl = TextEditingController(text: '1');
+  final TextEditingController _individualCountCtrl = TextEditingController(text: '1');
   final TextEditingController _notesCtrl = TextEditingController();
   final TextEditingController _timeCtrl = TextEditingController();
-  final TextEditingController _latitudeCtrl = TextEditingController();
-  final TextEditingController _longitudeCtrl = TextEditingController();
+  final TextEditingController _latCtrl = TextEditingController();
+  final TextEditingController _lngCtrl = TextEditingController();
+  final TextEditingController _habitatCtrl = TextEditingController();
+  final TextEditingController _behaviourNotesCtrl = TextEditingController();
+  final TextEditingController _customAttributionCtrl = TextEditingController();
 
-  DateTime _observedAt = DateTime.now();
-  String? _habitat;
+  DateTime _observedDate = DateTime.now();
+  TimeOfDay? _observedTime;
   String _iucnStatus = 'unknown';
   String _locationPrecision = 'district';
-  bool _breedingSite = false;
-  String _contributorPrivacy = 'named';
+  bool _isNestingOrRoost = false;
+  String _attributionPreference = 'real_name';
   bool _includeCoordinates = false;
-  String? _contributorName;
+  String? _selectedLifeStage;
+  String? _selectedBehaviour;
 
   final List<PlatformFile> _photos = <PlatformFile>[];
   final List<PlatformFile> _audioClips = <PlatformFile>[];
   final List<PlatformFile> _videoClips = <PlatformFile>[];
   final Map<PlatformFile, Uint8List> _photoPreviewBytes =
       <PlatformFile, Uint8List>{};
-
-  WildlifeSighting? _created;
-
-  static const List<String> _habitatOptions = <String>[
-    'বন', 'জলাশয়', 'নদী', 'ঘাসজমি', 'পাহাড়', 'বাগান', 'কৃষিজমি', 'অন্যান্য',
-  ];
-
-  static const Map<String, String> _iucnOptions = <String, String>{
-    'unknown': 'জানা নেই / জানি না',
-    'LC': 'Least Concern — কম উদ্বেগজনক',
-    'NT': 'Near Threatened — প্রায় সংকটাপন্ন',
-    'VU': 'Vulnerable — সংকটাপন্ন',
-    'EN': 'Endangered — বিপন্ন',
-    'CR': 'Critically Endangered — মহাবিপন্ন',
-  };
 
   @override
   void initState() {
@@ -90,12 +76,19 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
       _behaviourCtrl.text = existing.behaviour ?? '';
       _timeCtrl.text = existing.observedTime ?? '';
       _notesCtrl.text = existing.observationNotes ?? '';
-      _countCtrl.text = '${existing.individualCount ?? 1}';
+      _individualCountCtrl.text = '${existing.individualCount ?? 1}';
       _habitat = existing.habitat;
       _locationPrecision = existing.locationPrecision;
-      _breedingSite = existing.breedingSite;
-      _contributorPrivacy = existing.contributorPrivacy;
-      _observedAt = existing.observedAt ?? DateTime.now();
+      _isNestingOrRoost = existing.breedingSite;
+      _attributionPreference = existing.contributorPrivacy == 'anonymous' ? 'anonymous' : 'real_name';
+      _customAttributionCtrl.text = existing.contributorDisplayName ?? '';
+      _observedDate = existing.observedAt ?? DateTime.now();
+      if (existing.observedTime != null) {
+        final parts = existing.observedTime!.split(':');
+        if (parts.length >= 2) {
+          _observedTime = TimeOfDay(hour: int.tryParse(parts[0]) ?? 0, minute: int.tryParse(parts[1]) ?? 0);
+        }
+      }
     } else {
       _loadContributorDefaults();
     }
@@ -105,8 +98,8 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
     final profile = await _service.fetchContributorProfile();
     if (!mounted || profile == null) return;
     setState(() {
-      _contributorName = profile.displayName;
-      _contributorPrivacy = profile.privacy;
+      _customAttributionCtrl.text = profile.displayName;
+      _attributionPreference = profile.privacy == 'anonymous' ? 'anonymous' : 'real_name';
       if ((profile.district ?? '').isNotEmpty) _districtCtrl.text = profile.district!;
       if ((profile.state ?? '').isNotEmpty) _stateCtrl.text = profile.state!;
     });
@@ -122,12 +115,22 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
     _stateCtrl.dispose();
     _countryCtrl.dispose();
     _behaviourCtrl.dispose();
-    _countCtrl.dispose();
+    _individualCountCtrl.dispose();
     _notesCtrl.dispose();
     _timeCtrl.dispose();
-    _latitudeCtrl.dispose();
-    _longitudeCtrl.dispose();
+    _latCtrl.dispose();
+    _lngCtrl.dispose();
+    _habitatCtrl.dispose();
+    _behaviourNotesCtrl.dispose();
+    _customAttributionCtrl.dispose();
     super.dispose();
+  }
+
+  void _removePhoto(int index) {
+    setState(() {
+      final photo = _photos.removeAt(index);
+      _photoPreviewBytes.remove(photo);
+    });
   }
 
   Future<void> _pickPhotos() async {
@@ -157,30 +160,6 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
     }
   }
 
-  Future<void> _pickMedia(
-      String kind, FileType type, List<PlatformFile> target) async {
-    try {
-      final picked = await FilePicker.pickFiles(type: type);
-      if (picked.isEmpty) return;
-      final allowed = picked
-          .where((f) => SightingValidation.isAllowedExtension(kind, f.extension))
-          .toList();
-      if (allowed.isEmpty) {
-        _snack(kind == 'audio'
-            ? 'সমর্থিত অডিও ফরম্যাট: MP3, M4A, WAV, OGG'
-            : 'সমর্থিত ভিডিও ফরম্যাট: MP4, MOV, WEBM');
-        return;
-      }
-      setState(() {
-        target.addAll(allowed);
-        final cap = SightingValidation.maxCountForKind(kind);
-        if (target.length > cap) target.removeRange(cap, target.length);
-      });
-    } catch (e) {
-      _snack('ফাইল নির্বাচন করা যায়নি: $e');
-    }
-  }
-
   void _snack(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -189,7 +168,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _observedAt,
+      initialDate: _observedDate,
       firstDate: DateTime.now().subtract(const Duration(days: 3650)),
       lastDate: DateTime.now(),
       builder: (context, child) => Theme(
@@ -202,7 +181,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _observedAt = picked);
+    if (picked != null) setState(() => _observedDate = picked);
   }
 
   void _nextStep() {
@@ -236,7 +215,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
     if (!asDraft && _commonNameCtrl.text.trim().isNotEmpty) {
       final duplicate = await _service.findDuplicate(
         commonName: _commonNameCtrl.text.trim(),
-        observedAt: _observedAt,
+        observedAt: _observedDate,
         district: _districtCtrl.text.trim(),
       );
       if (duplicate != null && mounted) {
@@ -272,7 +251,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
     try {
       final sensitivity = SightingValidation.sensitivityFromIucn(
         _iucnStatus == 'unknown' ? null : _iucnStatus,
-        current: _breedingSite ? 'critical' : 'normal',
+        current: _isNestingOrRoost ? 'critical' : 'normal',
       );
 
       double? latitude;
@@ -280,8 +259,8 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
       if (_includeCoordinates &&
           SightingValidation.allowsPreciseCoordinates(sensitivity)) {
         latitude =
-            SightingValidation.parseCoordinate(_latitudeCtrl.text, isLatitude: true);
-        longitude = SightingValidation.parseCoordinate(_longitudeCtrl.text,
+            SightingValidation.parseCoordinate(_latCtrl.text, isLatitude: true);
+        longitude = SightingValidation.parseCoordinate(_lngCtrl.text,
             isLatitude: false);
       }
 
@@ -292,20 +271,22 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
         description: _descriptionCtrl.text,
         observationNotes: _notesCtrl.text,
         iucnStatus: _iucnStatus == 'unknown' ? null : _iucnStatus,
-        observedAt: _observedAt,
-        observedTime: _timeCtrl.text,
-        habitat: _habitat,
-        individualCount: SightingValidation.parseCount(_countCtrl.text),
-        behaviour: _behaviourCtrl.text,
+        observedAt: _observedDate,
+        observedTime: _observedTime != null
+            ? '${_observedTime!.hour.toString().padLeft(2, '0')}:${_observedTime!.minute.toString().padLeft(2, '0')}'
+            : null,
+        habitat: _habitatCtrl.text,
+        individualCount: SightingValidation.parseCount(_individualCountCtrl.text),
+        behaviour: _selectedBehaviour ?? _behaviourCtrl.text,
         district: _districtCtrl.text,
         state: _stateCtrl.text,
         country: _countryCtrl.text,
         latitude: latitude,
         longitude: longitude,
         locationPrecision: _locationPrecision,
-        breedingSite: _breedingSite,
-        contributorPrivacy: _contributorPrivacy,
-        contributorDisplayName: _contributorName,
+        breedingSite: _isNestingOrRoost,
+        contributorPrivacy: _attributionPreference,
+        contributorDisplayName: _customAttributionCtrl.text,
         status: asDraft ? 'draft' : 'submitted',
         photos: _photos,
         audioClips: _audioClips,
@@ -314,9 +295,13 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
 
       if (!mounted) return;
       setState(() {
-        _created = sighting;
         _isSubmitting = false;
       });
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => SightingSuccessScreen(sighting: sighting),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
@@ -326,9 +311,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final created = _created;
-    if (created != null) return _buildSpeciesStepPlaceholder();
-
+    // Navigation is handled via pushReplacement now
     return Scaffold(
       backgroundColor: CitizenSciencePalette.background,
       appBar: AppBar(
@@ -366,10 +349,10 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
               child: _step == 0
-                  ? _buildSpeciesStepPlaceholder()
+                  ? _buildStep1()
                   : _step == 1
-                      ? _buildSpeciesStepPlaceholder()
-                      : _buildSpeciesStepPlaceholder(),
+                      ? _buildStep2()
+                      : _buildStep3(),
             ),
             const SizedBox(height: 24),
             _buildNavigationButtons(),
@@ -557,7 +540,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
               flex: 3,
               child: DropdownButtonFormField<String>(
                 value: _selectedLifeStage,
-                dropdownColor: CitizenSciencePalette.cardBackground,
+                dropdownColor: CitizenSciencePalette.surfaceAlt,
                 style: const TextStyle(color: Colors.white),
                 decoration: _inputDecoration(
                   label: 'অবস্থা',
@@ -579,7 +562,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           value: _selectedBehaviour,
-          dropdownColor: CitizenSciencePalette.cardBackground,
+          dropdownColor: CitizenSciencePalette.surfaceAlt,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration(
             label: 'প্রধান আচরণ',
@@ -623,7 +606,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
             scrollDirection: Axis.horizontal,
             children: [
               InkWell(
-                onTap: _photos.length >= 5 ? null : _pickPhoto,
+                onTap: _photos.length >= 5 ? null : _pickPhotos,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: 100,
@@ -677,10 +660,12 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
                           width: 100,
                           height: 100,
                           color: Colors.black26,
-                          child: Image.memory(
-                            photo.bytes,
-                            fit: BoxFit.cover,
-                          ),
+                          child: _photoPreviewBytes[photo] != null
+                              ? Image.memory(
+                                  _photoPreviewBytes[photo]!,
+                                  fit: BoxFit.cover,
+                                )
+                              : const Icon(Icons.image, color: Colors.white24),
                         ),
                       ),
                       if (idx == 0)
@@ -818,7 +803,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           value: _locationPrecision,
-          dropdownColor: CitizenSciencePalette.cardBackground,
+          dropdownColor: CitizenSciencePalette.surfaceAlt,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration(
             label: 'সাধারণের জন্য অবস্থানের মাত্রা',
@@ -917,10 +902,10 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
                 icon: const Icon(Icons.date_range,
                     color: CitizenSciencePalette.accent, size: 18),
                 label: Text(
-                  _observedDate.year.toString() + '-' + _observedDate.month.toString().padStart(2, '0') + '-' + _observedDate.day.toString().padStart(2, '0'),
+                  '${_observedDate.year}-${_observedDate.month.toString().padLeft(2, '0')}-${_observedDate.day.toString().padLeft(2, '0')}',
                   style: const TextStyle(fontSize: 13),
                 ),
-                onPressed: _selectDate,
+                onPressed: _pickDate,
               ),
             ),
             const SizedBox(width: 10),
@@ -947,3 +932,333 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
       ],
     );
   }
+
+  Widget _buildStep3() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(
+          '৬. পর্যবেক্ষণের বিশদ বিবরণ',
+          'অন্যান্য প্রকৃতিপ্রেমী ও গবেষকদের জন্য গুরুত্বপূর্ণ তথ্য',
+          Icons.description_outlined,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _descriptionCtrl,
+          maxLines: 4,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration(
+            label: 'দর্শনের বিবরণ *',
+            hint: 'প্রাণীটি কী অবস্থায় ছিল? পরিবেশ কেমন ছিল? কোন বিশেষ আচরণ লক্ষ্য করেছিলেন?',
+          ),
+          validator: (v) {
+            final val = v?.trim() ?? '';
+            if (val.length < 10) {
+              return 'অন্তত ১০টি অক্ষরে বিস্তারিত বিবরণ দিন';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _notesCtrl,
+          maxLines: 2,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration(
+            label: 'সম্পাদকদের উদ্দেশ্যে কোনো নোট (ঐচ্ছিক)',
+            hint: 'যেমন: ছবিটি অনেক দূর থেকে তোলা, প্রজাতি শনাক্তকরণে সাহায্য চাই...',
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionTitle(
+          '৭. অবদানকারী পরিচিতি',
+          'সর্বসাধারণে আপনার নাম কীভাবে প্রদর্শিত হবে?',
+          Icons.badge_outlined,
+        ),
+        const SizedBox(height: 12),
+        RadioListTile<String>(
+          value: 'real_name',
+          groupValue: _attributionPreference,
+          activeColor: CitizenSciencePalette.accent,
+          title: const Text('আমার নাম প্রকাশ করুন',
+              style: TextStyle(color: Colors.white, fontSize: 13)),
+          subtitle: const Text('যেমন: নজরদারি: মনোজিত রায়',
+              style: TextStyle(color: Colors.white54, fontSize: 11)),
+          onChanged: (v) => setState(() => _attributionPreference = v!),
+        ),
+        if (_attributionPreference == 'real_name') ...[
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+            child: TextFormField(
+              controller: _customAttributionCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: _inputDecoration(
+                label: 'যে নামে স্বীকৃতি চান',
+                hint: 'আপনার নাম / ডাকনাম',
+                prefixIcon: Icons.person_outline,
+              ),
+            ),
+          ),
+        ],
+        RadioListTile<String>(
+          value: 'pseudonym',
+          groupValue: _attributionPreference,
+          activeColor: CitizenSciencePalette.accent,
+          title: const Text('ছদ্মনামে প্রকাশ করুন',
+              style: TextStyle(color: Colors.white, fontSize: 13)),
+          onChanged: (v) => setState(() => _attributionPreference = v!),
+        ),
+        RadioListTile<String>(
+          value: 'anonymous',
+          groupValue: _attributionPreference,
+          activeColor: CitizenSciencePalette.accent,
+          title: const Text('বেনামে প্রকাশ করুন (গোপনীয়)',
+              style: TextStyle(color: Colors.white, fontSize: 13)),
+          subtitle: const Text('সর্বসাধারণে কোনো নাম দৃশ্যমান হবে না',
+              style: TextStyle(color: Colors.white54, fontSize: 11)),
+          onChanged: (v) => setState(() => _attributionPreference = v!),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: CitizenSciencePalette.surfaceAlt,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.verified_user_outlined,
+                      size: 16, color: CitizenSciencePalette.accent),
+                  SizedBox(width: 8),
+                  Text('নাগরিক বিজ্ঞানের নীতি',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13)),
+                ],
+              ),
+              SizedBox(height: 6),
+              Text(
+                '• বন্যপ্রাণীকে কোনোভাবেই বিরক্ত বা ক্ষতিসাধন না করে ছবি তুলুন।\n' +
+                '• মিথ্যা বা ইন্টারনেট থেকে সংগৃহীত অন্য কারও ছবি জমা দেওয়া দণ্ডনীয়।\n' +
+                '• সম্পাদকগণ প্রয়োজনে সঠিক বৈজ্ঞানিক নাম এবং সংবেদনশীলতা হালনাগাদ করবেন।',
+                style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title, String subtitle, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: CitizenSciencePalette.accent, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: const TextStyle(color: Colors.white54, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String label,
+    String? hint,
+    IconData? prefixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
+      prefixIcon: prefixIcon != null
+          ? Icon(prefixIcon, color: CitizenSciencePalette.accentSoft, size: 20)
+          : null,
+      filled: true,
+      fillColor: CitizenSciencePalette.surfaceAlt,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.white12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.white12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: CitizenSciencePalette.accent),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+    );
+  }
+
+  Future<void> _selectTime() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: _observedTime ?? TimeOfDay.now(),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: CitizenSciencePalette.accent,
+            surface: CitizenSciencePalette.surface,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (time != null) setState(() => _observedTime = time);
+  }
+
+  Future<void> _fetchCurrentLocation() async {
+    _snack('অক্ষাংশ ও দ্রাঘিমাংশ প্রবেশ করুন অথবা জেলা নির্দিষ্ট করুন');
+  }
+}
+
+class SightingSuccessScreen extends StatelessWidget {
+  final WildlifeSighting sighting;
+
+  const SightingSuccessScreen({super.key, required this.sighting});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: CitizenSciencePalette.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white70),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: CitizenSciencePalette.surface,
+                ),
+                child: const Icon(Icons.check_circle_outline,
+                    color: CitizenSciencePalette.accent, size: 54),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'আপনার দর্শন সফলভাবে জমা হয়েছে!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                sighting.displaySpeciesName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: CitizenSciencePalette.accent,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: CitizenSciencePalette.surfaceAlt,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white12),
+                ),
+                child: Column(
+                  children: [
+                    _row(Icons.tag, 'আইডি', sighting.id.length >= 8 ? sighting.id.substring(0, 8) : sighting.id),
+                    const Divider(color: Colors.white10),
+                    _row(Icons.location_on_outlined, 'স্থান',
+                        sighting.publicLocationLabel ?? sighting.district ?? 'ভারত'),
+                    const Divider(color: Colors.white10),
+                    _row(Icons.hourglass_empty, 'বর্তমান অবস্থা',
+                        sighting.statusLabelBn),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'আমাদের বন্যপ্রাণী সম্পাদকমণ্ডলী এটি যাচাই করবেন। কোনো অতিরিক্ত তথ্যের প্রয়োজন হলে বা দর্শনটি প্রকাশিত হলে আপনি নোটিফিকেশনের মাধ্যমে জানতে পারবেন।',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: CitizenSciencePalette.accent,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('নাগরিক বিজ্ঞান পাতায় ফিরে যান',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _row(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: CitizenSciencePalette.accentSoft),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+        const Spacer(),
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+      ],
+    );
+  }
+}

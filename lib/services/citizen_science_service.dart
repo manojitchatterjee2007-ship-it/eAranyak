@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -666,7 +668,7 @@ class CitizenScienceService {
     required String userId,
     required String sightingId,
     required String kind,
-    required List<PickedFilePayload> files,
+    required List<PlatformFile> files,
     int startIndex = 0,
   }) async {
     final results = <WildlifeSightingMedia>[];
@@ -681,18 +683,21 @@ class CitizenScienceService {
         index: startIndex + i,
       );
       final storagePath = safeName;
-      final bytes = file.bytes;
+      Uint8List? bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (_) {
+        bytes = null;
+      }
+      if (bytes == null || bytes.isEmpty) continue;
+
+      final mime = SightingValidation.contentTypeForExtension(file.extension);
 
       await client.storage.from(mediaBucket).uploadBinary(
             storagePath,
             bytes,
             fileOptions: FileOptions(
-              contentType: file.mimeType ??
-                  (kind == 'photo'
-                      ? 'image/jpeg'
-                      : kind == 'audio'
-                          ? 'audio/mpeg'
-                          : 'video/mp4'),
+              contentType: mime,
               upsert: false,
             ),
           );
@@ -705,12 +710,7 @@ class CitizenScienceService {
         'sort_order': startIndex + i,
         'file_name': safeName,
         'file_size_bytes': bytes.lengthInBytes,
-        'mime_type': file.mimeType ??
-            (kind == 'photo'
-                ? 'image/jpeg'
-                : kind == 'audio'
-                    ? 'audio/mpeg'
-                    : 'video/mp4'),
+        'mime_type': mime,
       };
 
       final inserted = await client

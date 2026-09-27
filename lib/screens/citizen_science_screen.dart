@@ -5,7 +5,6 @@ import '../services/citizen_science_service.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/citizen_science/sighting_card.dart';
-import 'contributor_profile_screen.dart';
 import 'sighting_detail_screen.dart';
 import 'sighting_submission_screen.dart';
 
