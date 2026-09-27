@@ -47,11 +47,11 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
 
   DateTime _observedDate = DateTime.now();
   TimeOfDay? _observedTime;
-  String _iucnStatus = 'unknown';
+  final String _iucnStatus = 'unknown';
   String _locationPrecision = 'district';
   bool _isNestingOrRoost = false;
   String _attributionPreference = 'real_name';
-  bool _includeCoordinates = false;
+  final bool _includeCoordinates = false;
   String? _selectedLifeStage;
   String? _selectedBehaviour;
 
@@ -77,7 +77,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
       _timeCtrl.text = existing.observedTime ?? '';
       _notesCtrl.text = existing.observationNotes ?? '';
       _individualCountCtrl.text = '${existing.individualCount ?? 1}';
-      _habitat = existing.habitat;
+      _habitatCtrl.text = existing.habitat ?? '';
       _locationPrecision = existing.locationPrecision;
       _isNestingOrRoost = existing.breedingSite;
       _attributionPreference = existing.contributorPrivacy == 'anonymous' ? 'anonymous' : 'real_name';
@@ -539,7 +539,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
             Expanded(
               flex: 3,
               child: DropdownButtonFormField<String>(
-                value: _selectedLifeStage,
+                initialValue: _selectedLifeStage,
                 dropdownColor: CitizenSciencePalette.surfaceAlt,
                 style: const TextStyle(color: Colors.white),
                 decoration: _inputDecoration(
@@ -561,7 +561,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
-          value: _selectedBehaviour,
+          initialValue: _selectedBehaviour,
           dropdownColor: CitizenSciencePalette.surfaceAlt,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration(
@@ -802,7 +802,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _locationPrecision,
+          initialValue: _locationPrecision,
           dropdownColor: CitizenSciencePalette.surfaceAlt,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration(
@@ -976,47 +976,51 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
           Icons.badge_outlined,
         ),
         const SizedBox(height: 12),
-        RadioListTile<String>(
-          value: 'real_name',
+        RadioGroup<String>(
           groupValue: _attributionPreference,
-          activeColor: CitizenSciencePalette.accent,
-          title: const Text('আমার নাম প্রকাশ করুন',
-              style: TextStyle(color: Colors.white, fontSize: 13)),
-          subtitle: const Text('যেমন: নজরদারি: মনোজিত রায়',
-              style: TextStyle(color: Colors.white54, fontSize: 11)),
-          onChanged: (v) => setState(() => _attributionPreference = v!),
-        ),
-        if (_attributionPreference == 'real_name') ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-            child: TextFormField(
-              controller: _customAttributionCtrl,
-              style: const TextStyle(color: Colors.white),
-              decoration: _inputDecoration(
-                label: 'যে নামে স্বীকৃতি চান',
-                hint: 'আপনার নাম / ডাকনাম',
-                prefixIcon: Icons.person_outline,
+          onChanged: (v) {
+            if (v != null) setState(() => _attributionPreference = v);
+          },
+          child: Column(
+            children: [
+              RadioListTile<String>(
+                value: 'real_name',
+                activeColor: CitizenSciencePalette.accent,
+                title: const Text('আমার নাম প্রকাশ করুন',
+                    style: TextStyle(color: Colors.white, fontSize: 13)),
+                subtitle: const Text('যেমন: নজরদারি: মনোজিত রায়',
+                    style: TextStyle(color: Colors.white54, fontSize: 11)),
               ),
-            ),
+              if (_attributionPreference == 'real_name') ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                  child: TextFormField(
+                    controller: _customAttributionCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _inputDecoration(
+                      label: 'যে নামে স্বীকৃতি চান',
+                      hint: 'আপনার নাম / ডাকনাম',
+                      prefixIcon: Icons.person_outline,
+                    ),
+                  ),
+                ),
+              ],
+              RadioListTile<String>(
+                value: 'pseudonym',
+                activeColor: CitizenSciencePalette.accent,
+                title: const Text('ছদ্মনামে প্রকাশ করুন',
+                    style: TextStyle(color: Colors.white, fontSize: 13)),
+              ),
+              RadioListTile<String>(
+                value: 'anonymous',
+                activeColor: CitizenSciencePalette.accent,
+                title: const Text('বেনামে প্রকাশ করুন (গোপনীয়)',
+                    style: TextStyle(color: Colors.white, fontSize: 13)),
+                subtitle: const Text('সর্বসাধারণে কোনো নাম দৃশ্যমান হবে না',
+                    style: TextStyle(color: Colors.white54, fontSize: 11)),
+              ),
+            ],
           ),
-        ],
-        RadioListTile<String>(
-          value: 'pseudonym',
-          groupValue: _attributionPreference,
-          activeColor: CitizenSciencePalette.accent,
-          title: const Text('ছদ্মনামে প্রকাশ করুন',
-              style: TextStyle(color: Colors.white, fontSize: 13)),
-          onChanged: (v) => setState(() => _attributionPreference = v!),
-        ),
-        RadioListTile<String>(
-          value: 'anonymous',
-          groupValue: _attributionPreference,
-          activeColor: CitizenSciencePalette.accent,
-          title: const Text('বেনামে প্রকাশ করুন (গোপনীয়)',
-              style: TextStyle(color: Colors.white, fontSize: 13)),
-          subtitle: const Text('সর্বসাধারণে কোনো নাম দৃশ্যমান হবে না',
-              style: TextStyle(color: Colors.white54, fontSize: 11)),
-          onChanged: (v) => setState(() => _attributionPreference = v!),
         ),
         const SizedBox(height: 20),
         Container(
@@ -1043,8 +1047,8 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
               ),
               SizedBox(height: 6),
               Text(
-                '• বন্যপ্রাণীকে কোনোভাবেই বিরক্ত বা ক্ষতিসাধন না করে ছবি তুলুন।\n' +
-                '• মিথ্যা বা ইন্টারনেট থেকে সংগৃহীত অন্য কারও ছবি জমা দেওয়া দণ্ডনীয়।\n' +
+                '• বন্যপ্রাণীকে কোনোভাবেই বিরক্ত বা ক্ষতিসাধন না করে ছবি তুলুন।\n'
+                '• মিথ্যা বা ইন্টারনেট থেকে সংগৃহীত অন্য কারও ছবি জমা দেওয়া দণ্ডনীয়।\n'
                 '• সম্পাদকগণ প্রয়োজনে সঠিক বৈজ্ঞানিক নাম এবং সংবেদনশীলতা হালনাগাদ করবেন।',
                 style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.5),
               ),
