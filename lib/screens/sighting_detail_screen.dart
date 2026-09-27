@@ -7,7 +7,6 @@ import '../services/sound_service.dart';
 import '../widgets/citizen_science/sighting_card.dart';
 import '../widgets/protected_content.dart';
 import '../widgets/protected_image.dart';
-import '../widgets/protected_watermark.dart';
 import '../widgets/scientific_text.dart';
 
 /// Protected public detail view for a published sighting.

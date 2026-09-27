@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/wildlife_sighting.dart';
 import '../services/citizen_science_service.dart';
 import '../services/sound_service.dart';
+import '../widgets/keyboard_press_effect.dart';
 import '../widgets/citizen_science/sighting_card.dart';
 import 'contributor_profile_screen.dart';
 import 'sighting_detail_screen.dart';
@@ -182,9 +183,7 @@ class _CitizenScienceScreenState extends State<CitizenScienceScreen> {
 
   void _openContributorArea() {
     SoundService.playButtonSound();
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => const ContributorProfileScreen()))
-        .then((_) => _load());
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile not implemented yet')));
   }
 
   @override

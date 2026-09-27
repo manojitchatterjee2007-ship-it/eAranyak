@@ -16,6 +16,7 @@ import 'nature_games_screen.dart';
 import 'wildlife_gallery_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'online_book_store_screen.dart';
+import 'wildlife_help_screen.dart';
 import 'podcast_screen.dart';
 import 'vlog_screen.dart';
 import 'tutorial_screen.dart';
@@ -628,6 +629,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const OnlineBookStoreScreen()));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.health_and_safety, color: Color(0xFF00E676)),
+                  title: const Text('বন্যপ্রাণী সহায়তা', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  subtitle: const Text('(Wildlife Help)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const WildlifeHelpScreen()));
                   },
                 ),
                 ListTile(

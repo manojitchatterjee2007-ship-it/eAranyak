@@ -27,6 +27,7 @@ import '../widgets/editorial/vlog_admin_section.dart';
 import '../widgets/editorial/tutorial_admin_section.dart';
 import '../widgets/editorial/daily_wildlife_admin_section.dart';
 import '../widgets/editorial/about_us_admin_section.dart';
+import '../widgets/editorial/wildlife_help_admin_section.dart';
 
 class UploadTask {
   final String id;
@@ -923,6 +924,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onPressed: _loadAdminOnlineBooks,
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        ElevatedButton.icon(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Manage Reviews coming soon...')));
+          },
+          icon: const Icon(Icons.rate_review, color: Colors.white, size: 18),
+          label: const Text('Manage Reviews', style: TextStyle(color: Colors.white)),
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E2E23)),
         ),
         const SizedBox(height: 12),
 
@@ -2023,6 +2033,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 10: return const DailyWildlifeAdminSection();
       case 11: return const AboutUsAdminSection();
       case 12: return const GamificationAdminSection();
+      case 13: return const WildlifeHelpAdminSection();
       default: return const SizedBox.shrink();
     }
   }
@@ -2045,6 +2056,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       NavigationRailDestination(icon: Icon(Icons.pets_rounded), label: Text('Wildlife')),
       NavigationRailDestination(icon: Icon(Icons.info_outline_rounded), label: Text('About')),
       NavigationRailDestination(icon: Icon(Icons.games_rounded), label: Text('Kids&Game')),
+      NavigationRailDestination(icon: Icon(Icons.health_and_safety_rounded), label: Text('Rescue')),
     ];
 
     if (isDesktop) {
@@ -3703,6 +3715,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onPressed: _loadAdminNotifications,
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        ElevatedButton.icon(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Manage Reviews coming soon...')));
+          },
+          icon: const Icon(Icons.rate_review, color: Colors.white, size: 18),
+          label: const Text('Manage Reviews', style: TextStyle(color: Colors.white)),
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E2E23)),
         ),
         const SizedBox(height: 12),
 

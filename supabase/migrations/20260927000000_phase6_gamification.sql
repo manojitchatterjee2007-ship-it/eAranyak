@@ -117,16 +117,25 @@ ALTER TABLE public.vanarakkhi_question_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vanarakkhi_mission_completions ENABLE ROW LEVEL SECURITY;
 
 -- Read Access
+DROP POLICY IF EXISTS "Public read active modules" ON public.kishore_learning_modules;
 CREATE POLICY "Public read active modules" ON public.kishore_learning_modules FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Public read active missions" ON public.vanarakkhi_missions;
 CREATE POLICY "Public read active missions" ON public.vanarakkhi_missions FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Public read active badges" ON public.vanarakkhi_badges;
 CREATE POLICY "Public read active badges" ON public.vanarakkhi_badges FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Public read active challenges" ON public.vanarakkhi_challenges;
 CREATE POLICY "Public read active challenges" ON public.vanarakkhi_challenges FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Public read active question sets" ON public.vanarakkhi_question_sets;
 CREATE POLICY "Public read active question sets" ON public.vanarakkhi_question_sets FOR SELECT USING (is_active = true);
 
 -- User Progress Access
+DROP POLICY IF EXISTS "Users read own progress" ON public.vanarakkhi_user_progress;
 CREATE POLICY "Users read own progress" ON public.vanarakkhi_user_progress FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users read own badges" ON public.vanarakkhi_user_badges;
 CREATE POLICY "Users read own badges" ON public.vanarakkhi_user_badges FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users read own question attempts" ON public.vanarakkhi_question_attempts;
 CREATE POLICY "Users read own question attempts" ON public.vanarakkhi_question_attempts FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users read own mission completions" ON public.vanarakkhi_mission_completions;
 CREATE POLICY "Users read own mission completions" ON public.vanarakkhi_mission_completions FOR SELECT USING (auth.uid() = user_id);
 
 -- Write Access for Users (Restricted to RPC to prevent direct tampering)

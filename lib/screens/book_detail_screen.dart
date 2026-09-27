@@ -3,7 +3,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/online_book.dart';
+import '../models/book_review.dart';
 import '../services/online_book_service.dart';
+import '../services/book_review_service.dart';
 import '../services/analytics_service.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
@@ -25,6 +27,7 @@ class BookDetailScreen extends StatefulWidget {
 
 class _BookDetailScreenState extends State<BookDetailScreen> {
   final OnlineBookService _bookService = OnlineBookService();
+  final BookReviewService _reviewService = BookReviewService();
   final AnalyticsService _analyticsService = AnalyticsService();
   final SupabaseClient _supabase = Supabase.instance.client;
 
@@ -32,10 +35,31 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   bool _loadingState = true;
   bool _actionLoading = false;
 
+  List<BookReview> _reviews = [];
+  List<OnlineBook> _recommendations = [];
+  Map<String, dynamic> _ratingSummary = {};
+  bool _reviewsLoading = true;
+
   @override
   void initState() {
     super.initState();
     _checkBookshelfStatus();
+    _loadReviewsAndRecommendations();
+  }
+
+  Future<void> _loadReviewsAndRecommendations() async {
+    final reviews = await _reviewService.fetchReviewsForBook(widget.book.id);
+    final summary = await _reviewService.fetchBookRatingSummary(widget.book.id);
+    final recs = await _reviewService.fetchRecommendationsForBook(widget.book.id);
+    
+    if (mounted) {
+      setState(() {
+        _reviews = reviews;
+        _ratingSummary = summary;
+        _recommendations = recs;
+        _reviewsLoading = false;
+      });
+    }
   }
 
   Future<void> _checkBookshelfStatus() async {
@@ -368,9 +392,286 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                     ],
                   ),
             const SizedBox(height: 40),
+            
+            // Reviews and Recommendations Section
+            if (!_reviewsLoading) ...[
+              _buildEditorialReview(),
+              const SizedBox(height: 24),
+              _buildRatingSummary(),
+              const SizedBox(height: 24),
+              _buildReaderReviews(),
+              const SizedBox(height: 16),
+              _buildReviewButton(),
+              const SizedBox(height: 24),
+              _buildRecommendationCarousel(),
+            ] else
+               const Center(child: CircularProgressIndicator(color: Color(0xFF00E676))),
+            
+            const SizedBox(height: 40),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildEditorialReview() {
+    final editorialReviews = _reviews.where((r) => r.isEditorial).toList();
+    if (editorialReviews.isEmpty) return const SizedBox.shrink();
+
+    final rev = editorialReviews.first;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16251A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF81C784).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.star, color: Color(0xFFFFD54F), size: 18),
+              SizedBox(width: 8),
+              Text('সম্পাদকের মতামত', style: TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (rev.reviewTitle != null)
+            Text(rev.reviewTitle!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+          if (rev.reviewTitle != null) const SizedBox(height: 6),
+          Text(rev.reviewBody, style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingSummary() {
+    if (_ratingSummary['count'] == 0) return const SizedBox.shrink();
+    
+    final double avg = _ratingSummary['average'] ?? 0.0;
+    final int count = _ratingSummary['count'] ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('রেটিং', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text(avg.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: List.generate(5, (index) => Icon(
+                    index < avg.round() ? Icons.star : Icons.star_border,
+                    color: const Color(0xFFFFD54F),
+                    size: 16,
+                  )),
+                ),
+                Text('$count টি রেটিং', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReaderReviews() {
+    final readerReviews = _reviews.where((r) => !r.isEditorial).toList();
+    if (readerReviews.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('পাঠকদের মতামত', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 12),
+        ...readerReviews.take(3).map((rev) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.person, color: Colors.white38, size: 16),
+                    const SizedBox(width: 8),
+                    Text('পাঠক', style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    if (rev.rating != null)
+                      Row(
+                        children: List.generate(5, (index) => Icon(
+                          index < rev.rating! ? Icons.star : Icons.star_border,
+                          color: const Color(0xFFFFD54F),
+                          size: 12,
+                        )),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (rev.reviewTitle != null)
+                  Text(rev.reviewTitle!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                if (rev.reviewTitle != null) const SizedBox(height: 4),
+                Text(rev.reviewBody, style: const TextStyle(color: Colors.white60, fontSize: 12, height: 1.4)),
+              ],
+            ),
+          ),
+        )).toList(),
+      ],
+    );
+  }
+
+  Widget _buildReviewButton() {
+    return Center(
+      child: TextButton.icon(
+        onPressed: _showReviewDialog,
+        icon: const Icon(Icons.rate_review, color: Color(0xFF00E676), size: 18),
+        label: const Text('আপনার মতামত দিন', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.5)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showReviewDialog() {
+    final TextEditingController bodyController = TextEditingController();
+    int selectedRating = 5;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF18221B),
+              title: const Text('মতামত দিন', style: TextStyle(color: Colors.white)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) => IconButton(
+                      icon: Icon(
+                        index < selectedRating ? Icons.star : Icons.star_border,
+                        color: const Color(0xFFFFD54F),
+                      ),
+                      onPressed: () => setDialogState(() => selectedRating = index + 1),
+                    )),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: bodyController,
+                    maxLines: 4,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'বইটি সম্পর্কে আপনার মতামত লিখুন...',
+                      hintStyle: const TextStyle(color: Colors.white38),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
+                  onPressed: () async {
+                    if (bodyController.text.trim().isEmpty) return;
+                    Navigator.pop(ctx);
+                    final success = await _reviewService.submitReview(
+                      bookId: widget.book.id,
+                      reviewBody: bodyController.text.trim(),
+                      rating: selectedRating,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(success ? 'আপনার মতামত পর্যালোচনার জন্য পাঠানো হয়েছে।' : 'মতামত পাঠাতে সমস্যা হয়েছে।')),
+                      );
+                    }
+                  },
+                  child: const Text('জমা দিন', style: TextStyle(color: Colors.black)),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
+  Widget _buildRecommendationCarousel() {
+    if (_recommendations.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('আপনার ভালো লাগতে পারে', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 180,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _recommendations.length,
+            itemBuilder: (context, index) {
+              final rec = _recommendations[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => BookDetailScreen(book: rec, userEmail: widget.userEmail)),
+                  );
+                },
+                child: Container(
+                  width: 110,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: rec.thumbnailUrl ?? '',
+                          height: 130,
+                          width: 110,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, __, ___) => Container(color: Colors.white10, height: 130, width: 110, child: const Icon(Icons.book, color: Colors.white38)),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        rec.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white, fontSize: 11, height: 1.2),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

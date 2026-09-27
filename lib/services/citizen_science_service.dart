@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -199,20 +197,33 @@ class CitizenScienceService {
     }
 
     final media = <WildlifeSightingMedia>[];
-    media.addAll(await _uploadAll(
-        userId: userId, sightingId: sightingId, kind: 'photo', files: photos));
-    media.addAll(await _uploadAll(
+    if (photos.isNotEmpty) {
+      media.addAll(await _uploadAll(
+        userId: userId,
+        sightingId: sightingId,
+        kind: 'photo',
+        files: photos,
+      ));
+    }
+    if (audioClips.isNotEmpty) {
+      media.addAll(await _uploadAll(
         userId: userId,
         sightingId: sightingId,
         kind: 'audio',
         files: audioClips,
-        startIndex: 100));
-    media.addAll(await _uploadAll(
+        startIndex: 100,
+      ));
+    }
+    if (videoClips.isNotEmpty) {
+      media.addAll(await _uploadAll(
         userId: userId,
         sightingId: sightingId,
         kind: 'video',
         files: videoClips,
-        startIndex: 200));
+        startIndex: 200,
+      ));
+    }
+
 
     return WildlifeSighting.fromJson(<String, dynamic>{
       ...created,
@@ -539,7 +550,7 @@ class CitizenScienceService {
           .map((e) => PublicWildlifeSighting.fromJson(Map<String, dynamic>.from(e)))
           .toList();
 
-      return _attachMedia(list);
+      return await _attachMedia(list);
     } catch (_) {
       return const <PublicWildlifeSighting>[];
     }
@@ -651,4 +662,67 @@ class CitizenScienceService {
       throw SightingSubmissionException(_friendlyServerError(e.message));
     }
   }
+  Future<List<WildlifeSightingMedia>> _uploadAll({
+    required String userId,
+    required String sightingId,
+    required String kind,
+    required List<PickedFilePayload> files,
+    int startIndex = 0,
+  }) async {
+    final results = <WildlifeSightingMedia>[];
+    final client = _supabase;
+
+    for (var i = 0; i < files.length; i++) {
+      final file = files[i];
+      final safeName = SightingValidation.sanitizeFileName(
+        file.name,
+        userId: userId,
+        sightingId: sightingId,
+        index: startIndex + i,
+      );
+      final storagePath = safeName;
+      final bytes = file.bytes;
+
+      await client.storage.from(mediaBucket).uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: file.mimeType ??
+                  (kind == 'photo'
+                      ? 'image/jpeg'
+                      : kind == 'audio'
+                          ? 'audio/mpeg'
+                          : 'video/mp4'),
+              upsert: false,
+            ),
+          );
+
+      final insertPayload = <String, dynamic>{
+        'sighting_id': sightingId,
+        'user_id': userId,
+        'media_type': kind,
+        'storage_path': storagePath,
+        'sort_order': startIndex + i,
+        'file_name': safeName,
+        'file_size_bytes': bytes.lengthInBytes,
+        'mime_type': file.mimeType ??
+            (kind == 'photo'
+                ? 'image/jpeg'
+                : kind == 'audio'
+                    ? 'audio/mpeg'
+                    : 'video/mp4'),
+      };
+
+      final inserted = await client
+          .from('wildlife_sighting_media')
+          .insert(insertPayload)
+          .select()
+          .single();
+
+      results.add(WildlifeSightingMedia.fromJson(inserted));
+    }
+
+    return results;
+  }
+
 }
