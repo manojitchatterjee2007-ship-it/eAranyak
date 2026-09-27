@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -35,7 +36,7 @@ void main() {
         reason: 'Could not decode image: $path',
       );
 
-      print(
+      debugPrint(
         '=== $path '
         '(Width: ${image.width}, Height: ${image.height}) ===',
       );
@@ -57,7 +58,7 @@ void main() {
         final b = byteData.getUint8(offset + 2);
         final a = byteData.getUint8(offset + 3);
 
-        print(
+        debugPrint(
           'y=$y '
           '(frac: ${(y / image.height).toStringAsFixed(3)}): '
           'r=$r g=$g b=$b a=$a',

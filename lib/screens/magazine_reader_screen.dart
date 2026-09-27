@@ -172,7 +172,8 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
         final double ty = -(screenSize.height * scale - screenSize.height) / 2;
         
         _zoomController.value = Matrix4.identity()
-          ..translate(tx, ty)
+          ..setTranslationRaw(tx, ty, 0.0)
+          // ignore: deprecated_member_use
           ..scale(scale);
           
       } else {
@@ -272,7 +273,8 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
 
   void _nudgeZoom(double dx, double dy) {
     final matrix = _zoomController.value.clone();
-    matrix.translate(dx, dy);
+    final translation = matrix.getTranslation();
+    matrix.setTranslationRaw(translation.x + dx, translation.y + dy, 0.0);
     _zoomController.value = matrix;
   }
 
@@ -299,7 +301,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
             width: 140,
             height: 180,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.9),
+              color: Colors.black.withValues(alpha: 0.9),
               border: Border.all(color: const Color(0xFF00E676), width: 1.5),
               borderRadius: BorderRadius.circular(8),
               boxShadow: const [BoxShadow(color: Colors.black87, blurRadius: 10)],
@@ -346,7 +348,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: const Color(0xFF00E676), width: 2),
-                          color: const Color(0xFF00E676).withOpacity(0.25),
+                          color: const Color(0xFF00E676).withValues(alpha: 0.25),
                         ),
                       ),
                     );
@@ -518,7 +520,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                     Positioned(
                       top: 0, left: 0, right: 0,
                       child: AppBar(
-                        backgroundColor: Colors.black.withOpacity(0.85),
+                        backgroundColor: Colors.black.withValues(alpha: 0.85),
                         title: Text(
                           '${formatMagazineTitle(widget.title)} (Page ${_signedUrls.isEmpty ? 0 : _currentPage + 1}/${_signedUrls.length})',
                           style: const TextStyle(fontSize: 15),
@@ -542,7 +544,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                           height: 94,
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.90),
+                            color: Colors.black.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.white24),
                           ),
@@ -832,7 +834,7 @@ class _AranyakPdfReaderScreenState extends State<AranyakPdfReaderScreen> {
                 decoration: BoxDecoration(
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),

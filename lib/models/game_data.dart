@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../core/config.dart';
 
@@ -385,11 +386,11 @@ class WildlifeGameData {
             scrambleLoaded = true;
           }
         } catch (e) {
-          print('Error parsing payload for $category: $e');
+          debugPrint('Error parsing payload for $category: $e');
         }
       }
     } catch (e) {
-      print('Error fetching weekly games from Supabase: $e');
+      debugPrint('Error fetching weekly games from Supabase: $e');
     }
   }
 

@@ -526,7 +526,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
               ],
             ),
           ),
-        )).toList(),
+        )),
       ],
     );
   }

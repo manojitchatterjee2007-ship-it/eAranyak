@@ -135,6 +135,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
           final bytes = response.bodyBytes;
           final mimeType = response.headers['content-type'] ?? 'image/jpeg';
           
+          // ignore: deprecated_member_use
           await Share.shareXFiles(
             [
               XFile.fromData(
@@ -152,6 +153,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
     } catch (_) {}
 
     try {
+      // ignore: deprecated_member_use
       await Share.share(shareText, subject: 'eAranyak Wildlife');
     } catch (_) {}
   }

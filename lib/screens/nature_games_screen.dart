@@ -343,7 +343,7 @@ Widget _resourceAcknowledgement({String? source, String? attribution}) {
   if (s.isEmpty && a.isEmpty) return const SizedBox.shrink();
   return Container(
     width: double.infinity, margin: const EdgeInsets.only(top: 12), padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(color: Colors.white.withOpacity(.035), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white10)),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .035), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white10)),
     child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.info_outline, size: 15, color: Colors.white54), const SizedBox(width: 7),
       Expanded(child: Text([if (s.isNotEmpty) 'Source: $s', if (a.isNotEmpty) 'Credit: $a'].join('\n'), style: const TextStyle(color: Colors.white54, fontSize: 9.5, height: 1.35))),
@@ -691,7 +691,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
     showModalBottomSheet(context: context, backgroundColor: const Color(0xFF18221B), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))), builder: (sheet) => SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(18,18,18,20), child: Column(mainAxisSize: MainAxisSize.min, children: [
       Container(width:42,height:4,decoration:BoxDecoration(color:Colors.white24,borderRadius:BorderRadius.circular(4))), const SizedBox(height:14),
       Text(names[category]!.$1,style:const TextStyle(color:Colors.white,fontSize:19,fontWeight:FontWeight.bold)), Text(names[category]!.$2,style:const TextStyle(color:Color(0xFF81C784),fontSize:11)), const SizedBox(height:15),
-      ...levels.map((l) { final count=WildlifeGameData.count(category,l.$1); final available=count>0; return Padding(padding:const EdgeInsets.only(bottom:9),child:InkWell(borderRadius:BorderRadius.circular(14),onTap:!available?null:(){Navigator.pop(sheet);_launchDifficulty(context,category,l.$1);},child:Container(padding:const EdgeInsets.symmetric(horizontal:15,vertical:13),decoration:BoxDecoration(color:available?l.$4.withOpacity(.13):Colors.white.withOpacity(.035),borderRadius:BorderRadius.circular(14),border:Border.all(color:available?l.$4.withOpacity(.45):Colors.white12)),child:Row(children:[Container(width:12,height:12,decoration:BoxDecoration(color:available?l.$4:Colors.white24,shape:BoxShape.circle)),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(l.$2,style:TextStyle(color:available?Colors.white:Colors.white38,fontWeight:FontWeight.bold,fontSize:15)),Text(l.$3,style:TextStyle(color:available?Colors.white60:Colors.white24,fontSize:10))])),Text(available?'$count questions':'Unavailable',style:TextStyle(color:available?Colors.white70:Colors.white30,fontSize:11)),const SizedBox(width:7),Icon(Icons.arrow_forward_ios_rounded,size:14,color:available?Colors.white54:Colors.white24)])))); }),
+      ...levels.map((l) { final count=WildlifeGameData.count(category,l.$1); final available=count>0; return Padding(padding:const EdgeInsets.only(bottom:9),child:InkWell(borderRadius:BorderRadius.circular(14),onTap:!available?null:(){Navigator.pop(sheet);_launchDifficulty(context,category,l.$1);},child:Container(padding:const EdgeInsets.symmetric(horizontal:15,vertical:13),decoration:BoxDecoration(color:available?l.$4.withValues(alpha: .13):Colors.white.withValues(alpha: .035),borderRadius:BorderRadius.circular(14),border:Border.all(color:available?l.$4.withValues(alpha: .45):Colors.white12)),child:Row(children:[Container(width:12,height:12,decoration:BoxDecoration(color:available?l.$4:Colors.white24,shape:BoxShape.circle)),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(l.$2,style:TextStyle(color:available?Colors.white:Colors.white38,fontWeight:FontWeight.bold,fontSize:15)),Text(l.$3,style:TextStyle(color:available?Colors.white60:Colors.white24,fontSize:10))])),Text(available?'$count questions':'Unavailable',style:TextStyle(color:available?Colors.white70:Colors.white30,fontSize:11)),const SizedBox(width:7),Icon(Icons.arrow_forward_ios_rounded,size:14,color:available?Colors.white54:Colors.white24)])))); }),
     ]))));
   }
 
@@ -733,7 +733,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.035),
+              color: Colors.white.withValues(alpha: 0.035),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white10),
             ),
@@ -781,7 +781,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
   Widget _buildWarning(String message) => Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.orange.withOpacity(.10), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.orange.withOpacity(.35))),
+        decoration: BoxDecoration(color: Colors.orange.withValues(alpha: .10), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.orange.withValues(alpha: .35))),
         child: Text(message, style: const TextStyle(color: Colors.orangeAccent, fontSize: 11)),
       );
 
@@ -808,7 +808,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
 
   Widget _difficultySummary(String category) => Wrap(spacing:5,runSpacing:4,children:[_levelChip('সহজ',WildlifeGameData.count(category,'easy'),const Color(0xFF43A047)),_levelChip('মাঝারি',WildlifeGameData.count(category,'medium'),const Color(0xFFFFA000)),_levelChip('কঠিন',WildlifeGameData.count(category,'hard'),const Color(0xFFE53935))]);
 
-  Widget _levelChip(String label,int count,Color color)=>Container(padding:const EdgeInsets.symmetric(horizontal:6,vertical:3),decoration:BoxDecoration(color:count>0?color.withOpacity(.12):Colors.white.withOpacity(.035),borderRadius:BorderRadius.circular(10),border:Border.all(color:count>0?color.withOpacity(.35):Colors.white10)),child:Text('$label $count',style:TextStyle(color:count>0?Colors.white70:Colors.white24,fontSize:7.5,fontWeight:FontWeight.w600)));
+  Widget _levelChip(String label,int count,Color color)=>Container(padding:const EdgeInsets.symmetric(horizontal:6,vertical:3),decoration:BoxDecoration(color:count>0?color.withValues(alpha: .12):Colors.white.withValues(alpha: .035),borderRadius:BorderRadius.circular(10),border:Border.all(color:count>0?color.withValues(alpha: .35):Colors.white10)),child:Text('$label $count',style:TextStyle(color:count>0?Colors.white70:Colors.white24,fontSize:7.5,fontWeight:FontWeight.w600)));
 
   Widget _buildGameCard(
     BuildContext context,
@@ -828,12 +828,12 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [color.withOpacity(.28), color.withOpacity(.07)],
+            colors: [color.withValues(alpha: .28), color.withValues(alpha: .07)],
           ),
-          border: Border.all(color: color.withOpacity(.52)),
+          border: Border.all(color: color.withValues(alpha: .52)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(.22),
+              color: Colors.black.withValues(alpha: .22),
               blurRadius: 10,
               offset: const Offset(0, 6),
             ),
@@ -849,7 +849,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     width: double.infinity,
-                    color: color.withOpacity(.12),
+                    color: color.withValues(alpha: .12),
                     child: Image.asset(
                       imageAsset,
                       fit: BoxFit.contain,
@@ -881,7 +881,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
                   ),
                   Icon(
                     Icons.arrow_forward_rounded,
-                    color: Colors.white.withOpacity(.5),
+                    color: Colors.white.withValues(alpha: .5),
                     size: 16,
                   ),
                 ],
@@ -899,7 +899,7 @@ class NatureGamesScreenState extends State<NatureGamesScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(.24),
+                  color: color.withValues(alpha: .24),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -1178,8 +1178,11 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
             ...options.map((opt) {
               var bg = Colors.white10;
               if (_answered) {
-                if (opt == correct || _sameAnswer(opt, current)) bg = Colors.green.shade800;
-                else if (opt == _selectedOption) bg = Colors.red.shade900;
+                if (opt == correct || _sameAnswer(opt, current)) {
+                  bg = Colors.green.shade800;
+                } else if (opt == _selectedOption) {
+                  bg = Colors.red.shade900;
+                }
               }
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -1213,13 +1216,13 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
           onPressed: _showHintForCurrent,
           icon: const Icon(Icons.lightbulb_outline, size: 18),
           label: const Text('Hint / ইঙ্গিত'),
-          style: OutlinedButton.styleFrom(foregroundColor: Colors.amberAccent, side: BorderSide(color: Colors.amberAccent.withOpacity(.45))),
+          style: OutlinedButton.styleFrom(foregroundColor: Colors.amberAccent, side: BorderSide(color: Colors.amberAccent.withValues(alpha: .45))),
         ),
       );
 
   Widget _buildInlineHint(GameQuestion q) {
     final text = q.hints.isNotEmpty ? q.hints.first : (q.bengali.isNotEmpty ? 'বাংলা নাম: ${q.bengali}' : 'এই প্রশ্নটির উত্তরটি প্রকৃতি ও প্রাণীটির বৈশিষ্ট্য ভেবে খুঁজুন।');
-    return Container(margin: const EdgeInsets.only(top: 8), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.amber.withOpacity(.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.withOpacity(.3))), child: Text('💡 $text', style: const TextStyle(color: Colors.amberAccent, fontSize: 13, height: 1.35)));
+    return Container(margin: const EdgeInsets.only(top: 8), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.amber.withValues(alpha: .08), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.withValues(alpha: .3))), child: Text('💡 $text', style: const TextStyle(color: Colors.amberAccent, fontSize: 13, height: 1.35)));
   }
 
   Widget _buildPhotoArea() {
@@ -1239,7 +1242,7 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
       decoration: BoxDecoration(
         color: const Color(0xFF174D2B),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF00E676).withOpacity(.35)),
+        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: .35)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1261,7 +1264,7 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
 
   Widget _buildHintArea(GameQuestion current) {
     final hints = current.hints;
-    return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: const Color(0xFF1B5E20).withOpacity(.16), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF81C784).withOpacity(.35))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (hints.isNotEmpty) ...hints.take(3).map((h) => Padding(padding: const EdgeInsets.only(bottom: 10), child: Text('• $h', style: const TextStyle(color: Colors.white70, fontSize: 16))),) else const Text('প্রকৃতির একটি পরিচিত বৈশিষ্ট্য মনে করে উত্তরটি খুঁজুন।', style: TextStyle(color: Colors.white70, fontSize: 16))]));
+    return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: const Color(0xFF1B5E20).withValues(alpha: .16), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF81C784).withValues(alpha: .35))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (hints.isNotEmpty) ...hints.take(3).map((h) => Padding(padding: const EdgeInsets.only(bottom: 10), child: Text('• $h', style: const TextStyle(color: Colors.white70, fontSize: 16))),) else const Text('প্রকৃতির একটি পরিচিত বৈশিষ্ট্য মনে করে উত্তরটি খুঁজুন।', style: TextStyle(color: Colors.white70, fontSize: 16))]));
   }
 }
 
@@ -1448,7 +1451,7 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
                                     onPressed: _showPuzzleHint,
                                     icon: const Icon(Icons.lightbulb_outline, size: 18),
                                     label: const Text('Hint / ইঙ্গিত'),
-                                    style: OutlinedButton.styleFrom(foregroundColor: Colors.amberAccent, side: BorderSide(color: Colors.amberAccent.withOpacity(.45))),
+                                    style: OutlinedButton.styleFrom(foregroundColor: Colors.amberAccent, side: BorderSide(color: Colors.amberAccent.withValues(alpha: .45))),
                                   ),
                                 ),
                               if (_showHint)
@@ -1456,7 +1459,7 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
                                   width: maxBoard,
                                   margin: const EdgeInsets.only(bottom: 10),
                                   padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: Colors.amber.withOpacity(.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.withOpacity(.3))),
+                                  decoration: BoxDecoration(color: Colors.amber.withValues(alpha: .08), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.withValues(alpha: .3))),
                                   child: Text('💡 ${q.hints.isNotEmpty ? q.hints.first : 'ছবির প্রাণীটির বৈশিষ্ট্য খেয়াল করে টাইল সাজান।'}', style: const TextStyle(color: Colors.amberAccent, fontSize: 13, height: 1.35)),
                                 ),
                               SizedBox(
@@ -1644,7 +1647,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     color: Colors.black26,
-                    border: Border.all(color: const Color(0xFF1565C0).withOpacity(.45)),
+                    border: Border.all(color: const Color(0xFF1565C0).withValues(alpha: .45)),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
@@ -1661,12 +1664,12 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
               const SizedBox(height: 5),
               Text(q.english, style: const TextStyle(color: Color(0xFF81C784), fontSize: 14)),
               const SizedBox(height: 12),
-              if (!_showHint) OutlinedButton.icon(onPressed: () => setState(() => _showHint = true), icon: const Icon(Icons.lightbulb_outline, size: 18), label: const Text('Hint / ইঙ্গিত'), style: OutlinedButton.styleFrom(foregroundColor: Colors.amberAccent, side: BorderSide(color: Colors.amberAccent.withOpacity(.4)))),
-              if (_showHint) Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.amber.withOpacity(.08), borderRadius: BorderRadius.circular(12)), child: Text(q.hints.isNotEmpty ? '💡 ${q.hints.first}' : '💡 বাংলা নামের প্রথম অক্ষরটি মনে করুন।', style: const TextStyle(color: Colors.amberAccent))),
+              if (!_showHint) OutlinedButton.icon(onPressed: () => setState(() => _showHint = true), icon: const Icon(Icons.lightbulb_outline, size: 18), label: const Text('Hint / ইঙ্গিত'), style: OutlinedButton.styleFrom(foregroundColor: Colors.amberAccent, side: BorderSide(color: Colors.amberAccent.withValues(alpha: .4)))),
+              if (_showHint) Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.amber.withValues(alpha: .08), borderRadius: BorderRadius.circular(12)), child: Text(q.hints.isNotEmpty ? '💡 ${q.hints.first}' : '💡 বাংলা নামের প্রথম অক্ষরটি মনে করুন।', style: const TextStyle(color: Colors.amberAccent))),
               const SizedBox(height: 18),
               Wrap(alignment: WrapAlignment.center, spacing: 6, runSpacing: 6, children: List.generate(_slots.length, (index) {
                 final fixed = _isFixed[index];
-                return GestureDetector(onTap: () => _onSlotTap(index), child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: BoxDecoration(color: fixed ? const Color(0xFF00E676).withOpacity(.2) : Colors.white10, borderRadius: BorderRadius.circular(8), border: Border.all(color: fixed ? const Color(0xFF00E676) : Colors.white30)), child: Text(_slots[index], style: TextStyle(color: fixed ? const Color(0xFF00E676) : Colors.white, fontSize: 18, fontWeight: FontWeight.bold))));
+                return GestureDetector(onTap: () => _onSlotTap(index), child: Container(width: 44, height: 44, alignment: Alignment.center, decoration: BoxDecoration(color: fixed ? const Color(0xFF00E676).withValues(alpha: .2) : Colors.white10, borderRadius: BorderRadius.circular(8), border: Border.all(color: fixed ? const Color(0xFF00E676) : Colors.white30)), child: Text(_slots[index], style: TextStyle(color: fixed ? const Color(0xFF00E676) : Colors.white, fontSize: 18, fontWeight: FontWeight.bold))));
               })),
               const SizedBox(height: 22),
               Wrap(
@@ -1708,12 +1711,12 @@ class GameDiagramPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.8)
+      ..color = color.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
 
     final fillPaint = Paint()
-      ..color = color.withOpacity(0.2)
+      ..color = color.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     final w = size.width;

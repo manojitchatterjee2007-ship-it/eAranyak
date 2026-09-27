@@ -7,7 +7,7 @@ import 'dart:convert';
 import '../../core/config.dart';
 
 class DailyWildlifeAdminSection extends StatefulWidget {
-  const DailyWildlifeAdminSection({Key? key}) : super(key: key);
+  const DailyWildlifeAdminSection({super.key});
 
   @override
   State<DailyWildlifeAdminSection> createState() => _DailyWildlifeAdminSectionState();
@@ -139,7 +139,7 @@ class DailyWildlifeEditor extends StatefulWidget {
   final DailyWildlifeFeature feature;
   final VoidCallback onSave;
 
-  const DailyWildlifeEditor({Key? key, required this.feature, required this.onSave}) : super(key: key);
+  const DailyWildlifeEditor({super.key, required this.feature, required this.onSave});
 
   @override
   State<DailyWildlifeEditor> createState() => _DailyWildlifeEditorState();
@@ -203,7 +203,7 @@ class _DailyWildlifeEditorState extends State<DailyWildlifeEditor> {
       final session = _supabase.auth.currentSession;
       if (session == null) return;
       final response = await http.post(
-        Uri.parse('${supabaseUrl}/functions/v1/generate-wildlife-watercolor'),
+        Uri.parse('$supabaseUrl/functions/v1/generate-wildlife-watercolor'),
         headers: {
           'Authorization': 'Bearer ${session.accessToken}',
           'Content-Type': 'application/json',
@@ -263,7 +263,7 @@ class _DailyWildlifeEditorState extends State<DailyWildlifeEditor> {
               title: const Text('Publish', style: TextStyle(color: Colors.white)),
               value: _isPublished,
               onChanged: (v) => setState(() => _isPublished = v),
-              activeColor: const Color(0xFF00E676),
+              activeThumbColor: const Color(0xFF00E676),
             ),
           ],
         ),

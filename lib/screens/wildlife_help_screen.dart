@@ -121,7 +121,9 @@ class _WildlifeHelpScreenState extends State<WildlifeHelpScreen> {
                       mediaFile: selectedMedia,
                     );
                     if (mounted) {
+                      if (!ctx.mounted) return;
                       Navigator.pop(ctx);
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(success ? 'আপনার আবেদন জমা দেওয়া হয়েছে। আমরা শীঘ্রই যোগাযোগ করব।' : 'আবেদন জমা দিতে সমস্যা হয়েছে।')),
                       );

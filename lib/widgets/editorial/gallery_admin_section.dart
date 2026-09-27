@@ -700,7 +700,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(color: statusColor.withOpacity(0.4)),
+                  side: BorderSide(color: statusColor.withValues(alpha: 0.4)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -746,7 +746,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withOpacity(0.2),
+                                    color: statusColor.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(color: statusColor, width: 0.8),
                                   ),
@@ -759,7 +759,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.amber.withOpacity(0.2),
+                                      color: Colors.amber.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: const Text('⭐ Featured', style: TextStyle(fontSize: 10, color: Colors.amber)),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/wildlife_help.dart';
 
@@ -42,7 +43,7 @@ class WildlifeHelpService {
       });
       return true;
     } catch (e) {
-      print('Error submitting help request: $e');
+      debugPrint('Error submitting help request: $e');
       return false;
     }
   }
@@ -61,7 +62,7 @@ class WildlifeHelpService {
       final response = await query.order('name');
       return (response as List).map((e) => VerifiedRescueContact.fromMap(e)).toList();
     } catch (e) {
-      print('Error fetching verified contacts: $e');
+      debugPrint('Error fetching verified contacts: $e');
       return [];
     }
   }
@@ -76,7 +77,7 @@ class WildlifeHelpService {
       
       return (response as List).map((e) => WildlifeSafetyGuideline.fromMap(e)).toList();
     } catch (e) {
-      print('Error fetching safety guidelines: $e');
+      debugPrint('Error fetching safety guidelines: $e');
       return [];
     }
   }

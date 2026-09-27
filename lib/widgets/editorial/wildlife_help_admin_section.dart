@@ -35,7 +35,7 @@ class _WildlifeHelpAdminSectionState extends State<WildlifeHelpAdminSection> {
         });
       }
     } catch (e) {
-      print('Error fetching requests: $e');
+      debugPrint('Error fetching requests: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -45,7 +45,7 @@ class _WildlifeHelpAdminSectionState extends State<WildlifeHelpAdminSection> {
       await _supabase.from('wildlife_help_requests').update({'status': newStatus}).eq('id', req.id);
       _loadRequests();
     } catch (e) {
-      print('Error updating status: $e');
+      debugPrint('Error updating status: $e');
     }
   }
 

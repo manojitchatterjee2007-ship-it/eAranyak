@@ -8,7 +8,7 @@ import '../services/sound_service.dart';
 class DailyWildlifeScreen extends StatelessWidget {
   final DailyWildlifeFeature feature;
 
-  const DailyWildlifeScreen({Key? key, required this.feature}) : super(key: key);
+  const DailyWildlifeScreen({super.key, required this.feature});
 
   @override
   Widget build(BuildContext context) {

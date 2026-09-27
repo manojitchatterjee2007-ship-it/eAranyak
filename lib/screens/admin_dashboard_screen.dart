@@ -2062,20 +2062,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (isDesktop) {
       return Row(
         children: [
-          NavigationRail(
-            backgroundColor: const Color(0xFF142419),
-            selectedIndex: _selectedTabIndex,
-            onDestinationSelected: (int index) {
-              setState(() {
-                _selectedTabIndex = index;
-              });
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: NavigationRail(
+                      backgroundColor: const Color(0xFF142419),
+                      selectedIndex: _selectedTabIndex,
+                      onDestinationSelected: (int index) {
+                        setState(() {
+                          _selectedTabIndex = index;
+                        });
+                      },
+                      labelType: NavigationRailLabelType.all,
+                      selectedLabelTextStyle: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 11),
+                      unselectedLabelTextStyle: const TextStyle(color: Colors.white70, fontSize: 11),
+                      selectedIconTheme: const IconThemeData(color: Color(0xFF00E676)),
+                      unselectedIconTheme: const IconThemeData(color: Colors.white70),
+                      destinations: destinations,
+                    ),
+                  ),
+                ),
+              );
             },
-            labelType: NavigationRailLabelType.all,
-            selectedLabelTextStyle: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 11),
-            unselectedLabelTextStyle: const TextStyle(color: Colors.white70, fontSize: 11),
-            selectedIconTheme: const IconThemeData(color: Color(0xFF00E676)),
-            unselectedIconTheme: const IconThemeData(color: Colors.white70),
-            destinations: destinations,
           ),
           const VerticalDivider(thickness: 1, width: 1, color: Colors.white24),
           Expanded(

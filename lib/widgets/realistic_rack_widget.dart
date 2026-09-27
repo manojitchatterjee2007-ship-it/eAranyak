@@ -204,7 +204,6 @@ class RealisticRackWidget extends StatelessWidget {
                       isWooden: isWooden,
                       backgroundAsset: backgroundAsset,
                       foregroundAsset: foregroundAsset,
-                      children: shelfItems,
                       rackWidth: rackWidth,
                       cardWidth: actualCardWidth,
                       cardHeight: actualCardHeight,
@@ -213,6 +212,7 @@ class RealisticRackWidget extends StatelessWidget {
                       topClearance: _topClearance,
                       shelfSurfaceY: shelfSurfaceY,
                       lipHeight: _lipHeight,
+                      children: shelfItems,
                     ),
                   );
                 },
@@ -294,9 +294,9 @@ class _ShelfBay extends StatelessWidget {
             width: cardWidth,
             height: cardHeight,
             child: _PhysicalMagazine(
-              child: children[i],
               width: cardWidth,
               height: cardHeight,
+              child: children[i],
             ),
           ),
 

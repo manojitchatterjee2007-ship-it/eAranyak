@@ -264,7 +264,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.85),
+                                Colors.black.withValues(alpha: 0.85),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -308,7 +308,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
+                              color: Colors.black.withValues(alpha: 0.7),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: const Color(0xFFFFD54F)),
                             ),
@@ -335,7 +335,7 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
                               width: 30,
                               height: 30,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.55),
+                                color: Colors.black.withValues(alpha: 0.55),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Colors.redAccent),
                               ),
@@ -599,9 +599,9 @@ class _FullscreenProtectedImageViewerState
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF142419).withOpacity(0.92),
+                    color: const Color(0xFF142419).withValues(alpha: 0.92),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    border: Border.all(color: const Color(0xFF00E676).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
                   ),
                   child: SafeArea(
                     top: false,
@@ -658,7 +658,7 @@ class _FullscreenProtectedImageViewerState
                                 margin: const EdgeInsets.only(top: 4, bottom: 4),
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.2),
+                                  color: Colors.red.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(color: Colors.redAccent, width: 0.8),
                                 ),

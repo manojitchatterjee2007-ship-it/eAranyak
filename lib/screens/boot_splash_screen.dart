@@ -34,6 +34,7 @@ class _BootSplashState extends State<BootSplash>
           if (mounted) {
             // Forcefully terminate all sounds before routing to the silent Home Screen
             await SoundService.stopAllSounds();
+            if (!mounted) return;
             
             Navigator.of(context).pushReplacement(MaterialPageRoute(
                 builder: (_) => const AuthGate()));

@@ -160,6 +160,7 @@ class _PodcastDetailScreenState extends State<PodcastDetailScreen> {
         '${widget.podcast.title}\n\n'
         '${widget.podcast.snippet ?? widget.podcast.description ?? ''}\n\n'
         'Listen in eAranyak App! $audioUrl';
+    // ignore: deprecated_member_use
     Share.share(text, subject: widget.podcast.title);
   }
 

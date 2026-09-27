@@ -21,9 +21,9 @@ class CaptureBlockedOverlay extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.12),
+                color: Colors.redAccent.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.redAccent.withOpacity(0.5), width: 2),
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5), width: 2),
               ),
               child: const Icon(
                 Icons.screen_lock_portrait_rounded,

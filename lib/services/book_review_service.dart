@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/book_review.dart';
 import '../models/book_collection.dart';
@@ -19,7 +20,7 @@ class BookReviewService {
 
       return (response as List).map((e) => BookReview.fromMap(e)).toList();
     } catch (e) {
-      print('Error fetching book reviews: $e');
+      debugPrint('Error fetching book reviews: $e');
       return [];
     }
   }
@@ -53,7 +54,7 @@ class BookReviewService {
         'distribution': distribution,
       };
     } catch (e) {
-      print('Error fetching rating summary: $e');
+      debugPrint('Error fetching rating summary: $e');
       return {'average': 0.0, 'count': 0, 'distribution': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}};
     }
   }
@@ -76,7 +77,7 @@ class BookReviewService {
       });
       return true;
     } catch (e) {
-      print('Error submitting review: $e');
+      debugPrint('Error submitting review: $e');
       return false;
     }
   }
@@ -97,7 +98,7 @@ class BookReviewService {
       }
       return recommendedBooks;
     } catch (e) {
-      print('Error fetching recommendations: $e');
+      debugPrint('Error fetching recommendations: $e');
       return [];
     }
   }
@@ -128,7 +129,7 @@ class BookReviewService {
       }
       return collections;
     } catch (e) {
-      print('Error fetching collections: $e');
+      debugPrint('Error fetching collections: $e');
       return [];
     }
   }

@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/about_us_content.dart';
 
 class AboutUsAdminSection extends StatefulWidget {
-  const AboutUsAdminSection({Key? key}) : super(key: key);
+  const AboutUsAdminSection({super.key});
 
   @override
   State<AboutUsAdminSection> createState() => _AboutUsAdminSectionState();
@@ -115,7 +115,7 @@ class _AboutUsAdminSectionState extends State<AboutUsAdminSection> {
           title: const Text('Publish to Public', style: TextStyle(color: Colors.white)),
           value: _isPublished,
           onChanged: (v) => setState(() => _isPublished = v),
-          activeColor: const Color(0xFF00E676),
+          activeThumbColor: const Color(0xFF00E676),
         ),
         const SizedBox(height: 16),
         ElevatedButton.icon(

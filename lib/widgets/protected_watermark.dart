@@ -44,7 +44,7 @@ class ProtectedWatermark extends StatelessWidget {
                         line1,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(opacity),
+                          color: Colors.white.withValues(alpha: opacity),
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 2.2,
@@ -63,7 +63,7 @@ class ProtectedWatermark extends StatelessWidget {
                       line2,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(opacity * 0.8),
+                        color: Colors.white.withValues(alpha: opacity * 0.8),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 3,
@@ -81,7 +81,7 @@ class ProtectedWatermark extends StatelessWidget {
                       line3,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(opacity * 0.7),
+                        color: Colors.white.withValues(alpha: opacity * 0.7),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 2.5,

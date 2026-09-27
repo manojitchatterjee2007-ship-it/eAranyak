@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/vanarakkhi_gamification_models.dart';
 
@@ -65,7 +66,7 @@ class VanarakkhiService {
       final response = await _supabase.rpc('complete_mission', params: {'p_mission_id': missionId});
       return response as bool;
     } catch (e) {
-      print('Error completing mission: $e');
+      debugPrint('Error completing mission: $e');
       return false;
     }
   }

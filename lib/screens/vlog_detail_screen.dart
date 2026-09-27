@@ -63,6 +63,7 @@ class VlogDetailScreen extends StatelessWidget {
         '${vlog.title}\n\n'
         '${vlog.snippet ?? vlog.description ?? ''}\n\n'
         'Watch in eAranyak App! $videoUrl';
+    // ignore: deprecated_member_use
     Share.share(text, subject: vlog.title);
   }
 

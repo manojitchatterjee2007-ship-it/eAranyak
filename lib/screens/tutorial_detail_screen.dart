@@ -63,6 +63,7 @@ class TutorialDetailScreen extends StatelessWidget {
         '${tutorial.title}\n\n'
         '${tutorial.snippet ?? tutorial.description ?? ''}\n\n'
         'Read & Learn in eAranyak App! $url';
+    // ignore: deprecated_member_use
     Share.share(text, subject: tutorial.title);
   }
 
@@ -301,7 +302,7 @@ class TutorialDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D1410),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1410).withOpacity(0.9),
+        backgroundColor: const Color(0xFF0D1410).withValues(alpha: 0.9),
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -338,12 +339,12 @@ class TutorialDetailScreen extends StatelessWidget {
                       color: const Color(0xFF142419),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFF00E676).withOpacity(0.4),
+                        color: const Color(0xFF00E676).withValues(alpha: 0.4),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF00E676).withOpacity(0.15),
+                          color: const Color(0xFF00E676).withValues(alpha: 0.15),
                           blurRadius: 18,
                           spreadRadius: 1,
                         ),
@@ -380,7 +381,7 @@ class TutorialDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD54F).withOpacity(0.2),
+                            color: const Color(0xFFFFD54F).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFFFFD54F)),
                           ),
@@ -404,7 +405,7 @@ class TutorialDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF00E676).withOpacity(0.15),
+                            color: const Color(0xFF00E676).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFF00E676)),
                           ),
@@ -485,7 +486,7 @@ class TutorialDetailScreen extends StatelessWidget {
                         color: const Color(0xFF142419),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFF81C784).withOpacity(0.35),
+                          color: const Color(0xFF81C784).withValues(alpha: 0.35),
                         ),
                       ),
                       child: Row(
@@ -555,7 +556,7 @@ class TutorialDetailScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF142419),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF00E676).withOpacity(0.3)),
+                        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
                       ),
                       child: ScientificText(
                         tutorial.snippet!,
@@ -587,7 +588,7 @@ class TutorialDetailScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF18221B),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF00E676).withOpacity(0.4)),
+                        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.4)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
