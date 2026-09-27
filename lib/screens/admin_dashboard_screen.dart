@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'gamification_admin_section.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart' as pdfx;
@@ -2021,6 +2022,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 9: return _buildOnlineBookAdminSection();
       case 10: return const DailyWildlifeAdminSection();
       case 11: return const AboutUsAdminSection();
+      case 12: return const GamificationAdminSection();
       default: return const SizedBox.shrink();
     }
   }
@@ -2042,6 +2044,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       NavigationRailDestination(icon: Icon(Icons.book_rounded), label: Text('Books')),
       NavigationRailDestination(icon: Icon(Icons.pets_rounded), label: Text('Wildlife')),
       NavigationRailDestination(icon: Icon(Icons.info_outline_rounded), label: Text('About')),
+      NavigationRailDestination(icon: Icon(Icons.games_rounded), label: Text('Kids&Game')),
     ];
 
     if (isDesktop) {

@@ -19,6 +19,7 @@ import 'online_book_store_screen.dart';
 import 'podcast_screen.dart';
 import 'vlog_screen.dart';
 import 'tutorial_screen.dart';
+import 'kishore_earanyak_screen.dart';
 
 class MainNavigationShell extends StatefulWidget {
   final String userEmail;
@@ -640,6 +641,20 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const PodcastScreen(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.nature_people, color: Colors.green[400], size: 40),
+                  title: const Text('Kishore eআরণ্যক', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                  subtitle: const Text('(শিশু ও কিশোরদের জন্য)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const KishoreEaranyakScreen(),
                       ),
                     );
                   },
