@@ -66,18 +66,18 @@ class DailyWildlifeScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   if (feature.habitat != null && feature.habitat!.isNotEmpty) ...[
-                    _buildInfoChip(Icons.landscape, 'Habitat', feature.habitat!),
+                    _buildInfoChip(Icons.landscape, 'আবাসস্থল (Habitat)', feature.habitat!),
                     const SizedBox(height: 12),
                   ],
                   
                   if (feature.conservationStatus != null && feature.conservationStatus!.isNotEmpty) ...[
-                    _buildInfoChip(Icons.security, 'Status', feature.conservationStatus!),
+                    _buildInfoChip(Icons.security, 'সংরক্ষণ অবস্থা (Status)', feature.conservationStatus!),
                     const SizedBox(height: 12),
                   ],
 
                   if (feature.interestingFacts != null && feature.interestingFacts!.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    const Text('Interesting Facts / জানেন কি?', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text('জানেন কি? (Interesting Facts)', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Text(
                       feature.interestingFacts!,
@@ -87,7 +87,7 @@ class DailyWildlifeScreen extends StatelessWidget {
                   
                   if (feature.didYouKnow != null && feature.didYouKnow!.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    const Text('Did You Know?', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text('আপনি কি জানেন? (Did You Know?)', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Text(
                       feature.didYouKnow!,

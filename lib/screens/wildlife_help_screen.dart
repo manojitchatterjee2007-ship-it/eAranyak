@@ -110,6 +110,9 @@ class _WildlifeHelpScreenState extends State<WildlifeHelpScreen> {
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
                   onPressed: isSubmitting ? null : () async {
                     if (catController.text.trim().isEmpty || descController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('ঘটনার ধরন ও বিস্তারিত বিবরণ প্রদান আবশ্যক।')),
+                      );
                       return;
                     }
                     setDialogState(() => isSubmitting = true);

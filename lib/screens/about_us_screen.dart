@@ -47,7 +47,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          'About Us',
+          'আমাদের কথা (About Us)',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
