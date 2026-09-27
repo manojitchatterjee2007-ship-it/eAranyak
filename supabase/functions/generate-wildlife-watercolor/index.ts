@@ -1,6 +1,6 @@
-@
-import { createClient } from npm:@supabase/supabase-js@2;
-import { generateIllustration, storeIllustration, buildIllustrationPrompt } from ../_shared/image/pollinations.ts;
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { generateIllustration, storeIllustration, buildIllustrationPrompt } from "../_shared/image/pollinations.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,13 +23,15 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing auth header' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid user' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-    const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
-    if (!roleData || (roleData.role !== 'admin' && roleData.role !== 'editor')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (token !== supabaseKey) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Invalid user' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
+      if (!roleData || (roleData.role !== 'admin' && roleData.role !== 'editor')) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
     }
 
     const body = await req.json();
@@ -73,7 +75,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Generation failed', details: generated.reason }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const stored = await storeIllustration({ storage: supabase.storage } as any, generated.bytes, generated.mime, daily-feature-${featureId});
+    const stored = await storeIllustration({ storage: supabase.storage } as any, generated.bytes, generated.mime, "daily-feature-\${featureId}");
 
     if (!stored.ok || !stored.publicUrl) {
       await supabase.from('daily_wildlife_features').update({
@@ -103,4 +105,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
-@
+

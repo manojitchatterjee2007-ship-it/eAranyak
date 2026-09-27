@@ -1,5 +1,5 @@
-@
-import { createClient } from npm:@supabase/supabase-js@2;
+
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 // For daily automation, this will be invoked via pg_cron.
 
@@ -136,4 +136,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
-@
+
