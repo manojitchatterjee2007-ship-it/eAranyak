@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
             if (userError || !user) {
               return new Response(JSON.stringify({ error: 'Invalid user' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             }
-            const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
+            const { data: roleData } = await supabase.from('profiles').select('role').eq('id', user.id).single();
             if (!roleData || (roleData.role !== 'admin' && roleData.role !== 'editor')) {
               return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             }

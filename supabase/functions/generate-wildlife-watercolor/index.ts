@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       if (userError || !user) {
         return new Response(JSON.stringify({ error: 'Invalid user' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-      const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
+      const { data: roleData } = await supabase.from('profiles').select('role').eq('id', user.id).single();
       if (!roleData || (roleData.role !== 'admin' && roleData.role !== 'editor')) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Generation failed', details: generated.reason }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const stored = await storeIllustration({ storage: supabase.storage } as any, generated.bytes, generated.mime, "daily-feature-\${featureId}");
+    const stored = await storeIllustration({ storage: supabase.storage } as any, generated.bytes, generated.mime, `daily-feature-${featureId}`);
 
     if (!stored.ok || !stored.publicUrl) {
       await supabase.from('daily_wildlife_features').update({
