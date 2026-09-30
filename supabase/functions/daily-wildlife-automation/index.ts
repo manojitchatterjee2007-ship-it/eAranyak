@@ -57,7 +57,6 @@ Deno.serve(async (req) => {
       .from('wildlife_gallery')
       .select('*')
       .eq('is_published', true)
-      .not('common_name', 'is', null)
       .limit(50);
 
     if (candidateError || !candidates || candidates.length === 0) {
@@ -88,13 +87,13 @@ Deno.serve(async (req) => {
       .insert({
         feature_date: dateStr,
         status: 'draft',
-        title: selected.common_name || selected.title,
+        title: selected.common_name || selected.title || 'Unknown Species',
         title_bn: selected.bengali_description, // Optional mapping
-        common_name: selected.common_name,
-        scientific_name: selected.scientific_name,
+        common_name: selected.common_name || selected.title,
+        scientific_name: selected.scientific_name || null,
         bengali_name: selected.title, // Just using title if it's bengali
-        species_description: selected.species_description,
-        habitat: selected.location, // Approximate
+        species_description: selected.species_description || selected.description || selected.caption,
+        habitat: selected.location || selected.district, // Approximate
         original_image_url: selected.storage_path,
         is_published: false,
         scheduled_publish_at: dateStr + 'T00:00:00Z', // Schedule to publish at midnight UTC
