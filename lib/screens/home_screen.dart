@@ -2600,6 +2600,24 @@ class HomeScreenState extends State<HomeScreen> {
         'logo':
             'https://www.google.com/s2/favicons?sz=128&domain=mushroomobserver.org',
       },
+      {
+        'name': 'IBP',
+        'url': 'https://indiabiodiversity.org/',
+        'logo':
+            'https://www.google.com/s2/favicons?sz=128&domain=indiabiodiversity.org',
+      },
+      {
+        'name': 'Pl@ntNet',
+        'url': 'https://plantnet.org/',
+        'logo':
+            'https://www.google.com/s2/favicons?sz=128&domain=plantnet.org',
+      },
+      {
+        'name': 'IUCN Red List',
+        'url': 'https://www.iucnredlist.org/',
+        'logo':
+            'https://www.google.com/s2/favicons?sz=128&domain=iucnredlist.org',
+      },
     ];
 
     return Padding(
