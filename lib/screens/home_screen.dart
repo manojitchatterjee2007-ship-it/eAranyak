@@ -12,11 +12,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../core/config.dart';
 import '../models/daily_wildlife_feature.dart';
-import '../screens/daily_wildlife_screen.dart';
 import '../services/sound_service.dart';
 import '../services/forest_ambience_service.dart';
 import '../services/app_notification_service.dart';
 import '../models/app_notification.dart';
+import '../widgets/daily_wildlife_oil_card.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/rotating_book_card.dart';
 import '../widgets/magazine_cover_image.dart';
@@ -114,8 +114,9 @@ class NewsImageFallbackWidget extends StatelessWidget {
 class NewsImageWidget extends StatelessWidget {
   final Map<String, dynamic> item;
   final BoxFit fit;
+  final bool isThumbnail;
 
-  const NewsImageWidget({super.key, required this.item, this.fit = BoxFit.contain});
+  const NewsImageWidget({super.key, required this.item, this.fit = BoxFit.contain, this.isThumbnail = true});
 
   @override
   Widget build(BuildContext context) {
@@ -162,6 +163,28 @@ class WildlifeLiveObservation {
   final String? description;
   final bool sourceLocationVerified;
 
+  // iNaturalist iconic taxon (for example "Aves", "Mammalia", "Insecta").
+  // The live feed sets this for every source; eBird is always birds.
+  final String? iconicTaxon;
+
+  /// True when this observation is known to be a bird, so the Xeno-canto
+  /// bird-call button can be offered.
+  ///
+  /// eBird checklists only contain birds, so a missing `iconicTaxon` there still
+  /// counts as a bird. That keeps eBird tiles working against an older deployed
+  /// version of the live feed.
+  bool get isBird {
+    final iconic = iconicTaxon?.trim().toLowerCase() ?? '';
+    if (iconic.isNotEmpty) return iconic == 'aves';
+    return source.trim().toLowerCase() == 'ebird';
+  }
+
+  /// The bird-call service needs a binomial (genus + species). iNaturalist
+  /// observations are often identified no further than genus or family, and
+  /// those must not offer a play button.
+  bool get hasBinomialScientificName =>
+      scientificName.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length >= 2;
+
   const WildlifeLiveObservation({
     required this.id,
     required this.commonName,
@@ -183,6 +206,7 @@ class WildlifeLiveObservation {
     this.observationUrl,
     this.description,
     this.sourceLocationVerified = false,
+    this.iconicTaxon,
   });
 
   static String _upgradeWildlifeImageUrl(String url, {bool large = false}) {
@@ -216,6 +240,7 @@ class WildlifeLiveObservation {
     String? imageUrl,
     String? imageSource,
     String? imageAttribution,
+    String? iconicTaxon,
   }) {
     return WildlifeLiveObservation(
       id: id,
@@ -238,6 +263,8 @@ class WildlifeLiveObservation {
       observationUrl: observationUrl,
       description: description,
       sourceLocationVerified: sourceLocationVerified ?? this.sourceLocationVerified,
+      // Preserve the bird classification when the caller does not resupply it.
+      iconicTaxon: iconicTaxon ?? this.iconicTaxon,
     );
   }
 
@@ -322,6 +349,9 @@ class WildlifeLiveObservation {
           _nullable(raw['url']),
       description: _nullable(raw['description']) ??
           _nullable(raw['short_description']),
+      iconicTaxon: _nullable(raw['iconic_taxon']) ??
+          _nullable(raw['iconicTaxon']) ??
+          _nullable(taxon['iconic_taxon_name']),
     );
   }
 }
@@ -1508,8 +1538,12 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
               Text(o.scientificName, style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic)),
             ],
 
-            // AUDIO PLAYER BUTTON (Only for eBird tiles)
-            if (o.source.toLowerCase() == 'ebird') ...[
+            // AUDIO PLAYER BUTTON
+            // eBird tiles are always birds. iNaturalist tiles show the button
+            // only when the iconic taxon is Aves and the observation is
+            // identified to species, because the bird-call service needs a
+            // binomial scientific name.
+            if (o.isBird && o.hasBinomialScientificName) ...[
               const SizedBox(height: 16),
               Container(
                 width: double.infinity,
@@ -1821,6 +1855,11 @@ class HomeScreenState extends State<HomeScreen> {
             _visibleNews = List<Map<String, dynamic>>.from(validItems)..shuffle();
             _visibleNews = _visibleNews.take(5).toList();
           });
+        }
+        if (rawItems.isEmpty) {
+          debugPrint('News: no published wildlife_news rows found — check is_published / scheduled_publish_at');
+        } else if (validItems.isEmpty) {
+          debugPrint('News: ${rawItems.length} published rows but none passed the image + Bengali-content filter');
         }
       }
     } catch (_) {}
@@ -2513,7 +2552,7 @@ class HomeScreenState extends State<HomeScreen> {
       {
         'name': 'eBird',
         'url': 'https://ebird.org/',
-        'logo': 'https://www.google.com/s2/favicons?sz=128&domain=ebird.org',
+        'logo': 'assets/images/ebird_logo.png', // The Google favicon service might block eBird occasionally. Ebird provides clear brand assets for this use case.
       },
       {
         'name': 'iNaturalist',
@@ -2577,7 +2616,7 @@ class HomeScreenState extends State<HomeScreen> {
                   filterQuality: FilterQuality.medium),
               const SizedBox(width: 8),
               const Text(
-                'Important Links',
+                'গুরুত্বপূর্ণ লিঙ্ক',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -2590,7 +2629,7 @@ class HomeScreenState extends State<HomeScreen> {
           const Padding(
             padding: EdgeInsets.only(left: 28),
             child: Text(
-              '(গুরুত্বপূর্ণ লিঙ্ক)',
+              '(Important Links)',
               style: TextStyle(
                 color: Color(0xFF81C784),
                 fontSize: 11,
@@ -2614,7 +2653,7 @@ class HomeScreenState extends State<HomeScreen> {
                   crossAxisCount: columns,
                   crossAxisSpacing: 6,
                   mainAxisSpacing: 6,
-                  childAspectRatio: 0.82,
+                  childAspectRatio: 0.70,
                 ),
                 itemBuilder: (context, index) {
                   final link = links[index];
@@ -2686,8 +2725,8 @@ class HomeScreenState extends State<HomeScreen> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white70,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -2807,8 +2846,8 @@ class HomeScreenState extends State<HomeScreen> {
       future: supabase
           .from('daily_wildlife_features')
           .select('*')
-          .eq('is_published', true)
-          .lte('scheduled_publish_at', DateTime.now().toIso8601String())
+          .or('is_published.eq.true,status.eq.scheduled')
+          .lte('scheduled_publish_at', DateTime.now().toUtc().toIso8601String())
           .order('feature_date', ascending: false)
           .limit(1)
           .maybeSingle(),
@@ -2834,61 +2873,7 @@ class HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              KeyboardPressEffect(
-                onTap: () {
-                  SoundService.playButtonSound();
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => DailyWildlifeScreen(feature: feature),
-                  ));
-                },
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: const Color(0xFF142419),
-                    border: Border.all(color: Colors.white12),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (feature.watercolourImageUrl != null)
-                        CachedNetworkImage(
-                          imageUrl: feature.watercolourImageUrl!,
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        )
-                      else if (feature.originalImageUrl != null)
-                        CachedNetworkImage(
-                          imageUrl: feature.originalImageUrl!,
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              feature.titleBn ?? feature.title,
-                              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            if (feature.scientificName != null) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                feature.scientificName!,
-                                style: const TextStyle(color: Colors.white70, fontSize: 14, fontStyle: FontStyle.italic),
-                              ),
-                            ]
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              DailyWildlifeOilCard(feature: feature, imageHeight: 220),
             ],
           ),
         );
@@ -2914,7 +2899,7 @@ class HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'বন্যপ্রাণ বার্তা — ভারতীয় বন্যপ্রাণ ড্যাশবোর্ড',
+                  'ভারতীয় বন্যপ্রাণ ড্যাশবোর্ড',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
@@ -2925,7 +2910,7 @@ class HomeScreenState extends State<HomeScreen> {
           const Padding(
             padding: EdgeInsets.only(left: 37, top: 3),
             child: Text(
-              'ভারতের সাম্প্রতিক মাঠ-পর্যবেক্ষণ — প্রতি ৫ মিনিটে নতুন তথ্য',
+              'সাম্প্রতিক বন্যপ্রাণ-পর্যবেক্ষণ',
               style: TextStyle(fontSize: 10, color: Color(0xFF81C784)),
             ),
           ),
@@ -3052,7 +3037,7 @@ class HomeScreenState extends State<HomeScreen> {
                             height: 32,
                             fit: BoxFit.contain),
                         SizedBox(width: 8),
-                        Text('Continue Reading',
+                        Text('পড়া জারি রাখুন',
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -3061,7 +3046,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                     Padding(
                       padding: EdgeInsets.only(left: 30),
-                      child: Text('(পড়া জারি রাখুন)',
+                      child: Text('(Continue Reading)',
                           style:
                           TextStyle(fontSize: 11, color: Color(0xFF81C784))),
                     ),
@@ -3153,7 +3138,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 height: 24,
                                 filterQuality: FilterQuality.medium),
                             const SizedBox(width: 6),
-                            const Text('Resume (চালিয়ে যান)',
+                            const Text('চালিয়ে যান (Resume)',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
@@ -3184,7 +3169,7 @@ class HomeScreenState extends State<HomeScreen> {
                           filterQuality: FilterQuality.medium),
                       SizedBox(width: 8),
                       Expanded(
-                        child: Text('Current Happenings & Wildlife News',
+                        child: Text('চলতি ঘটনা ও বন্যপ্রাণ বার্তা',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -3197,7 +3182,7 @@ class HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: EdgeInsets.only(left: 30),
                     child: Text(
-                        '(চলতি ঘটনা ও বন্যপ্রাণ বার্তা - প্রতি ২ মিনিটে ৫টি নির্বাচিত খবর)',
+                        '(Current Happenings & Wildlife News)',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
@@ -3270,7 +3255,8 @@ class HomeScreenState extends State<HomeScreen> {
                                             child: ClipRect(
                                               child: NewsImageWidget(
                                                 item: item, 
-                                                fit: BoxFit.contain 
+                                                fit: BoxFit.contain,
+                                                isThumbnail: true,
                                               ),
                                             ),
                                           ),
@@ -3408,7 +3394,7 @@ class HomeScreenState extends State<HomeScreen> {
                             height: 32,
                             fit: BoxFit.contain),
                         SizedBox(width: 8),
-                        Text('Latest Release',
+                        Text('সদ্য প্রকাশিত সংখ্যা',
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -3417,7 +3403,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                     Padding(
                       padding: EdgeInsets.only(left: 30),
-                      child: Text('(সদ্য প্রকাশিত সংখ্যা)',
+                      child: Text('(Latest Release)',
                           style: TextStyle(
                               fontSize: 11, color: Color(0xFF81C784))),
                     ),
@@ -3491,7 +3477,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(width: 10),
                                     const Flexible(
                                       child: Text(
-                                        'Download from Library (লাইব্রেরি থেকে ডাউনলোড করুন)',
+                                        'লাইব্রেরি থেকে ডাউনলোড করুন (Download from Library)',
                                         maxLines: 2,
                                         softWrap: true,
                                         style: TextStyle(

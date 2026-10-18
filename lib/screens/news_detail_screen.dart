@@ -206,6 +206,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                 child: NewsImageWidget(
                   item: newsItem,
                   fit: BoxFit.contain, 
+                  isThumbnail: true,
                 ),
               ),
             ),
