@@ -1,7 +1,7 @@
 name: earanyak
 description: "eআরণ্যক - Protected Wildlife Magazine & Nature Library"
 publish_to: 'none'
-version: 2.1.0+3
+version: 3.0.0+4
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -13,27 +13,32 @@ dependencies:
   file_picker: ^13.1.0
   pdfx: ^2.6.0
   photo_view: ^0.15.0
-  cached_network_image: ^4.0.1
+  cached_network_image: ^3.4.1
   audioplayers: ^6.7.1
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.6
   url_launcher: ^6.3.1
   http: ^1.2.0
   flutter_local_notifications: ^22.3.1
   workmanager: ^0.10.9
-  flutter_windowmanager_plus: ^1.1.0
   flutter_realistic_flipbook: ^0.1.4
   book_page_flip: ^0.1.0
   page_flip: 0.2.5+1
   firebase_core: ^4.15.0
   firebase_messaging: ^16.7.0
   package_info_plus: ^10.2.1
-  permission_handler: ^13.0.2
+  permission_handler: ^12.0.3
   device_info_plus: ^13.2.0
   share_plus: ^13.3.0
-  flutter_scene: ^0.23.0
   vector_math: ^2.4.2
   cube_transition_plus: ^2.0.1
   image_picker: ^1.2.3
+  shimmer: ^3.0.0
+  image: 4.5.4
+  path_provider: 2.1.6
+  saver_gallery: 5.1.0
+  rotating_shining_card: 0.1.2
+  shared_preferences_android: 2.5.0
+
 
 dev_dependencies:
   flutter_test:
@@ -41,11 +46,17 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
+dependency_overrides:
+  test_api: ^0.7.0
+  matcher: ^0.12.16
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/icon/app_icon.png"
   min_sdk_android: 21
+  adaptive_icon_background: "#0D1410"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
   windows:
     generate: true
     image_path: "assets/icon/app_icon.png"
