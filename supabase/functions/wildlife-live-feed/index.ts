@@ -85,6 +85,9 @@ function normalizeEbird(obs: any, bengaliName = "") {
       : null,
     description: null,
     image_url: null,
+    // Every eBird record is a bird. Flutter uses this to decide whether the
+    // Xeno-canto bird-call button can be shown.
+    iconic_taxon: "Aves",
   };
 }
 
@@ -148,6 +151,12 @@ function normalizeInat(obs: any, bengaliName = "") {
       text(obs.short_description) ||
       null,
     image_url: firstPhotoUrl(obs),
+    // iNaturalist iconic taxon ("Aves" for birds). Flutter uses this to show
+    // the Xeno-canto bird-call button only on bird tiles.
+    iconic_taxon:
+      text(taxon.iconic_taxon_name) ||
+      text(obs.iconic_taxon_name) ||
+      null,
   };
 }
 
@@ -404,6 +413,7 @@ serve(async (req) => {
       "taxon.id",
       "taxon.name",
       "taxon.preferred_common_name",
+      "taxon.iconic_taxon_name",
       "user.id",
       "user.login",
       "user.name",

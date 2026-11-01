@@ -14,7 +14,8 @@ ADD COLUMN IF NOT EXISTS audio_id TEXT,
 ADD COLUMN IF NOT EXISTS audio_recordist TEXT,
 ADD COLUMN IF NOT EXISTS audio_license TEXT,
 ADD COLUMN IF NOT EXISTS audio_attribution TEXT,
-ADD COLUMN IF NOT EXISTS audio_available BOOLEAN DEFAULT FALSE;
+ADD COLUMN IF NOT EXISTS audio_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS image_provenance TEXT;
 
 -- Ensure statuses: planned, preparing, prepared, scheduled, published, unpublished, cancelled, failed
 -- We can't strictly enforce an ENUM easily without potentially breaking existing 'draft' etc, but we'll use TEXT.

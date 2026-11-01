@@ -911,12 +911,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('📚 Online Book Store Management', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('📚 Online Book Store Management', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 Text('(অনলাইন বই ঘর ক্যাটালগ ও অর্ডার ব্যবস্থাপনা)', style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
               ],
+            ),
             ),
             IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
@@ -2643,12 +2645,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('📝 পাঠকদের লেখা — Editorial Review', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('📝 পাঠকদের লেখা — Editorial Review', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 Text('(পাঠকদের পাঠানো লেখা পর্যালোচনা ও প্রকাশনা নিয়ন্ত্রণ)', style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
               ],
+            ),
             ),
             IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
@@ -2985,14 +2989,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Existing News Management',
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Existing News Management',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 Text('(প্রকাশিত ও অপ্রকাশিত সকল সংবাদ পরিচালনা)',
                     style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
               ],
+            ),
             ),
             IconButton(
               tooltip: 'Refresh News List / তালিকা রিফ্রেশ করুন',
@@ -3153,7 +3159,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
 
                         // Action Buttons
-                        Row(
+                        Wrap(
+                          spacing: 4,
                           children: [
                             TextButton.icon(
                               style: TextButton.styleFrom(
@@ -3713,12 +3720,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('🔔 বিজ্ঞপ্তি ব্যবস্থাপনা — Editorial Review', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('🔔 বিজ্ঞপ্তি ব্যবস্থাপনা — Editorial Review', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 Text('(সার্কুলার, দাপ্তরিক নির্দেশিকা ও বিশেষ নোটিশ প্রকাশ নিয়ন্ত্রণ)', style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
               ],
+            ),
             ),
             IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),

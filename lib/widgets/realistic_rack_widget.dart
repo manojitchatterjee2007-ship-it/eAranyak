@@ -2,6 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+// Helper to format issue date: Bengali only, months and year visible
+String formatBengaliOnlyIssueDate(String? raw) {
+  if (raw == null || raw.isEmpty) return '';
+  String cleaned = raw.replaceAll(RegExp(r'[A-Za-z0-9]+'), '').replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+  cleaned = cleaned.replaceAll('()', '').replaceAll('  ', ' ').trim();
+  return cleaned.isNotEmpty ? cleaned : raw;
+}
+
 /// Keeps the final rack tail below the viewport while still allowing the
 /// ListView to have a finite, normal scroll extent.
 class _StopShortScrollPhysics extends ClampingScrollPhysics {
@@ -48,6 +56,7 @@ class _StopShortScrollPhysics extends ClampingScrollPhysics {
 /// scroll view from Library or My Bookshelf.
 class RealisticRackWidget extends StatelessWidget {
   final List<Widget> children;
+  final List<String>? issueLabels;
   final bool isWooden;
   final double cardWidth;
   final double cardHeight;
@@ -55,6 +64,7 @@ class RealisticRackWidget extends StatelessWidget {
   const RealisticRackWidget({
     super.key,
     required this.children,
+    this.issueLabels,
     required this.isWooden,
     this.cardWidth = 170.0,
     this.cardHeight = 235.0,
@@ -75,29 +85,7 @@ class RealisticRackWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (children.isEmpty) {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.80),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFF00E676).withValues(alpha: 0.40),
-            ),
-          ),
-          child: const Text(
-            'কোনো ম্যাগাজিন পাওয়া যায়নি\n(No magazines available)',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              height: 1.4,
-            ),
-          ),
-        ),
-      );
-    }
+    // Removed children.isEmpty check so the empty rack is always drawn.
 
     final backgroundAsset = isWooden
         ? 'assets/images/wooden_rack_background_posts.png'
@@ -114,8 +102,9 @@ class RealisticRackWidget extends StatelessWidget {
             : 1000.0;
 
         // Keep a substantial rack while leaving the forest clearly visible.
+        // Adjusted to show more forest background in portrait mode and fix layout overflow.
         final rackWidth = math.min(
-          math.max(availableWidth * 0.62, 560.0),
+          math.max(availableWidth * 0.75, 280.0),
           920.0,
         );
 
@@ -137,7 +126,7 @@ class RealisticRackWidget extends StatelessWidget {
                 itemsPerShelf;
 
         final actualCardWidth = math.max(
-          120.0,
+          80.0, // Reduced minimum card width to fit smaller screens
           math.min(cardWidth, maximumCardWidth),
         );
 
@@ -197,6 +186,13 @@ class RealisticRackWidget extends StatelessWidget {
                           .toList(growable: false)
                       : const <Widget>[];
 
+                  final shelfLabels = (issueLabels != null && start < issueLabels!.length)
+                      ? issueLabels!
+                          .skip(start)
+                          .take(itemsPerShelf)
+                          .toList(growable: false)
+                      : const <String>[];
+
                   return SizedBox(
                     width: rackWidth,
                     height: rowHeight,
@@ -213,6 +209,7 @@ class RealisticRackWidget extends StatelessWidget {
                       shelfSurfaceY: shelfSurfaceY,
                       lipHeight: _lipHeight,
                       children: shelfItems,
+                      issueLabels: shelfLabels,
                     ),
                   );
                 },
@@ -230,6 +227,7 @@ class _ShelfBay extends StatelessWidget {
   final String backgroundAsset;
   final String foregroundAsset;
   final List<Widget> children;
+  final List<String>? issueLabels;
   final double rackWidth;
   final double cardWidth;
   final double cardHeight;
@@ -244,6 +242,7 @@ class _ShelfBay extends StatelessWidget {
     required this.backgroundAsset,
     required this.foregroundAsset,
     required this.children,
+    this.issueLabels,
     required this.rackWidth,
     required this.cardWidth,
     required this.cardHeight,
@@ -320,6 +319,43 @@ class _ShelfBay extends StatelessWidget {
             ),
           ),
         ),
+
+        // ================================================================
+        // ISSUE LABELS ON THE SHELF LIP
+        // ================================================================
+        for (var i = 0; i < children.length; i++)
+          if (issueLabels != null && i < issueLabels!.length && issueLabels![i].trim().isNotEmpty)
+            Positioned(
+              left: cardsLeft + i * (cardWidth + magazineGap) - 5,
+              width: cardWidth + 10,
+              top: shelfSurfaceY + (lipHeight - 16) / 2 + 6,
+              height: 16,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: Text(
+                    formatBengaliOnlyIssueDate(issueLabels![i]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: isWooden ? const Color(0xFFFFECB3) : const Color(0xFF69F0AE),
+                      fontSize: 8.0,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.2,
+                      shadows: const [
+                        Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
+                        Shadow(color: Colors.black, blurRadius: 2, offset: Offset(0, 0)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
       ],
     );
   }
@@ -480,53 +516,22 @@ class _PhysicalMagazineState extends State<_PhysicalMagazine>
                           ],
                         ),
                         child: ClipPath(
-                          clipper: WindWaveClipper(progress: progress),
+                          clipper: WindWaveClipper(
+                            progress: progress,
+                          ),
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
                               child ?? const SizedBox.shrink(),
 
                               // ------------------------------------------------
-                              // MOVING LIGHT / PAPER HIGHLIGHT
+                              // DYNAMIC WIND-SWEPT SPECULAR HIGHLIGHT & SHADOW
                               // ------------------------------------------------
-                              IgnorePointer(
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment(
-                                        -1.2 + progress * 2.4,
-                                        -0.7,
-                                      ),
-                                      end: Alignment(
-                                        -0.2 + progress * 2.4,
-                                        0.7,
-                                      ),
-                                      colors: const [
-                                        Colors.transparent,
-                                        Color.fromRGBO(255, 255, 255, 0.0),
-                                        Color.fromRGBO(255, 255, 255, 0.12),
-                                        Color.fromRGBO(255, 255, 255, 0.0),
-                                        Colors.transparent,
-                                      ],
-                                      stops: [
-                                        0.0,
-                                        0.34,
-                                        0.52,
-                                        0.68,
-                                        1.0,
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // A narrow moving curl band makes the bent paper
-                              // edge readable even when the cover artwork is dark.
                               Positioned(
-                                left: widget.width * 0.70,
+                                right: 0,
                                 top: 0,
                                 bottom: 0,
-                                width: widget.width * 0.34,
+                                width: widget.width * 0.32,
                                 child: IgnorePointer(
                                   child: ClipPath(
                                     clipper: WindCurlHighlightClipper(
@@ -539,10 +544,11 @@ class _PhysicalMagazineState extends State<_PhysicalMagazine>
                                           end: Alignment.centerRight,
                                           colors: [
                                             Colors.transparent,
-                                            Colors.white.withValues(alpha: 0.18),
-                                            Colors.black.withValues(alpha: 0.15),
+                                            Colors.white.withValues(alpha: 0.16),
+                                            Colors.black.withValues(alpha: 0.12),
                                             Colors.transparent,
                                           ],
+                                          stops: const [0.0, 0.42, 0.72, 1.0],
                                         ),
                                       ),
                                     ),
@@ -550,11 +556,12 @@ class _PhysicalMagazineState extends State<_PhysicalMagazine>
                                 ),
                               ),
 
+                              // Ambient light sweep across the paper
                               Positioned(
-                                right: -10 + (math.sin(progress * 2 * math.pi) * 10),
+                                right: -6 + (math.sin(progress * 2 * math.pi) * 8),
                                 top: 0,
                                 bottom: 0,
-                                width: widget.width * 0.24,
+                                width: widget.width * 0.22,
                                 child: IgnorePointer(
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
@@ -563,8 +570,8 @@ class _PhysicalMagazineState extends State<_PhysicalMagazine>
                                         end: Alignment.centerRight,
                                         colors: [
                                           Colors.transparent,
-                                          Colors.white.withValues(alpha: 0.16),
-                                          Colors.black.withValues(alpha: 0.12),
+                                          Colors.white.withValues(alpha: 0.10),
+                                          Colors.black.withValues(alpha: 0.08),
                                           Colors.transparent,
                                         ],
                                       ),
@@ -588,9 +595,7 @@ class _PhysicalMagazineState extends State<_PhysicalMagazine>
   }
 }
 
-/// Clips the moving highlight into a curved strip. This gives the eye a
-/// concrete visual cue that the outer paper is bending rather than merely
-/// changing its rectangular boundary.
+/// Clips the moving highlight into a curved strip that follows the wind curl.
 class WindCurlHighlightClipper extends CustomClipper<Path> {
   final double progress;
 
@@ -602,19 +607,19 @@ class WindCurlHighlightClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final t = progress * 2 * math.pi;
 
-    final top = math.sin(t) * 8.0;
-    final mid = math.sin(t + 1.4) * 15.0;
-    final bottom = math.cos(t + 0.4) * 12.0;
+    final top = math.sin(t) * 4.0;
+    final mid = math.sin(t + 1.2) * 7.0;
+    final bottom = math.cos(t + 0.4) * 5.0;
 
     final path = Path()
       ..moveTo(size.width * 0.15, 0)
       ..cubicTo(
-        size.width * 0.48,
+        size.width * 0.45,
         top,
-        size.width * 0.68,
+        size.width * 0.70,
         mid,
         size.width,
-        mid * 0.75,
+        top * 0.5,
       )
       ..lineTo(
         size.width,
@@ -623,9 +628,9 @@ class WindCurlHighlightClipper extends CustomClipper<Path> {
       ..cubicTo(
         size.width * 0.70,
         size.height + bottom,
-        size.width * 0.42,
-        size.height + mid * 0.25,
-        size.width * 0.12,
+        size.width * 0.40,
+        size.height + mid * 0.4,
+        size.width * 0.10,
         size.height,
       )
       ..close();
@@ -639,9 +644,9 @@ class WindCurlHighlightClipper extends CustomClipper<Path> {
   }
 }
 
-/// Deforms the outer/right edge of the magazine with a stronger S-shaped
-/// sweep. The left/binding edge remains stable while the outer page edge
-/// lifts, curls and returns through an out-of-phase wave.
+/// Deforms the outer/right edge of the magazine with a smooth, realistic
+/// wind-swept flutter. The spine (left edge) remains fully stable and anchored,
+/// while the outer right page edge wafts gently in the forest breeze.
 class WindWaveClipper extends CustomClipper<Path> {
   final double progress;
 
@@ -654,55 +659,45 @@ class WindWaveClipper extends CustomClipper<Path> {
     final path = Path();
     final t = progress * 2 * math.pi;
 
-    // The cover is fixed at the binding edge. The outer paper sweeps through
-    // a pronounced curl so the movement is visible at normal card size.
-    final topCurl = math.sin(t) * 13.0;
-    final upperCurl = math.sin(t + 1.25) * 22.0;
-    final middleCurl = math.sin(t + 2.65) * 18.0;
-    final lowerCurl = math.cos(t + 0.55) * 20.0;
-    final bottomCurl = math.cos(t + 0.15) * 13.0;
+    // Gentle organic wave deviations along outer edge (±2.5 to 5px)
+    final topCurl = math.sin(t) * 4.5;
+    final upperFlutter = math.sin(t + 1.1) * 5.0;
+    final middleFlutter = math.sin(t + 2.4) * 4.0;
+    final bottomCurl = math.cos(t + 0.3) * 3.5;
 
+    // Left spine edge: fixed at x=0
     path.moveTo(0, 0);
 
-    // Stable binding/top-left area.
-    path.lineTo(size.width * 0.32, 0);
+    // Flat top edge until 65% across
+    path.lineTo(size.width * 0.65, 0);
 
-    // Top edge rises into the first page curl.
+    // Top edge curves smoothly into the top-right paper flutter
     path.cubicTo(
-      size.width * 0.52,
-      topCurl * 0.18,
-      size.width * 0.76,
-      upperCurl * 0.46,
+      size.width * 0.82,
+      topCurl * 0.25,
+      size.width * 0.94,
+      topCurl * 0.70,
       size.width,
       topCurl,
     );
 
-    // Strong S-wave along the loose outer page.
+    // Smooth continuous outer right paper edge (flowing flutter, no pinching)
     path.cubicTo(
-      size.width + upperCurl * 0.70,
-      size.height * 0.16,
-      size.width - middleCurl * 0.82,
-      size.height * 0.38,
-      size.width + middleCurl * 0.72,
-      size.height * 0.57,
+      size.width + upperFlutter,
+      size.height * 0.32,
+      size.width + middleFlutter,
+      size.height * 0.68,
+      size.width,
+      size.height + bottomCurl,
     );
 
+    // Bottom edge returns smoothly to the fixed lower boundary
     path.cubicTo(
-      size.width - lowerCurl * 0.62,
-      size.height * 0.72,
-      size.width + lowerCurl * 0.70,
-      size.height * 0.88,
-      size.width + bottomCurl * 0.60,
-      size.height + bottomCurl * 0.35,
-    );
-
-    // Bottom returns to the fixed binding edge.
-    path.cubicTo(
-      size.width * 0.70,
-      size.height + bottomCurl * 0.12,
-      size.width * 0.49,
+      size.width * 0.94,
+      size.height + bottomCurl * 0.60,
+      size.width * 0.82,
       size.height,
-      size.width * 0.32,
+      size.width * 0.65,
       size.height,
     );
 

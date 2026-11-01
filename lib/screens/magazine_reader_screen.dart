@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,8 +17,10 @@ import '../services/sound_service.dart';
 import '../services/forest_ambience_service.dart';
 import '../services/content_protection_service.dart';
 import '../services/protected_asset_service.dart';
+import '../services/magazine_download_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/protected_watermark.dart';
+import '../widgets/magazine_flipbook_layout_gate.dart';
 
 enum ReaderViewState { spread, single, zoomed }
 
@@ -43,19 +47,28 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   final ScrollController _thumbScrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   final AudioPlayer _pageFlipAudioPlayer = AudioPlayer();
-  final SupabaseClient _supabase = Supabase.instance.client;
-  
+  SupabaseClient get _supabase => supabase;
+
   // Controllers
   final FlipbookController _flipbookController = FlipbookController();
-  final GlobalKey<PageFlipWidgetState> _pageFlipKey = GlobalKey<PageFlipWidgetState>();
+  final GlobalKey<PageFlipWidgetState> _pageFlipKey =
+      GlobalKey<PageFlipWidgetState>();
   final TransformationController _zoomController = TransformationController();
 
+  List<File>? _localFiles;
   List<String> _signedUrls = [];
-  List<FlipbookPage?> _flipbookPages = [];
+  List<FlipbookPage> _flipbookPages = [];
   bool _isLoading = true;
+  String? _loadError;
+  int _loadGeneration = 0;
+  bool _loggedFirstRender = false;
   late int _currentPage;
   bool _showControls = true;
-  
+  bool _isFlipping = false;
+
+  int get _pageCount =>
+      _localFiles != null ? _localFiles!.length : _signedUrls.length;
+
   // 3-State Cycle Controller
   ReaderViewState _viewState = ReaderViewState.spread;
   bool _enablePageFlipSound = true;
@@ -64,6 +77,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   void initState() {
     super.initState();
     _currentPage = widget.initialPage;
+    debugPrint('MagazineReader opened issue=${widget.magazineId}');
     unawaited(ContentProtectionService.enable(
       scope: ContentProtectionScope.magazine,
       contentId: widget.magazineId,
@@ -74,8 +88,8 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
     // Page-flip audio remains independently controlled and defaults to ON.
     unawaited(ForestAmbienceService.stopAmbience());
     _initAudioEngine();
-    _fetchSignedPageUrls().then((_) {
-      _saveReadingProgress(_currentPage);
+    _loadMagazinePages().then((_) {
+      if (_loadError == null) _saveReadingProgress(_currentPage);
     });
     _loadReaderSettings();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -86,10 +100,6 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   Future<void> _initAudioEngine() async {
     try {
       await _pageFlipAudioPlayer.setPlayerMode(PlayerMode.lowLatency);
-      // FIX: Explicitly set ReleaseMode to stop. This prevents the Windows audio engine 
-      // from hanging after playing the sound for the first time.[cite: 21]
-      await _pageFlipAudioPlayer.setReleaseMode(ReleaseMode.stop);
-      await _pageFlipAudioPlayer.setVolume(1.0);
     } catch (_) {}
   }
 
@@ -102,61 +112,267 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
     unawaited(ForestAmbienceService.stopAmbience());
     unawaited(ContentProtectionService.disable());
     _zoomController.dispose();
+    unawaited(_saveReadingProgress(_currentPage));
     super.dispose();
   }
 
   Future<void> _loadReaderSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _enablePageFlipSound = prefs.getBool('pref_page_flip_sound') ?? true;
-    });
-  }
-
-  Future<void> _saveReadingProgress(int page) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('last_read_mag_id', widget.magazineId);
-    await prefs.setString('last_read_title', formatMagazineTitle(widget.title));
-    await prefs.setInt('last_read_page', page);
-    await prefs.setInt('last_read_total_pages', _signedUrls.length);
-    if (_signedUrls.isNotEmpty) {
-      await prefs.setDouble(
-          'progress_${widget.magazineId}', (page + 1) / _signedUrls.length);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _enablePageFlipSound = prefs.getBool('pref_page_flip_sound') ?? true;
+      });
+    } catch (e) {
+      debugPrint('[MagazineReader] loadReaderSettings error: $e');
     }
   }
 
-  Future<void> _fetchSignedPageUrls() async {
+  Future<void> _saveReadingProgress(int page) async {
     try {
-      final pages = await _supabase
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_read_mag_id', widget.magazineId);
+      await prefs.setString('last_read_title', formatMagazineTitle(widget.title));
+      await prefs.setInt('last_read_page', page);
+      await prefs.setInt('last_read_total_pages', _pageCount);
+      await prefs.setInt('last_read_page_${widget.magazineId}', page);
+      await prefs.setInt('last_read_total_${widget.magazineId}', _pageCount);
+      if (_pageCount > 0) {
+        await prefs.setDouble(
+            'progress_${widget.magazineId}', (page + 1) / _pageCount);
+      }
+    } catch (e) {
+      debugPrint('[MagazineReader] saveReadingProgress error: $e');
+    }
+  }
+
+  Future<void> _loadMagazinePages() async {
+    final generation = ++_loadGeneration;
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
+    debugPrint('MagazineReader page data loading issue=${widget.magazineId}');
+
+    // If _currentPage is 0 (or default), restore saved reading progress for this magazine
+    if (_currentPage == 0) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final savedPage = prefs.getInt('last_read_page_${widget.magazineId}');
+        if (savedPage != null && savedPage > 0) {
+          _currentPage = savedPage;
+        } else {
+          final lastId = prefs.getString('last_read_mag_id');
+          if (lastId == widget.magazineId) {
+            final globalPage = prefs.getInt('last_read_page') ?? 0;
+            if (globalPage > 0) _currentPage = globalPage;
+          }
+        }
+      } catch (e) {
+        debugPrint('[MagazineReader] restore progress error: $e');
+      }
+    }
+
+    // 1. Check local offline storage
+    try {
+      final local =
+          await MagazineDownloadService.getLocalPageFiles(widget.magazineId);
+      if (local != null && local.isNotEmpty) {
+        if (!mounted || generation != _loadGeneration) return;
+        _localFiles = local;
+        _signedUrls = [];
+
+        // Fallback restoration from progress percentage if page was still 0
+        if (_currentPage == 0) {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            final p = prefs.getDouble('progress_${widget.magazineId}');
+            if (p != null && p > 0.01 && local.isNotEmpty) {
+              _currentPage =
+                  ((p * local.length) - 1).round().clamp(0, local.length - 1);
+            }
+          } catch (_) {}
+        }
+
+        final builtPages = <FlipbookPage>[];
+        final providers = <ImageProvider>[];
+        for (final f in local) {
+          final provider = FileImage(f);
+          providers.add(provider);
+          builtPages.add(FlipbookPage(
+            image: provider,
+            hiResImage: provider,
+            sizeHint: const Size(1000, 1414),
+          ));
+        }
+
+        // Precache initial visible spread before exposing flipbook
+        final isLandscapeSpread = mounted &&
+            MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+        final initialSpreadCount = isLandscapeSpread ? 2 : 1;
+        final startIdx = _currentPage.clamp(0, providers.length - 1);
+        final endIdx = math.min(startIdx + initialSpreadCount, providers.length);
+
+        final initialTasks = <Future<void>>[];
+        for (int i = startIdx; i < endIdx; i++) {
+          if (mounted) {
+            initialTasks.add(precacheImage(providers[i], context));
+          }
+        }
+        await Future.wait(initialTasks);
+        if (!mounted || generation != _loadGeneration) return;
+
+        debugPrint(
+            'MagazineReader loaded from local storage issue=${widget.magazineId} count=${local.length}');
+
+        setState(() {
+          _flipbookPages = builtPages;
+          _isLoading = false;
+          _loadError = null;
+        });
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _pageCount > 0) {
+            final target = (_currentPage + 1).clamp(1, _pageCount);
+            if (_flipbookController.page != target) {
+              try {
+                _flipbookController.goToPage(target);
+              } catch (_) {}
+            }
+            _syncThumbnails();
+          }
+        });
+
+        // Prefetch remaining pages in the background
+        if (providers.length > endIdx || startIdx > 0) {
+          unawaited(() async {
+            for (int pIdx = 0; pIdx < providers.length; pIdx++) {
+              if (pIdx >= startIdx && pIdx < endIdx) continue;
+              if (!mounted || generation != _loadGeneration) return;
+              try {
+                await precacheImage(providers[pIdx], context);
+              } catch (_) {}
+            }
+          }());
+        }
+        return;
+      }
+    } catch (e) {
+      debugPrint('MagazineReader local check error: $e');
+    }
+
+    // 2. Online streaming
+    try {
+      final pagesRes = await _supabase
           .from('magazine_pages')
           .select()
           .eq('magazine_id', widget.magazineId)
           .order('page_number', ascending: true);
-      final List<String> urls = [];
-      for (final p in pages) {
-        final signedUrl = await ProtectedAssetService.getSignedUrl(
-          bucket: 'magazine_pages',
-          storagePath: p['storage_path'],
-          expiresInSeconds: 120,
-        );
-        if (signedUrl != null) {
-          urls.add(signedUrl);
+
+      final pages = List<Map<String, dynamic>>.from(pagesRes);
+      if (pages.isEmpty) {
+        throw StateError('No magazine pages are available.');
+      }
+
+      // Parallel signed URL requests
+      final signedUrls = await Future.wait(
+        pages.map((p) => ProtectedAssetService.getSignedUrl(
+              bucket: 'magazine_pages',
+              storagePath: p['storage_path']?.toString() ?? '',
+              expiresInSeconds: 300,
+            )),
+      );
+
+      final urls = signedUrls.whereType<String>().toList();
+      if (urls.isEmpty) throw StateError('Failed to sign page URLs.');
+
+      if (!mounted || generation != _loadGeneration) return;
+
+      _localFiles = null;
+      _signedUrls = urls;
+
+      // Fallback restoration from progress percentage if page was still 0
+      if (_currentPage == 0) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final p = prefs.getDouble('progress_${widget.magazineId}');
+          if (p != null && p > 0.01 && urls.isNotEmpty) {
+            _currentPage =
+                ((p * urls.length) - 1).round().clamp(0, urls.length - 1);
+          }
+        } catch (_) {}
+      }
+
+      final builtPages = <FlipbookPage>[];
+      final providers = <ImageProvider>[];
+      for (final url in urls) {
+        final provider = CachedNetworkImageProvider(url);
+        providers.add(provider);
+        builtPages.add(FlipbookPage(
+          image: provider,
+          hiResImage: provider,
+          sizeHint: const Size(1000, 1414),
+        ));
+      }
+
+      // Precache initial visible spread before exposing flipbook
+      final isLandscapeSpread = mounted &&
+          MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+      final initialSpreadCount = isLandscapeSpread ? 2 : 1;
+      final startIdx = _currentPage.clamp(0, providers.length - 1);
+      final endIdx = math.min(startIdx + initialSpreadCount, providers.length);
+
+      final initialTasks = <Future<void>>[];
+      for (int i = startIdx; i < endIdx; i++) {
+        if (mounted) {
+          initialTasks.add(precacheImage(providers[i], context));
         }
       }
-      _signedUrls = urls;
-      _buildFlipbookPages();
-      if (mounted) setState(() => _isLoading = false);
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+      await Future.wait(initialTasks);
+      if (!mounted || generation != _loadGeneration) return;
 
-  void _buildFlipbookPages() {
-    final pages = <FlipbookPage?>[null];
-    for (final url in _signedUrls) {
-      final provider = CachedNetworkImageProvider(url);
-      pages.add(FlipbookPage(image: provider, hiResImage: provider));
+      setState(() {
+        _flipbookPages = builtPages;
+        _isLoading = false;
+        _loadError = null;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageCount > 0) {
+          final target = (_currentPage + 1).clamp(1, _pageCount);
+          if (_flipbookController.page != target) {
+            try {
+              _flipbookController.goToPage(target);
+            } catch (_) {}
+          }
+          _syncThumbnails();
+        }
+      });
+
+      // Prefetch remaining pages in the background
+      if (providers.length > endIdx || startIdx > 0) {
+        unawaited(() async {
+          for (int pIdx = 0; pIdx < providers.length; pIdx++) {
+            if (pIdx >= startIdx && pIdx < endIdx) continue;
+            if (!mounted || generation != _loadGeneration) return;
+            try {
+              await precacheImage(providers[pIdx], context);
+            } catch (_) {}
+          }
+        }());
+      }
+    } catch (e) {
+      if (generation != _loadGeneration) return;
+      debugPrint('MagazineReader load failed issue=${widget.magazineId}: $e');
+      if (mounted) {
+        setState(() {
+          _loadError =
+              'Unable to load this magazine. Check your connection or download it for offline reading.';
+          _isLoading = false;
+        });
+      }
     }
-    _flipbookPages = pages;
   }
 
   void _cycleViewState(BuildContext context) {
@@ -165,22 +381,33 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
         _viewState = ReaderViewState.single;
       } else if (_viewState == ReaderViewState.single) {
         _viewState = ReaderViewState.zoomed;
-        
+
         final Size screenSize = MediaQuery.of(context).size;
         const double scale = 2.5;
         final double tx = -(screenSize.width * scale - screenSize.width) / 2;
         final double ty = -(screenSize.height * scale - screenSize.height) / 2;
-        
+
         _zoomController.value = Matrix4.identity()
           ..setTranslationRaw(tx, ty, 0.0)
           // ignore: deprecated_member_use
           ..scale(scale);
-          
       } else {
         _viewState = ReaderViewState.spread;
-        _flipbookController.goToPage((_currentPage + 1).clamp(1, _signedUrls.length));
       }
     });
+
+    if (_viewState == ReaderViewState.spread) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageCount > 0) {
+          final target = (_currentPage + 1).clamp(1, _pageCount);
+          if (_flipbookController.page != target) {
+            try {
+              _flipbookController.goToPage(target);
+            } catch (_) {}
+          }
+        }
+      });
+    }
   }
 
   void _updateCurrentPage(int newPage) {
@@ -191,78 +418,96 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   }
 
   void _onFlipbookPageSettled() {
-    final page = (_flipbookController.page - 1).clamp(0, _signedUrls.length - 1);
+    if (!mounted || _pageCount == 0) return;
+    final page =
+        (_flipbookController.page - 1).clamp(0, _pageCount - 1);
     _updateCurrentPage(page);
   }
 
   Future<void> _playPageFlipSound() async {
     if (_enablePageFlipSound && !SoundService.isMuted) {
       try {
-        // FIX: Forcefully stop the player and reset position before playing to prevent freeze[cite: 21]
-        await _pageFlipAudioPlayer.stop(); 
-        await _pageFlipAudioPlayer.play(AssetSource('audio/page_flip.mp3'), position: Duration.zero);
+        await _pageFlipAudioPlayer.stop();
+        await _pageFlipAudioPlayer.play(AssetSource('audio/page_flip.mp3'));
       } catch (_) {}
     }
   }
 
   void _turnNext() {
     _focusNode.requestFocus();
+    if (_isFlipping) return;
     if (_viewState == ReaderViewState.zoomed) return;
-    if (_currentPage >= _signedUrls.length - 1) return;
-    _playPageFlipSound();
+    if (_currentPage >= _pageCount - 1) return;
 
     if (_viewState == ReaderViewState.spread) {
       if (_flipbookController.canFlipRight) {
-        try { _flipbookController.flipRight(); } catch (_) {}
+        try {
+          _flipbookController.flipRight();
+        } catch (_) {}
       } else {
-        final target = (_flipbookController.page + 2).clamp(1, _signedUrls.length);
+        final target =
+            (_flipbookController.page + 2).clamp(1, _pageCount);
+        _playPageFlipSound();
         _flipbookController.goToPage(target);
-        _updateCurrentPage((target - 1).clamp(0, _signedUrls.length - 1));
+        _updateCurrentPage((target - 1).clamp(0, _pageCount - 1));
       }
     } else if (_viewState == ReaderViewState.single) {
+      _playPageFlipSound();
       _pageFlipKey.currentState?.nextPage();
-      _updateCurrentPage((_currentPage + 1).clamp(0, _signedUrls.length - 1));
+      _updateCurrentPage((_currentPage + 1).clamp(0, _pageCount - 1));
     }
   }
 
   void _turnPrev() {
     _focusNode.requestFocus();
-    if (_viewState == ReaderViewState.zoomed) return; 
+    if (_isFlipping) return;
+    if (_viewState == ReaderViewState.zoomed) return;
     if (_currentPage <= 0) return;
-    _playPageFlipSound();
 
     if (_viewState == ReaderViewState.spread) {
       if (_flipbookController.canFlipLeft) {
-        try { _flipbookController.flipLeft(); } catch (_) {}
+        try {
+          _flipbookController.flipLeft();
+        } catch (_) {}
       } else {
-        final target = (_flipbookController.page - 2).clamp(1, _signedUrls.length);
+        final target =
+            (_flipbookController.page - 2).clamp(1, _pageCount);
+        _playPageFlipSound();
         _flipbookController.goToPage(target);
-        _updateCurrentPage((target - 1).clamp(0, _signedUrls.length - 1));
+        _updateCurrentPage((target - 1).clamp(0, _pageCount - 1));
       }
     } else if (_viewState == ReaderViewState.single) {
+      _playPageFlipSound();
       _pageFlipKey.currentState?.previousPage();
-      _updateCurrentPage((_currentPage - 1).clamp(0, _signedUrls.length - 1));
+      _updateCurrentPage((_currentPage - 1).clamp(0, _pageCount - 1));
     }
   }
 
   void _jumpToPage(int index) {
-    if (index < 0 || index >= _signedUrls.length) return;
-    if (index == _currentPage) return;
-    
+    if (index < 0 || index >= _pageCount) return;
+    final targetPage = index + 1;
+    final needsSync = _viewState == ReaderViewState.spread &&
+        _flipbookController.page != targetPage;
+    if (index == _currentPage && !needsSync) return;
+
     _playPageFlipSound();
-    
+
     if (_viewState == ReaderViewState.spread) {
-      _flipbookController.goToPage(index + 1);
-    } 
-    
+      _flipbookController.goToPage(targetPage);
+    } else if (_viewState == ReaderViewState.single) {
+      _pageFlipKey.currentState?.goToPage(index);
+    }
+
     _updateCurrentPage(index);
   }
 
   void _syncThumbnails() {
     if (_thumbScrollController.hasClients) {
-      final targetOffset = (_currentPage * 68.0) - (MediaQuery.of(context).size.width / 2) + 29;
+      final targetOffset =
+          (_currentPage * 68.0) - (MediaQuery.of(context).size.width / 2) + 29;
       _thumbScrollController.animateTo(
-        targetOffset.clamp(0.0, _thumbScrollController.position.maxScrollExtent),
+        targetOffset.clamp(
+            0.0, _thumbScrollController.position.maxScrollExtent),
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
       );
@@ -270,6 +515,33 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   }
 
   void _toggleControls() => setState(() => _showControls = !_showControls);
+
+  Widget _buildLoadError() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.menu_book_rounded,
+                  color: Color(0xFF81C784), size: 48),
+              const SizedBox(height: 12),
+              Text(_loadError ?? 'No pages are available for this magazine.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70)),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  debugPrint(
+                      'MagazineReader retry requested issue=${widget.magazineId}');
+                  _loadMagazinePages();
+                },
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
 
   void _nudgeZoom(double dx, double dy) {
     final matrix = _zoomController.value.clone();
@@ -279,18 +551,23 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
   }
 
   Widget _buildCustomZoomView(BuildContext context) {
-    final content = CachedNetworkImage(imageUrl: _signedUrls[_currentPage], fit: BoxFit.contain);
+    final Widget content = _localFiles != null && _currentPage < _localFiles!.length
+        ? Image.file(_localFiles![_currentPage], fit: BoxFit.contain)
+        : CachedNetworkImage(
+            imageUrl: _signedUrls.isNotEmpty ? _signedUrls[_currentPage] : '',
+            fit: BoxFit.contain,
+          );
 
     return Stack(
       fit: StackFit.expand,
       children: [
         GestureDetector(
-          onDoubleTap: () => _cycleViewState(context), 
+          onDoubleTap: () => _cycleViewState(context),
           child: InteractiveViewer(
             transformationController: _zoomController,
             minScale: 1.0,
             maxScale: 5.0,
-            panEnabled: true, 
+            panEnabled: true,
             child: Center(child: content),
           ),
         ),
@@ -304,7 +581,9 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
               color: Colors.black.withValues(alpha: 0.9),
               border: Border.all(color: const Color(0xFF00E676), width: 1.5),
               borderRadius: BorderRadius.circular(8),
-              boxShadow: const [BoxShadow(color: Colors.black87, blurRadius: 10)],
+              boxShadow: const [
+                BoxShadow(color: Colors.black87, blurRadius: 10)
+              ],
             ),
             child: Stack(
               children: [
@@ -318,46 +597,72 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                   ),
                 ),
                 AnimatedBuilder(
-                  animation: _zoomController,
-                  builder: (context, child) {
-                    final matrix = _zoomController.value;
-                    final scale = matrix.getMaxScaleOnAxis();
-                    final tx = -matrix.getTranslation().x;
-                    final ty = -matrix.getTranslation().y;
-                    
-                    final screenWidth = MediaQuery.of(context).size.width;
-                    final screenHeight = MediaQuery.of(context).size.height;
-                    
-                    const double mapWidth = 140.0;
-                    const double mapHeight = 180.0;
-                    
-                    final rectWidth = (mapWidth / scale).clamp(0.0, mapWidth);
-                    final rectHeight = (mapHeight / scale).clamp(0.0, mapHeight);
-                    
-                    final maxTx = (screenWidth * scale) - screenWidth;
-                    final maxTy = (screenHeight * scale) - screenHeight;
-                    
-                    final progressX = maxTx > 0 ? (tx / maxTx).clamp(0.0, 1.0) : 0.5;
-                    final progressY = maxTy > 0 ? (ty / maxTy).clamp(0.0, 1.0) : 0.5;
-                    
-                    final left = progressX * (mapWidth - rectWidth);
-                    final top = progressY * (mapHeight - rectHeight);
+                    animation: _zoomController,
+                    builder: (context, child) {
+                      final matrix = _zoomController.value;
+                      final scale = matrix.getMaxScaleOnAxis();
+                      final tx = -matrix.getTranslation().x;
+                      final ty = -matrix.getTranslation().y;
 
-                    return Positioned(
-                      left: left, top: top, width: rectWidth, height: rectHeight,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFF00E676), width: 2),
-                          color: const Color(0xFF00E676).withValues(alpha: 0.25),
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      final screenHeight = MediaQuery.of(context).size.height;
+
+                      const double mapWidth = 140.0;
+                      const double mapHeight = 180.0;
+
+                      final rectWidth = (mapWidth / scale).clamp(0.0, mapWidth);
+                      final rectHeight =
+                          (mapHeight / scale).clamp(0.0, mapHeight);
+
+                      final maxTx = (screenWidth * scale) - screenWidth;
+                      final maxTy = (screenHeight * scale) - screenHeight;
+
+                      final progressX =
+                          maxTx > 0 ? (tx / maxTx).clamp(0.0, 1.0) : 0.5;
+                      final progressY =
+                          maxTy > 0 ? (ty / maxTy).clamp(0.0, 1.0) : 0.5;
+
+                      final left = progressX * (mapWidth - rectWidth);
+                      final top = progressY * (mapHeight - rectHeight);
+
+                      return Positioned(
+                        left: left,
+                        top: top,
+                        width: rectWidth,
+                        height: rectHeight,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: const Color(0xFF00E676), width: 2),
+                            color:
+                                const Color(0xFF00E676).withValues(alpha: 0.25),
+                          ),
                         ),
-                      ),
-                    );
-                  }
-                ),
-                Align(alignment: Alignment.topCenter, child: IconButton(icon: const Icon(Icons.arrow_drop_up, color: Colors.white), onPressed: () => _nudgeZoom(0, 50))),
-                Align(alignment: Alignment.bottomCenter, child: IconButton(icon: const Icon(Icons.arrow_drop_down, color: Colors.white), onPressed: () => _nudgeZoom(0, -50))),
-                Align(alignment: Alignment.centerLeft, child: IconButton(icon: const Icon(Icons.arrow_left, color: Colors.white), onPressed: () => _nudgeZoom(50, 0))),
-                Align(alignment: Alignment.centerRight, child: IconButton(icon: const Icon(Icons.arrow_right, color: Colors.white), onPressed: () => _nudgeZoom(-50, 0))),
+                      );
+                    }),
+                Align(
+                    alignment: Alignment.topCenter,
+                    child: IconButton(
+                        icon: const Icon(Icons.arrow_drop_up,
+                            color: Colors.white),
+                        onPressed: () => _nudgeZoom(0, 50))),
+                Align(
+                    alignment: Alignment.bottomCenter,
+                    child: IconButton(
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: Colors.white),
+                        onPressed: () => _nudgeZoom(0, -50))),
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                        icon: const Icon(Icons.arrow_left, color: Colors.white),
+                        onPressed: () => _nudgeZoom(50, 0))),
+                Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                        icon:
+                            const Icon(Icons.arrow_right, color: Colors.white),
+                        onPressed: () => _nudgeZoom(-50, 0))),
               ],
             ),
           ),
@@ -370,7 +675,8 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF18221B),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -385,8 +691,12 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Reader Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('(পাঠক সেটিংস)', style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
+                      Text('Reader Settings',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('(পাঠক সেটিংস)',
+                          style: TextStyle(
+                              fontSize: 11, color: Color(0xFF81C784))),
                     ],
                   ),
                 ],
@@ -401,12 +711,14 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.touch_app_rounded, color: Colors.white54, size: 20),
+                    Icon(Icons.touch_app_rounded,
+                        color: Colors.white54, size: 20),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Double-tap anywhere on the screen to cycle between:\n1. 2-Page Spread View\n2. Single Page View\n3. Zoom Navigator',
-                        style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                        style: TextStyle(
+                            color: Colors.white70, fontSize: 12, height: 1.4),
                       ),
                     ),
                   ],
@@ -442,146 +754,238 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
       },
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: _isLoading || _signedUrls.isEmpty
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
-            : Stack(
-                fit: StackFit.expand,
-                children: [
-                  // --- STATE 1: SPREAD VIEW ---
-                  if (_viewState == ReaderViewState.spread)
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _toggleControls,
-                      onDoubleTap: () => _cycleViewState(context), 
-                      child: RealisticFlipbook(
-                        controller: _flipbookController,
-                        pages: _flipbookPages,
-                        flipDuration: const Duration(milliseconds: 600),
-                        zoomDuration: const Duration(milliseconds: 300),
-                        singlePageSpreadNavigation: false, 
-                        forwardDirection: FlipbookForwardDirection.right,
-                        centering: true,
-                        startPage: (_currentPage + 1).clamp(1, _flipbookPages.isEmpty ? 1 : _flipbookPages.length - 1),
-                        tapToFlip: false,
-                        clickToZoom: false,
-                        dragToFlip: true,
-                        nPolygons: 10,
-                        ambient: 0.8,
-                        onFlipLeftStart: (_) => _playPageFlipSound(),
-                        onFlipRightStart: (_) => _playPageFlipSound(),
-                        onFlipLeftEnd: (_) => _onFlipbookPageSettled(),
-                        onFlipRightEnd: (_) => _onFlipbookPageSettled(),
-                      ),
-                    ),
-
-                  // --- STATE 2: SINGLE PAGE VIEW (Page_Flip Package) ---
-                  if (_viewState == ReaderViewState.single)
-                    // FIX: Replaced opaque gesture overlays with a non-blocking onTapUp wrapper.
-                    // This allows you to tap the edges to navigate, or swipe directly to peel the page![cite: 21]
-                    GestureDetector(
-                      onTapUp: (details) {
-                        final width = MediaQuery.of(context).size.width;
-                        final dx = details.globalPosition.dx;
-                        if (dx < width * 0.25) {
-                          _turnPrev();
-                        } else if (dx > width * 0.75) {
-                          _turnNext();
-                        } else {
-                          _toggleControls();
-                        }
-                      },
-                      onDoubleTap: () => _cycleViewState(context),
-                      child: PageFlipWidget(
-                        key: _pageFlipKey,
-                        backgroundColor: Colors.black,
-                        initialIndex: _currentPage,
-                        lastPage: Container(color: Colors.black),
-                        children: <Widget>[
-                          for (final url in _signedUrls)
-                            CachedNetworkImage(
-                              imageUrl: url, 
-                              fit: BoxFit.contain,
-                              placeholder: (c, u) => const Center(child: CircularProgressIndicator(color: Color(0xFF00E676))),
-                            )
-                        ],
-                      ),
-                    ),
-
-                  // --- STATE 3: ZOOM VIEW ---
-                  if (_viewState == ReaderViewState.zoomed) 
-                    _buildCustomZoomView(context),
-
-                  // Dynamic visible watermark: useful on platforms where the OS
-                  // cannot guarantee screenshot blocking (for example Windows).
-                  ProtectedWatermark(identity: widget.userEmail),
-                  
-                  // UI Controls
-                  if (_showControls) ...[
-                    Positioned(
-                      top: 0, left: 0, right: 0,
-                      child: AppBar(
-                        backgroundColor: Colors.black.withValues(alpha: 0.85),
-                        title: Text(
-                          '${formatMagazineTitle(widget.title)} (Page ${_signedUrls.isEmpty ? 0 : _currentPage + 1}/${_signedUrls.length})',
-                          style: const TextStyle(fontSize: 15),
-                        ),
-                        actions: [
-                          IconButton(
-                            icon: const Icon(Icons.tune_rounded, color: Color(0xFF00E676)),
-                            onPressed: _openReaderSettings,
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.fullscreen_exit_rounded),
-                            onPressed: _toggleControls,
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_signedUrls.isNotEmpty)
-                      Positioned(
-                        bottom: 12, left: 16, right: 16,
-                        child: Container(
-                          height: 94,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white24),
-                          ),
-                          child: ListView.builder(
-                            controller: _thumbScrollController,
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _signedUrls.length,
-                            itemBuilder: (context, index) {
-                              final isSelected = index == _currentPage;
-                              return Center(
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 220),
-                                  width: isSelected ? 58 : 44,
-                                  height: isSelected ? 80 : 60,
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: isSelected ? const Color(0xFF00E676) : Colors.white24,
-                                      width: isSelected ? 2.5 : 1,
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF00E676)))
+            : _loadError != null
+                ? _buildLoadError()
+                : _pageCount == 0
+                    ? _buildLoadError()
+                    : Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // --- STATE 1: SPREAD VIEW ---
+                          if (_viewState == ReaderViewState.spread)
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: _toggleControls,
+                              onDoubleTap: () => _cycleViewState(context),
+                              child: MagazineFlipbookLayoutGate(
+                                builder: (context, constraints) {
+                                  if (!_loggedFirstRender) {
+                                    debugPrint(
+                                        'MagazineReader valid layout issue=${widget.magazineId} size=${constraints.maxWidth}x${constraints.maxHeight}');
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      if (mounted && !_loggedFirstRender) {
+                                        _loggedFirstRender = true;
+                                        debugPrint(
+                                            'MagazineReader first page frame rendered issue=${widget.magazineId}');
+                                      }
+                                      if (mounted && _pageCount > 0) {
+                                        final target =
+                                            (_currentPage + 1).clamp(1, _pageCount);
+                                        if (_flipbookController.page != target) {
+                                          try {
+                                            _flipbookController.goToPage(target);
+                                          } catch (_) {}
+                                        }
+                                        _syncThumbnails();
+                                      }
+                                    });
+                                  }
+                                  return IgnorePointer(
+                                    ignoring: _isFlipping,
+                                    child: RealisticFlipbook(
+                                      controller: _flipbookController,
+                                      pages: _flipbookPages,
+                                      flipDuration:
+                                          const Duration(milliseconds: 600),
+                                      zoomDuration:
+                                          const Duration(milliseconds: 300),
+                                      singlePageSpreadNavigation: false,
+                                      forwardDirection:
+                                          FlipbookForwardDirection.right,
+                                      centering: true,
+                                      startPage: (_currentPage + 1).clamp(
+                                          1,
+                                          _flipbookPages.isEmpty
+                                              ? 1
+                                              : _flipbookPages.length),
+                                      tapToFlip: false,
+                                      clickToZoom: false,
+                                      dragToFlip: true,
+                                      nPolygons: 10,
+                                      ambient: 0.8,
+                                      onFlipGuard: (currentPage, targetPage, direction, auto) =>
+                                          !_isFlipping,
+                                      onFlipLeftStart: (_) {
+                                        _isFlipping = true;
+                                        _playPageFlipSound();
+                                      },
+                                      onFlipRightStart: (_) {
+                                        _isFlipping = true;
+                                        _playPageFlipSound();
+                                      },
+                                      onFlipLeftEnd: (_) {
+                                        _isFlipping = false;
+                                        _onFlipbookPageSettled();
+                                      },
+                                      onFlipRightEnd: (_) {
+                                        _isFlipping = false;
+                                        _onFlipbookPageSettled();
+                                      },
+                                      loadingBuilder: (_) => const Center(
+                                        child: CircularProgressIndicator(
+                                            color: Color(0xFF00E676)),
+                                      ),
                                     ),
+                                  );
+                                },
+                                loading: const Center(
+                                  child: CircularProgressIndicator(
+                                      color: Color(0xFF00E676)),
+                                ),
+                              ),
+                            ),
+
+                          // --- STATE 2: SINGLE PAGE VIEW (Page_Flip Package) ---
+                          if (_viewState == ReaderViewState.single)
+                            // FIX: Replaced opaque gesture overlays with a non-blocking onTapUp wrapper.
+                            // This allows you to tap the edges to navigate, or swipe directly to peel the page![cite: 21]
+                            GestureDetector(
+                              onTapUp: (details) {
+                                final width = MediaQuery.of(context).size.width;
+                                final dx = details.globalPosition.dx;
+                                if (dx < width * 0.25) {
+                                  _turnPrev();
+                                } else if (dx > width * 0.75) {
+                                  _turnNext();
+                                } else {
+                                  _toggleControls();
+                                }
+                              },
+                              onDoubleTap: () => _cycleViewState(context),
+                              child: PageFlipWidget(
+                                key: _pageFlipKey,
+                                backgroundColor: Colors.black,
+                                initialIndex: _currentPage,
+                                onPageFlipped: (page) =>
+                                    _updateCurrentPage(page),
+                                lastPage: Container(color: Colors.black),
+                                children: <Widget>[
+                                  for (int i = 0; i < _pageCount; i++)
+                                    _localFiles != null && i < _localFiles!.length
+                                        ? Image.file(_localFiles![i], fit: BoxFit.contain)
+                                        : CachedNetworkImage(
+                                            imageUrl: _signedUrls[i],
+                                            fit: BoxFit.contain,
+                                            placeholder: (c, u) => const Center(
+                                                child: CircularProgressIndicator(
+                                                    color: Color(0xFF00E676))),
+                                          )
+                                ],
+                              ),
+                            ),
+
+                          // --- STATE 3: ZOOM VIEW ---
+                          if (_viewState == ReaderViewState.zoomed)
+                            _buildCustomZoomView(context),
+
+                          // Dynamic visible watermark: useful on platforms where the OS
+                          // cannot guarantee screenshot blocking (for example Windows).
+                          ProtectedWatermark(identity: widget.userEmail),
+
+                          // UI Controls
+                          if (_showControls) ...[
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              child: AppBar(
+                                backgroundColor:
+                                    Colors.black.withValues(alpha: 0.85),
+                                title: Text(
+                                  '${formatMagazineTitle(widget.title)} (Page ${_pageCount == 0 ? 0 : _currentPage + 1}/$_pageCount)',
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                                actions: [
+                                  IconButton(
+                                    icon: const Icon(Icons.tune_rounded,
+                                        color: Color(0xFF00E676)),
+                                    onPressed: _openReaderSettings,
                                   ),
-                                  child: KeyboardPressEffect(
-                                    onTap: () => _jumpToPage(index),
-                                    child: CachedNetworkImage(
-                                      imageUrl: _signedUrls[index],
-                                      fit: BoxFit.cover,
-                                    ),
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.fullscreen_exit_rounded),
+                                    onPressed: _toggleControls,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (_pageCount > 0)
+                              Positioned(
+                                bottom: 12,
+                                left: 16,
+                                right: 16,
+                                child: Container(
+                                  height: 94,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.9),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: Colors.white24),
+                                  ),
+                                  child: ListView.builder(
+                                    controller: _thumbScrollController,
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: _pageCount,
+                                    itemBuilder: (context, index) {
+                                      final isSelected = index == _currentPage;
+                                      return Center(
+                                        child: AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 220),
+                                          width: isSelected ? 58 : 44,
+                                          height: isSelected ? 80 : 60,
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 4),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: isSelected
+                                                  ? const Color(0xFF00E676)
+                                                  : Colors.white24,
+                                              width: isSelected ? 2.5 : 1,
+                                            ),
+                                          ),
+                                          child: KeyboardPressEffect(
+                                            onTap: () => _jumpToPage(index),
+                                            child: _localFiles != null &&
+                                                    index < _localFiles!.length
+                                                ? Image.file(
+                                                    _localFiles![index],
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : (_signedUrls.isNotEmpty &&
+                                                        index <
+                                                            _signedUrls.length
+                                                    ? CachedNetworkImage(
+                                                        imageUrl:
+                                                            _signedUrls[index],
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : const SizedBox.shrink()),
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-                        ),
+                              ),
+                          ]
+                        ],
                       ),
-                  ]
-                ],
-              ),
       ),
     );
   }
@@ -794,65 +1198,66 @@ class _AranyakPdfReaderScreenState extends State<AranyakPdfReaderScreen> {
       children: [
         ListView.builder(
           controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      itemCount: _pageCount,
-      itemBuilder: (context, index) {
-        final pageNumber = index + 1;
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          itemCount: _pageCount,
+          itemBuilder: (context, index) {
+            final pageNumber = index + 1;
 
-        return FutureBuilder<Uint8List?>(
-          future: _renderPage(pageNumber),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return Container(
-                height: 400,
-                alignment: Alignment.center,
-                child: const CircularProgressIndicator(
-                  color: Color(0xFF00E676),
-                ),
-              );
-            }
-
-            final bytes = snapshot.data;
-            if (bytes == null) {
-              return const SizedBox(
-                height: 100,
-                child: Center(
-                  child: Icon(
-                    Icons.broken_image_rounded,
-                    color: Colors.white54,
-                    size: 48,
-                  ),
-                ),
-              );
-            }
-
-            return InteractiveViewer(
-              minScale: 1.0,
-              maxScale: 4.0,
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 24, left: 12, right: 12),
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
+            return FutureBuilder<Uint8List?>(
+              future: _renderPage(pageNumber),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return Container(
+                    height: 400,
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(
+                      color: Color(0xFF00E676),
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.memory(
-                    bytes,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                  );
+                }
+
+                final bytes = snapshot.data;
+                if (bytes == null) {
+                  return const SizedBox(
+                    height: 100,
+                    child: Center(
+                      child: Icon(
+                        Icons.broken_image_rounded,
+                        color: Colors.white54,
+                        size: 48,
+                      ),
+                    ),
+                  );
+                }
+
+                return InteractiveViewer(
+                  minScale: 1.0,
+                  maxScale: 4.0,
+                  child: Container(
+                    margin:
+                        const EdgeInsets.only(bottom: 24, left: 12, right: 12),
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.memory(
+                        bytes,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
-        );
-        },
         ),
         const ProtectedWatermark(identity: 'eআরণ্যক PREVIEW'),
       ],

@@ -15,6 +15,7 @@ type ArticleResult = {
   images: string[];
   primaryImage: string | null;
   imageCredit: string | null;
+  publishedAt: string | null;
   error?: string;
 };
 
@@ -155,6 +156,16 @@ function extractImageCredit(html: string): string | null {
     .find((x) => x.length >= 8 && x.length <= 240) ?? null;
 }
 
+function extractPublishedAt(html: string): string | null {
+  const meta = extractMeta(html, "article:published_time")
+    ?? extractMeta(html, "datePublished")
+    ?? extractMeta(html, "pubdate");
+  if (meta && Number.isFinite(Date.parse(meta))) return new Date(meta).toISOString();
+  const jsonLd = /["']datePublished["']\s*:\s*["']([^"']+)["']/i.exec(html)?.[1];
+  if (!jsonLd || !Number.isFinite(Date.parse(jsonLd))) return null;
+  return new Date(jsonLd).toISOString();
+}
+
 function removeNoise(html: string): string {
   return html
     .replace(/<(script|style|noscript|svg|nav|header|footer|aside|form|button|iframe|template)[^>]*>[\s\S]*?<\/\1>/gi, " ")
@@ -251,6 +262,7 @@ serve(async (req) => {
     const words = articleText.split(/\s+/).filter(Boolean);
     const images = extractImages(html, response.url || parsed.toString());
     const imageCredit = extractImageCredit(html);
+    const publishedAt = extractPublishedAt(html);
     const blocked = looksBlocked(title, articleText);
     const readable = words.length >= MIN_WORDS && !blocked;
 
@@ -264,6 +276,7 @@ serve(async (req) => {
       images,
       primaryImage: images[0] ?? null,
       imageCredit,
+      publishedAt,
       error: readable ? undefined : blocked
         ? "The source appears blocked, login-gated, or subscription-gated."
         : `Only ${words.length} readable words were extracted; minimum is ${MIN_WORDS}.`,

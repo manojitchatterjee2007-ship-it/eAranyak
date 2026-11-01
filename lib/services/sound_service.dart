@@ -97,7 +97,11 @@ class BootSoundPool {
 }
 
 class SoundService {
-  static final AudioPlayer _player = AudioPlayer();
+  static final AudioPlayer _bootPlayer = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+  static final AudioPlayer _wildlifePlayer = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+  
+  static final List<AudioPlayer> _buttonPlayers = List.generate(3, (_) => AudioPlayer()..setReleaseMode(ReleaseMode.stop));
+  static int _buttonPlayerIndex = 0;
 
   static final ValueNotifier<bool> keyPressSoundNotifier =
       ValueNotifier<bool>(false);
@@ -112,6 +116,24 @@ class SoundService {
     final prefs = await SharedPreferences.getInstance();
     keyPressSoundNotifier.value = prefs.getBool('key_press_sound_enabled') ?? false;
     mutedNotifier.value = prefs.getBool('sound_muted') ?? false;
+
+    try {
+      await AudioPlayer.global.setAudioContext(
+        AudioContext(
+          android: const AudioContextAndroid(
+            usageType: AndroidUsageType.media,
+            contentType: AndroidContentType.music,
+            audioFocus: AndroidAudioFocus.none,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.ambient,
+            options: {
+              AVAudioSessionOptions.mixWithOthers,
+            },
+          ),
+        ),
+      );
+    } catch (_) {}
   }
 
   static Future<void> setMuted(bool muted) async {
@@ -126,7 +148,11 @@ class SoundService {
 
   static Future<void> stopAllSounds() async {
     try {
-      await _player.stop();
+      await _bootPlayer.stop();
+      await _wildlifePlayer.stop();
+      for (final p in _buttonPlayers) {
+        await p.stop();
+      }
     } catch (_) {}
   }
 
@@ -134,10 +160,11 @@ class SoundService {
     if (isMuted) return;
     try {
       final soundName = await BootSoundPool.getNextSound();
-      await _player.stop();
-      await _player.setReleaseMode(ReleaseMode.stop);
-      await _player.play(AssetSource('audio/$soundName.mp3'), volume: 1.0);
-    } catch (_) {}
+      await _bootPlayer.stop();
+      await _bootPlayer.play(AssetSource('audio/$soundName.mp3'), volume: 1.0);
+    } catch (e) {
+      debugPrint('Boot sound error: $e');
+    }
   }
 
   static Future<void> setKeyPressSoundEnabled(bool enabled) async {
@@ -153,16 +180,36 @@ class SoundService {
   static Future<void> playButtonSound() async {
     if (isMuted || !keyPressSoundNotifier.value) return;
     try {
-      await _player.stop();
-      await _player.play(AssetSource('audio/button_press.mp3'), volume: 0.45);
+      final player = _buttonPlayers[_buttonPlayerIndex];
+      _buttonPlayerIndex = (_buttonPlayerIndex + 1) % _buttonPlayers.length;
+      await player.stop();
+      await player.play(AssetSource('audio/button_press.mp3'), volume: 0.45);
     } catch (_) {}
   }
 
   static Future<void> playWildlifeSound(String assetName) async {
     if (isMuted) return;
     try {
-      await _player.stop();
-      await _player.play(AssetSource('audio/$assetName'), volume: 0.5);
+      await _wildlifePlayer.stop();
+      await _wildlifePlayer.play(AssetSource('audio/$assetName'), volume: 0.5);
+    } catch (e) {
+      debugPrint('Wildlife sound error: $e');
+    }
+  }
+
+  static Future<void> playUrlSound(String url) async {
+    if (isMuted || url.isEmpty) return;
+    try {
+      await _wildlifePlayer.stop();
+      await _wildlifePlayer.play(UrlSource(url), volume: 1.0);
+    } catch (e) {
+      debugPrint('Wildlife URL sound error: $e');
+    }
+  }
+
+  static Future<void> stopWildlifeSound() async {
+    try {
+      await _wildlifePlayer.stop();
     } catch (_) {}
   }
 

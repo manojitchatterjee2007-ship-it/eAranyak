@@ -73,29 +73,31 @@ class _AnimatedEAranyakLogoState extends State<AnimatedEAranyakLogo>
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (context, child) {
-        return Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFF141F17),
-            border: Border.all(color: const Color(0xFF00E676), width: 2.5),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF00E676).withValues(alpha: 0.35),
-                blurRadius: _glow.value,
-                spreadRadius: _glow.value / 6,
-              ),
-            ],
-          ),
-          child: Transform.scale(
-            scale: _scale.value,
+        return Transform.scale(
+          scale: _scale.value,
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF0D1410),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00E676).withValues(alpha: 0.35),
+                  blurRadius: _glow.value,
+                  spreadRadius: _glow.value / 6,
+                ),
+              ],
+            ),
             child: ClipOval(
-              child: Image.asset(
-                'assets/icon/app_icon.png',
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) => const Icon(Icons.eco,
-                    size: 80, color: Color(0xFF00E676)),
+              child: Transform.scale(
+                scale: 1.12,
+                child: Image.asset(
+                  'assets/icon/app_icon.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => const Icon(Icons.eco,
+                      size: 80, color: Color(0xFF00E676)),
+                ),
               ),
             ),
           ),

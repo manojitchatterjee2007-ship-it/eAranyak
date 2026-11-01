@@ -50,13 +50,12 @@ class _KeyboardPressEffectState extends State<KeyboardPressEffect> {
       onTapCancel: _handleTapCancel,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 60),
+        duration: const Duration(milliseconds: 100),
         curve: Curves.easeOutCubic,
-        transform: Matrix4.translationValues(
-          0,
-          _isPressed ? widget.depth : 0,
-          0,
-        ),
+        transformAlignment: Alignment.center,
+        transform: Matrix4.identity()
+          ..translate(0.0, _isPressed ? widget.depth : 0.0, 0.0)
+          ..scale(_isPressed ? 0.95 : 1.0),
         child: widget.child,
       ),
     );

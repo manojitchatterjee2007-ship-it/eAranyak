@@ -1,14 +1,15 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
 import '../services/sound_service.dart';
 import '../services/forest_ambience_service.dart';
 import '../services/forest_scene_manager.dart';
+import '../services/magazine_download_service.dart';
 import '../widgets/magazine_cover_image.dart';
 import '../widgets/realistic_rack_widget.dart';
+import '../widgets/seamless_scrolling_background.dart';
 import 'magazine_preview_screen.dart';
+import 'magazine_reader_screen.dart';
 
 class LibraryScreen extends StatefulWidget {
   final String userEmail;
@@ -19,7 +20,7 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => supabase;
   List<Map<String, dynamic>> _magazines = [];
   List<Map<String, dynamic>> _filteredMagazines = [];
   bool _loading = true;
@@ -53,14 +54,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _loadMagazines() async {
     setState(() => _loading = true);
     try {
-      final magRes = await _supabase.from('magazines').select().order('created_at', ascending: false);
+      final magRes = await _supabase
+          .from('magazines')
+          .select()
+          .order('created_at', ascending: false);
       final mags = List<Map<String, dynamic>>.from(magRes);
 
-      final prefs = await SharedPreferences.getInstance();
       for (final mag in mags) {
         final id = mag['id'].toString();
-        final downloaded = prefs.getBool('downloaded_mag_$id') ?? false;
-        _downloadStates[id] = downloaded ? 'downloaded' : 'none';
+        final isDownloaded =
+            await MagazineDownloadService.isMagazineDownloaded(id);
+        _downloadStates[id] = isDownloaded ? 'downloaded' : 'none';
       }
 
       if (mounted) {
@@ -71,54 +75,84 @@ class _LibraryScreenState extends State<LibraryScreen> {
         });
       }
     } catch (e) {
+      debugPrint('[LibraryScreen] _loadMagazines error: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _downloadMagazine(Map<String, dynamic> mag) async {
     final id = mag['id'].toString();
+    final title = formatMagazineTitle(mag['title']?.toString());
     setState(() {
       _downloadStates[id] = 'downloading';
     });
 
-    try {
-      final pages = await _supabase
-          .from('magazine_pages')
-          .select()
-          .eq('magazine_id', id)
-          .limit(1);
+    final success = await MagazineDownloadService.downloadMagazine(
+      magazine: mag,
+      onProgress: (p) {
+        if (mounted) {
+          setState(() {
+            _downloadStates[id] = p.isCompleted
+                ? 'downloaded'
+                : p.error != null
+                    ? 'none'
+                    : 'downloading';
+          });
+        }
+      },
+    );
 
-      if (pages.isEmpty) {
-        throw Exception('Magazine pages not found');
-      }
+    if (!mounted) return;
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('downloaded_mag_$id', true);
-
-      List<String> downloadedIds = prefs.getStringList('downloaded_magazine_ids') ?? [];
-      if (!downloadedIds.contains(id)) {
-        downloadedIds.add(id);
-        await prefs.setStringList('downloaded_magazine_ids', downloadedIds);
-      }
-      await prefs.setString('mag_meta_$id', jsonEncode(mag));
-
-      if (mounted) {
-        setState(() {
-          _downloadStates[id] = 'downloaded';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✓ "${mag['title']}" সফলভাবে ডাউনলোড হয়েছে এবং আপনার বুকশেলফে যুক্ত হয়েছে!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _downloadStates[id] = 'none';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ডাউনলোড ব্যর্থ হয়েছে: ${e.toString()}')),
-        );
-      }
+    if (success) {
+      setState(() {
+        _downloadStates[id] = 'downloaded';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF142419),
+          content: Text(
+              '✓ "$title" সম্পূর্ণ ম্যাগাজিনটি সফলভাবে ডাউনলোড হয়েছে এবং আপনার বুকশেলফে যুক্ত হয়েছে!'),
+          action: SnackBarAction(
+            label: 'পড়ুন (Read)',
+            textColor: const Color(0xFF00E676),
+            onPressed: () {
+              ForestAmbienceService.stopAmbience();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProtectedReaderScreen(
+                    magazineId: id,
+                    title: title,
+                    userEmail: widget.userEmail,
+                  ),
+                ),
+              ).then((_) {
+                ForestAmbienceService.startAmbience();
+                _loadMagazines();
+              });
+            },
+          ),
+        ),
+      );
+    } else {
+      setState(() {
+        _downloadStates[id] = 'none';
+      });
+      final errorDetail =
+          MagazineDownloadService.progressNotifier.value[id]?.error ??
+              'Unknown error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF321313),
+          content: Text('ডাউনলোড ব্যর্থ হয়েছে: $errorDetail'),
+          action: SnackBarAction(
+            label: 'পুনরায় চেষ্টা (Retry)',
+            textColor: const Color(0xFFFF5252),
+            onPressed: () => _downloadMagazine(mag),
+          ),
+        ),
+      );
     }
   }
 
@@ -139,164 +173,143 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final magazineCards = _filteredMagazines.map((mag) {
+    final List<Widget> magazineCards = [];
+    final List<String> issueLabels = [];
+
+    for (final mag in _filteredMagazines) {
       final id = mag['id'].toString();
       final title = formatMagazineTitle(mag['title']?.toString());
       final issueDate = mag['issue_date']?.toString() ?? '';
       final downloadState = _downloadStates[id] ?? 'none';
 
-      return GestureDetector(
-        onTap: () {
-          SoundService.playButtonSound();
-          if (downloadState != 'downloaded') {
-            // FIX: Stop ambience before launching reader
-            ForestAmbienceService.stopAmbience();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MagazinePreviewScreen(
-                  magazineId: id,
-                  title: title,
-                  onDownloadTriggered: () => _downloadMagazine(mag),
+      issueLabels.add(issueDate);
+
+      magazineCards.add(
+        GestureDetector(
+          onTap: () {
+            SoundService.playButtonSound();
+            if (downloadState == 'downloaded') {
+              ForestAmbienceService.stopAmbience();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProtectedReaderScreen(
+                    magazineId: id,
+                    title: title,
+                    userEmail: widget.userEmail,
+                  ),
                 ),
-              ),
-            ).then((_) {
-              // FIX: Restart ambience when returning to Library
-              ForestAmbienceService.startAmbience();
-            });
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('এই ম্যাগাজিনটি ইতিমধ্যে আপনার বুকশেলফে রয়েছে! (Already in Bookshelf)')),
-            );
-          }
-        },
-        child: Container(
-          width: 170,
-          height: 235,
-          decoration: BoxDecoration(
-            color: const Color(0xFF152018),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.35)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.6),
-                blurRadius: 10,
-                offset: const Offset(2, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(7),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                MagazineCoverImage(
-                  magazineId: id,
-                  fit: BoxFit.cover,
+              ).then((_) {
+                ForestAmbienceService.startAmbience();
+                _loadMagazines();
+              });
+            } else {
+              ForestAmbienceService.stopAmbience();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MagazinePreviewScreen(
+                    magazineId: id,
+                    title: title,
+                    onDownloadTriggered: () => _downloadMagazine(mag),
+                  ),
                 ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 170 - 16),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.6)),
-                    ),
-                    child: Text(
-                      issueDate,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF00E676),
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
+              ).then((_) {
+                ForestAmbienceService.startAmbience();
+                _loadMagazines();
+              });
+            }
+          },
+          child: Container(
+            width: 170,
+            height: 235,
+            decoration: BoxDecoration(
+              color: const Color(0xFF152018),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: const Color(0xFF00E676).withValues(alpha: 0.35)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 10,
+                  offset: const Offset(2, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(7),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  MagazineCoverImage(
+                    magazineId: id,
+                    fit: BoxFit.cover,
+                  ),
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (downloadState == 'none') {
+                          SoundService.playButtonSound();
+                          _downloadMagazine(mag);
+                        } else if (downloadState == 'downloaded') {
+                          SoundService.playButtonSound();
+                          ForestAmbienceService.stopAmbience();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProtectedReaderScreen(
+                                magazineId: id,
+                                title: title,
+                                userEmail: widget.userEmail,
+                              ),
+                            ),
+                          ).then((_) {
+                            ForestAmbienceService.startAmbience();
+                            _loadMagazines();
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: const Color(0xFF00E676), width: 1),
+                        ),
+                        child: downloadState == 'downloaded'
+                            ? const Icon(Icons.check_rounded,
+                                color: Color(0xFF00E676), size: 16)
+                            : downloadState == 'downloading'
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFF00E676)),
+                                  )
+                                : const Icon(Icons.download_rounded,
+                                    color: Color(0xFF00E676), size: 16),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-                    color: Colors.black.withValues(alpha: 0.88),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        downloadState == 'downloaded'
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(vertical: 5),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF00E676).withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(color: const Color(0xFF00E676)),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.check_rounded, color: Color(0xFF00E676), size: 14),
-                                    SizedBox(width: 4),
-                                    Text('সংরক্ষিত', style: TextStyle(color: Color(0xFF00E676), fontSize: 10, fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                              )
-                            : downloadState == 'downloading'
-                                ? const Center(
-                                    child: SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00E676)),
-                                    ),
-                                  )
-                                : ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF00E676),
-                                      foregroundColor: Colors.black,
-                                      padding: const EdgeInsets.symmetric(vertical: 6),
-                                      minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                                    ),
-                                    onPressed: () {
-                                      SoundService.playButtonSound();
-                                      _downloadMagazine(mag);
-                                    },
-                                    child: const Text('ডাউনলোড', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
-                                  ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       );
-    }).toList();
+    }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D1410).withValues(alpha: 0.85),
-        title: const Text('📚  Library - লাইব্রেরি', style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text('📚  Library - লাইব্রেরি',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Color(0xFF00E676)),
       ),
@@ -304,9 +317,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            child: Image.asset(
-              ForestSceneManager.assetPath(_sceneIndex),
-              fit: BoxFit.cover,
+            child: SeamlessScrollingBackground(
+              imagePath: ForestSceneManager.assetPath(_sceneIndex),
+              duration: const Duration(seconds: 40),
             ),
           ),
           Positioned.fill(
@@ -323,9 +336,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF142018).withValues(alpha: 0.88),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFF00E676).withValues(alpha: 0.3)),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 10),
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 10),
                       ],
                     ),
                     child: Column(
@@ -333,24 +350,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       children: [
                         const Text(
                           'প্রকৃতি ও বন্যপ্রাণ ডিজিটাল ম্যাগাজিন লাইব্রেরি',
-                          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 2),
                         const Text(
                           'মেটাল র্যাকে ম্যাগাজিনগুলো সাজানো রয়েছে।',
-                          style: TextStyle(color: Color(0xFF81C784), fontSize: 11),
+                          style:
+                              TextStyle(color: Color(0xFF81C784), fontSize: 11),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: _searchController,
-                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13),
                           decoration: InputDecoration(
                             hintText: 'ম্যাগাজিনের নাম বা তারিখ দিয়ে খুঁজুন...',
-                            hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF00E676)),
+                            hintStyle: const TextStyle(
+                                color: Colors.white38, fontSize: 13),
+                            prefixIcon: const Icon(Icons.search_rounded,
+                                color: Color(0xFF00E676)),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear_rounded, color: Colors.white54, size: 18),
+                                    icon: const Icon(Icons.clear_rounded,
+                                        color: Colors.white54, size: 18),
                                     onPressed: () {
                                       _searchController.clear();
                                       FocusScope.of(context).unfocus();
@@ -359,18 +384,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                 : null,
                             filled: true,
                             fillColor: const Color(0xFF0D1410),
-                            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 16),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                              borderSide: BorderSide(
+                                  color: const Color(0xFF00E676)
+                                      .withValues(alpha: 0.3)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                              borderSide: BorderSide(
+                                  color: const Color(0xFF00E676)
+                                      .withValues(alpha: 0.3)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF00E676), width: 1.2),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFF00E676), width: 1.2),
                             ),
                           ),
                         ),
@@ -380,40 +411,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   const SizedBox(height: 8),
                   Expanded(
                     child: _loading
-                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E676)))
-                        : _filteredMagazines.isEmpty
-                            ? Center(
-                                child: Container(
-                                  padding: const EdgeInsets.all(28),
-                                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF142018).withValues(alpha: 0.9),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.white12),
-                                  ),
-                                  child: const Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.newspaper_rounded, size: 52, color: Color(0xFF81C784)),
-                                      SizedBox(height: 14),
-                                      Text(
-                                        'কোনো ম্যাগাজিন পাওয়া যায়নি',
-                                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                      ),
-                                      SizedBox(height: 6),
-                                      Text(
-                                        'অনুগ্রহ করে অন্য শব্দ দিয়ে খুঁজুন অথবা পরবর্তীতে আবার চেষ্টা করুন।',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : RealisticRackWidget(
-                                isWooden: false,
-                                children: magazineCards,
-                              ),
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                                color: Color(0xFF00E676)))
+                        : RealisticRackWidget(
+                            isWooden: false,
+                            issueLabels: issueLabels,
+                            children: magazineCards,
+                          ),
                   ),
                 ],
               ),

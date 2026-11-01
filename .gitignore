@@ -82,3 +82,33 @@ android/app/src/main/res/raw/
 
 # Generated Gradle reports
 android/build/reports/
+# Widget Preview related
+.widget_preview/
+
+# buildSrc outputs
+android/buildSrc/build/
+android/buildSrc/.gradle/
+
+# Scratch, debug dumps and binaries
+scratch/
+*.hprof
+*.zip
+jdk17/
+temp_app/
+build_logs/
+*.bak*
+test_run_*.txt
+analyze_out*.txt
+flutter_build_error.txt
+gradle-diagnostic.txt
+
+.backup_*
+.medal_probe/
+.vs/
+build.backup*
+medal_verify_*.png
+gradle-versions.json
+
+.gradle/
+
+*.backup*

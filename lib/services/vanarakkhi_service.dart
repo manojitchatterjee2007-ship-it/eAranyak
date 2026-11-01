@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/vanarakkhi_gamification_models.dart';
+import '../models/kishor_medal.dart';
 
 class VanarakkhiService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -68,6 +69,55 @@ class VanarakkhiService {
     } catch (e) {
       debugPrint('Error completing mission: $e');
       return false;
+    }
+  }
+
+  /// Securely records Kishor Aranyak level completion and evaluates medal eligibility.
+  Future<KishorMedalEligibility?> recordLevelCompletion({
+    required int level,
+    required int score,
+    required int maxScore,
+    String category = 'general',
+  }) async {
+    try {
+      final response = await _supabase.rpc(
+        'record_kishor_level_completion',
+        params: {
+          'p_level': level,
+          'p_score': score,
+          'p_max_score': maxScore,
+          'p_category': category,
+        },
+      );
+
+      if (response != null && response is Map<String, dynamic>) {
+        return KishorMedalEligibility.fromMap(response);
+      }
+    } catch (e) {
+      debugPrint('Error recording level completion: $e');
+    }
+    return null;
+  }
+
+  /// Retrieves earned medals and level completions for the authenticated user.
+  Future<List<KishorMedalEligibility>> getEarnedMedals({String category = 'general'}) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    try {
+      final response = await _supabase
+          .from('kishor_level_completions')
+          .select()
+          .eq('user_id', userId)
+          .eq('category', category)
+          .order('level_number');
+
+      return (response as List)
+          .map((e) => KishorMedalEligibility.fromMap(e))
+          .toList();
+    } catch (e) {
+      debugPrint('Error retrieving earned medals: $e');
+      return [];
     }
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
@@ -23,19 +24,18 @@ class _BootSplashState extends State<BootSplash>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     
-    // Play the uniquely shuffled boot sound using the Global service
-    SoundService.playBootSound();
+    // Initialise audio before playing the boot sound. This screen loads
+    // before main_navigation_shell (which otherwise calls SoundService.init),
+    // so the audio context must be ready here.
+    unawaited(SoundService.init());
+    unawaited(SoundService.playBootSound());
     
     _ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1200));
     _ctrl.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
-        Future.delayed(const Duration(milliseconds: 3600), () async {
+        Future.delayed(const Duration(milliseconds: 1000), () async {
           if (mounted) {
-            // Forcefully terminate all sounds before routing to the silent Home Screen
-            await SoundService.stopAllSounds();
-            if (!mounted) return;
-            
             Navigator.of(context).pushReplacement(MaterialPageRoute(
                 builder: (_) => const AuthGate()));
           }
@@ -50,14 +50,13 @@ class _BootSplashState extends State<BootSplash>
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      SoundService.stopAllSounds();
+      unawaited(SoundService.stopAllSounds());
     } 
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    SoundService.stopAllSounds();
     _ctrl.dispose();
     super.dispose();
   }
@@ -82,7 +81,7 @@ class _BootSplashState extends State<BootSplash>
               const AnimatedEAranyakLogo(size: 200),
               const SizedBox(height: 28),
               const Text(
-                'এখন আরণ্যক',
+                'eআরণ্যক',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 36,
@@ -98,7 +97,7 @@ class _BootSplashState extends State<BootSplash>
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFF00E676),
-                  fontSize: 17,
+                  fontSize: 22,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
                 ),
@@ -124,7 +123,7 @@ class _BootSplashState extends State<BootSplash>
                         ]),
                         child: Image.asset(
                           'assets/images/logo.jpeg',
-                          height: 30,
+                          height: 36,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -134,7 +133,7 @@ class _BootSplashState extends State<BootSplash>
                     ' পত্রিকার একটি ডিজিটাল নিবেদন',
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 13.5,
+                      fontSize: 16,
                       fontStyle: FontStyle.italic,
                       letterSpacing: 0.4,
                     ),

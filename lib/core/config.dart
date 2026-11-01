@@ -11,7 +11,15 @@ const String adminEmail = 'ekhonaranyak.edit@gmail.com';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-SupabaseClient get supabase => Supabase.instance.client;
+SupabaseClient? _fallbackSupabaseClient;
+
+SupabaseClient get supabase {
+  try {
+    return Supabase.instance.client;
+  } catch (_) {
+    return _fallbackSupabaseClient ??= SupabaseClient(supabaseUrl, supabaseAnonKey);
+  }
+}
 
 /// Helper to ensure magazine names consistently format as "এখন আরণ্যক"
 String formatMagazineTitle(String? title) {
@@ -23,7 +31,6 @@ String formatMagazineTitle(String? title) {
     return 'এখন আরণ্যক';
   }
   return title
-      .replaceAll('e আরণ্যক', 'এখন আরণ্যক')
+      .replaceAll('e আরণ্যক', 'এখন আরণ্যک')
       .replaceAll('eআরণ্যক', 'এখন আরণ্যক');
 }
-

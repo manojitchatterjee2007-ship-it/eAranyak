@@ -230,8 +230,9 @@ function validateOutput(headline: string, dek: string, body: string) {
     reasons.push("Body does not end with complete sentence punctuation");
   }
 
+  const combined = `${headline}\n${dek}\n${body}`.toLowerCase();
   for (const artifact of ["ZZZPROT", "undefined", "[TRANSLATION]", "<translation>", "NaN"]) {
-    if (new RegExp(artifact, "i").test(`${headline}\n${dek}\n${body}`)) {
+    if (combined.includes(artifact.toLowerCase())) {
       reasons.push(`Internal translation artifact detected: ${artifact}`);
     }
   }
@@ -437,10 +438,21 @@ STRICT RULES:
   return { summary, model: GROQ_MODEL };
 }
 
+function cleanInternalArtifactPrefixes(text: string): string {
+  if (!text) return "";
+  let value = text.trim();
+  // Strip leading artifact markers if present at start of field
+  value = value.replace(/^(?:\[TRANSLATION\]|<translation>|TRANSLATION:|অনুবাদ\s*[:|—\-–])\s*/iu, "");
+  // Strip trailing artifact markers if present at end of field
+  value = value.replace(/\s*(?:\[TRANSLATION\]|<translation>)$/iu, "");
+  return value.trim();
+}
+
 async function translateWithGemini(
   headline: string,
   dek: string,
   body: string,
+  extraInstruction = "",
 ): Promise<{ headline: string; dek: string; body: string }> {
   const key = Deno.env.get("GEMINI_API_KEY") ?? "";
   if (!key) throw new Error("GEMINI_API_KEY is not configured.");
@@ -458,6 +470,7 @@ IMPORTANT:
 - Do not produce a literal machine-translation style. Write fluent, readable Bengali journalism.
 - Do not add a heading such as "অনুবাদ", "শিরোনাম", "ডেক", or commentary.
 - Do not mention AI, Gemini, translation, or these instructions.
+- Do NOT include any placeholders, internal markers, or bracketed labels like [TRANSLATION], <translation>, ZZZPROT, NaN, or undefined anywhere in the JSON fields.
 - The body is already an editorially compressed English source. Translate the complete supplied body; do not compress it further.
 - Return ONLY valid JSON with exactly these three string fields:
   {"headline":"...","dek":"...","body":"..."}
@@ -472,6 +485,10 @@ ${dek}
 ENGLISH BODY:
 ${body}`;
 
+  const promptText = extraInstruction
+    ? `${system}\n\n${extraInstruction}\n\n${user}`
+    : `${system}\n\n${user}`;
+
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -479,7 +496,7 @@ ${body}`;
       contents: [
         {
           role: "user",
-          parts: [{ text: `${system}\n\n${user}` }],
+          parts: [{ text: promptText }],
         },
       ],
       generationConfig: {
@@ -492,7 +509,7 @@ ${body}`;
 
   const raw = await response.text();
   if (!response.ok) {
-    throw new Error(`Gemini HTTP ${response.status}: ${raw.slice(0, 700)}`);
+    throw new Error(`Gemini HTTP ${response.status}: ${raw.slice(0, 500)}`);
   }
 
   let outer: any;
@@ -502,44 +519,57 @@ ${body}`;
     throw new Error("Gemini returned an invalid API response.");
   }
 
-  const content = outer?.candidates?.[0]?.content?.parts
+  const candidate = outer?.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+  if (finishReason && finishReason !== "STOP") {
+    if (finishReason === "MAX_TOKENS") {
+      throw new Error(`Gemini response truncated (finishReason: MAX_TOKENS).`);
+    } else if (finishReason === "SAFETY" || finishReason === "RECITATION") {
+      throw new Error(`Gemini generation blocked by policy (finishReason: ${finishReason}).`);
+    }
+  }
+
+  const content = candidate?.content?.parts
     ?.map((part: any) => typeof part?.text === "string" ? part.text : "")
     .join("")
     .trim();
 
   if (!content) throw new Error("Gemini returned an empty translation.");
 
-  let translated: any;
-  try {
-    translated = JSON.parse(content);
-  } catch {
-    const cleaned = content
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```$/i, "")
-      .trim();
+  const resObj = (() => {
     try {
-      translated = JSON.parse(cleaned);
+      return JSON.parse(content);
     } catch {
-      throw new Error("Gemini returned translation that was not valid JSON.");
+      const cleaned = content
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+      try {
+        return JSON.parse(cleaned);
+      } catch {
+        throw new Error(`Gemini returned translation that was not valid JSON: ${content.slice(0, 150)}`);
+      }
     }
-  }
+  })();
 
-  const translatedHeadline =
-    typeof translated?.headline === "string" ? clean(translated.headline) : "";
-  const translatedDek =
-    typeof translated?.dek === "string" ? clean(translated.dek) : "";
-  const translatedBody =
-    typeof translated?.body === "string" ? clean(translated.body) : "";
+  const rawHeadline = typeof resObj?.headline === "string" ? clean(resObj.headline) : "";
+  const rawDek = typeof resObj?.dek === "string" ? clean(resObj.dek) : "";
+  const rawBody = typeof resObj?.body === "string" ? clean(resObj.body) : "";
 
-  if (!translatedHeadline || !translatedDek || !translatedBody) {
+  const cleanHeadlineStr = cleanInternalArtifactPrefixes(rawHeadline);
+  const cleanDekStr = cleanInternalArtifactPrefixes(rawDek);
+  const cleanBodyStr = cleanInternalArtifactPrefixes(rawBody);
+
+  if (!cleanHeadlineStr || !cleanDekStr || !cleanBodyStr) {
     throw new Error("Gemini translation was missing headline, dek, or body.");
   }
 
   return {
-    headline: sanitizeHeadline(normalizeJournalisticBengali(translatedHeadline)),
-    dek: normalizeJournalisticBengali(translatedDek),
+    rawContent: content,
+    headline: sanitizeHeadline(normalizeJournalisticBengali(cleanHeadlineStr)),
+    dek: normalizeJournalisticBengali(cleanDekStr),
     body: ensureTerminalPunctuation(
-      formatBody(normalizeJournalisticBengali(translatedBody)),
+      formatBody(normalizeJournalisticBengali(cleanBodyStr)),
     ),
   };
 }
@@ -548,23 +578,34 @@ async function getFinalTranslation(
   groq: { headline: string; dek: string; summary: string },
   logs: string[],
 ): Promise<{ headline: string; dek: string; body: string; provider: string }> {
-  // PRIMARY AND ONLY TRANSLATOR: Gemini 3.1 Flash-Lite.
-  // This is the same free-tier translation model used by the tutorial pipeline.
-  // There is deliberately NO paid fallback and NO secondary translator.
   try {
-    const gemini = finalizeTranslation(
-      await translateWithGemini(
-        groq.headline,
-        groq.dek,
-        groq.summary,
-      ),
-    );
+    let rawTranslation: { rawContent: string; headline: string; dek: string; body: string };
+    try {
+      rawTranslation = await translateWithGemini(groq.headline, groq.dek, groq.summary);
+      logs.push(`Gemini raw output: ${rawTranslation.rawContent.replace(/\s+/g, " ").slice(0, 200)}`);
+    } catch (firstErr) {
+      const errMsg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+      if (!errMsg.includes("HTTP 4") && !errMsg.includes("blocked by policy")) {
+        logs.push(`MT Gemini ${GEMINI_MODEL}: First attempt failed (${errMsg}). Retrying once with corrective prompt.`);
+        const retryInstruction = `CORRECTION REQUIRED: Your previous attempt failed (${errMsg}). Please translate the English news package into natural Indian Bengali. Return ONLY valid JSON with fields {"headline":"...","dek":"...","body":"..."}. Do NOT include any markers or placeholders like [TRANSLATION].`;
+        rawTranslation = await translateWithGemini(groq.headline, groq.dek, groq.summary, retryInstruction);
+        logs.push(`Gemini retry raw output: ${rawTranslation.rawContent.replace(/\s+/g, " ").slice(0, 200)}`);
+      } else {
+        throw firstErr;
+      }
+    }
 
-    const validation = validateOutput(
-      gemini.headline,
-      gemini.dek,
-      gemini.body,
-    );
+    let gemini = finalizeTranslation(rawTranslation);
+    let validation = validateOutput(gemini.headline, gemini.dek, gemini.body);
+
+    if (!validation.valid) {
+      logs.push(`MT Gemini ${GEMINI_MODEL}: First validation failed (${validation.reasons.join("; ")}). Performing 1 corrective retry.`);
+      const retryInstruction = `CORRECTION REQUIRED: Your previous translation output was invalid due to: [${validation.reasons.join("; ")}]. Translate the English package into natural Indian Bengali. Return ONLY valid JSON: {"headline":"...","dek":"...","body":"..."}. Ensure non-empty Bengali text with complete sentence punctuation. Do NOT include any markers or placeholders like [TRANSLATION].`;
+      const retriedRaw = await translateWithGemini(groq.headline, groq.dek, groq.summary, retryInstruction);
+      logs.push(`Gemini retry raw output: ${retriedRaw.rawContent.replace(/\s+/g, " ").slice(0, 200)}`);
+      gemini = finalizeTranslation(retriedRaw);
+      validation = validateOutput(gemini.headline, gemini.dek, gemini.body);
+    }
 
     if (validation.valid) {
       logs.push(`MT Gemini ${GEMINI_MODEL}: OK; final Bengali generated from Groq English source.`);

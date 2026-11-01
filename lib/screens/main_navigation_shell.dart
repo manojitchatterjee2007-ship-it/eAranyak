@@ -834,19 +834,22 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
               );
             },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.white10)),
-              ),
-              child: Text(
-                'Version $_appVersion',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white54, 
-                  fontSize: 12, 
-                  letterSpacing: 1.2,
+            child: SafeArea(
+              top: false,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.white10)),
+                ),
+                child: Text(
+                  'Version $_appVersion',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white54, 
+                    fontSize: 12, 
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ),
@@ -859,15 +862,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget _buildNavIcon(String assetPath, IconData fallbackIcon, {bool active = false}) {
     final img = Image.asset(
       assetPath,
-      width: 28,
-      height: 28,
+      width: 32,
+      height: 32,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
       errorBuilder: (context, error, stackTrace) {
         debugPrint('Error loading nav icon $assetPath: $error');
         return Icon(
           fallbackIcon,
-          size: 26,
+          size: 30,
           color: active ? const Color(0xFF00E676) : Colors.white54,
         );
       },
@@ -981,69 +984,76 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           ),
         ],
       ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: const Color(0xFF0D1410),
-          selectedItemColor: const Color(0xFF00E676),
-          unselectedItemColor: Colors.white54,
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _currentIndex,
-          selectedFontSize: 8.0,
-          unselectedFontSize: 8.0,
-          selectedLabelStyle: const TextStyle(
-            fontSize: 8.0,
-            height: 1.15,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.2,
-            overflow: TextOverflow.visible,
+      bottomNavigationBar: SafeArea(
+        bottom: true,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 8.0,
-            height: 1.15,
-            letterSpacing: -0.2,
-            overflow: TextOverflow.visible,
-          ),
-          onTap: (index) {
-            SoundService.playButtonSound();
-            _switchTab(index);
-          },
-          items: [
-            BottomNavigationBarItem(
-              icon: _buildNavIcon('assets/images/baya_weaver_nest_button.png', Icons.home_rounded),
-              activeIcon: _buildNavIcon('assets/images/baya_weaver_nest_button.png', Icons.home_rounded, active: true),
-              label: 'নীড়\n(Home)',
+          child: BottomNavigationBar(
+            backgroundColor: const Color(0xFF0D1410),
+            selectedItemColor: const Color(0xFF00E676),
+            unselectedItemColor: Colors.white54,
+            type: BottomNavigationBarType.fixed,
+            currentIndex: () {
+              if (_currentIndex == 0) return 0;
+              if (_currentIndex == 1) return 1;
+              if (_currentIndex == 2) return 2;
+              if (_currentIndex == 5 && _isAdmin) return 3;
+              return 0;
+            }(),
+            selectedFontSize: 11.0,
+            unselectedFontSize: 11.0,
+            selectedLabelStyle: const TextStyle(
+              fontSize: 11.0,
+              height: 1.25,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.2,
+              overflow: TextOverflow.visible,
             ),
-            BottomNavigationBarItem(
-              icon: _buildNavIcon('assets/images/bookworm_bookshelf.png', Icons.collections_bookmark_rounded),
-              activeIcon: _buildNavIcon('assets/images/bookworm_bookshelf.png', Icons.collections_bookmark_rounded, active: true),
-              label: 'আমার বইয়ের তাক\n(Bookshelf)',
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 11.0,
+              height: 1.25,
+              letterSpacing: -0.2,
+              overflow: TextOverflow.visible,
             ),
-            BottomNavigationBarItem(
-              icon: _buildNavIcon('assets/images/library.png', Icons.local_library_rounded),
-              activeIcon: _buildNavIcon('assets/images/library.png', Icons.local_library_rounded, active: true),
-              label: 'লাইব্রেরি\n(Library)',
-            ),
-            BottomNavigationBarItem(
-              icon: _buildNavIcon('assets/images/red_panda_games.png', Icons.sports_esports_rounded),
-              activeIcon: _buildNavIcon('assets/images/red_panda_games.png', Icons.sports_esports_rounded, active: true),
-              label: 'খেলা\n(Games)',
-            ),
-            BottomNavigationBarItem(
-              icon: _buildNavIcon('assets/images/gallery.png', Icons.photo_library_rounded),
-              activeIcon: _buildNavIcon('assets/images/gallery.png', Icons.photo_library_rounded, active: true),
-              label: 'চিত্রশালা\n(Gallery)',
-            ),
-            if (_isAdmin)
+            onTap: (navIndex) {
+              SoundService.playButtonSound();
+              if (navIndex == 0) {
+                _switchTab(0);
+              } else if (navIndex == 1) {
+                _switchTab(1);
+              } else if (navIndex == 2) {
+                _switchTab(2);
+              } else if (navIndex == 3 && _isAdmin) {
+                _switchTab(5);
+              }
+            },
+            items: [
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/images/owl_editor_glasses.png', Icons.admin_panel_settings_rounded),
-                activeIcon: _buildNavIcon('assets/images/owl_editor_glasses.png', Icons.admin_panel_settings_rounded, active: true),
-                label: 'সম্পাদক\n(Editor)',
+                icon: _buildNavIcon('assets/images/baya_weaver_nest_button.png', Icons.home_rounded),
+                activeIcon: _buildNavIcon('assets/images/baya_weaver_nest_button.png', Icons.home_rounded, active: true),
+                label: '  নীড়\n(Home)',
               ),
-          ],
+              BottomNavigationBarItem(
+                icon: _buildNavIcon('assets/images/bookworm_bookshelf.png', Icons.collections_bookmark_rounded),
+                activeIcon: _buildNavIcon('assets/images/bookworm_bookshelf.png', Icons.collections_bookmark_rounded, active: true),
+                label: 'বইয়ের তাক\n(Bookshelf)',
+              ),
+              BottomNavigationBarItem(
+                icon: _buildNavIcon('assets/images/library.png', Icons.local_library_rounded),
+                activeIcon: _buildNavIcon('assets/images/library.png', Icons.local_library_rounded, active: true),
+                label: 'লাইব্রেরি\n(Library)',
+              ),
+              if (_isAdmin)
+                BottomNavigationBarItem(
+                  icon: _buildNavIcon('assets/images/owl_editor_glasses.png', Icons.admin_panel_settings_rounded),
+                  activeIcon: _buildNavIcon('assets/images/owl_editor_glasses.png', Icons.admin_panel_settings_rounded, active: true),
+                  label: 'সম্পাদক\n(Editor)',
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,5 @@
 {
-  "dart.flutterSdkPath": "C:\\flutter\\flutter",
+  "dart.flutterSdkPath": "D:\\src\\flutter",
   "deno.enablePaths": [
     "supabase/functions"
   ],

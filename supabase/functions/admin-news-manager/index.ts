@@ -151,7 +151,13 @@ async function pipeline(sourceUrl: string, supabaseUrl: string, serviceKey: stri
 
   return {
     ok: true,
-    data: { normalized, host, sourceTitle, imageUrl, imageCredit, headline, dek, body, wordCount, articleText },
+    data: {
+      normalized, host, sourceTitle, imageUrl, imageCredit, headline, dek, body,
+      wordCount, articleText,
+      sourcePublishedAt: article.publishedAt && Number.isFinite(Date.parse(article.publishedAt))
+        ? new Date(article.publishedAt).toISOString()
+        : null,
+    },
   };
 }
 
@@ -313,6 +319,8 @@ serve(async (req) => {
         bengali_headline: d.headline, bengali_dek: d.dek, bengali_body: d.body,
         publication_source: "editorial", editorial_priority: priority,
         is_published: true, created_by_editor: true, published_at: now,
+        source_published_at: d.sourcePublishedAt,
+        first_seen_at: now, last_fetched_at: now, updated_at: now,
         fetched_at: now, processed_at: now, notification_ready_at: now,
         processing_status: "published",
         content_hash: await sha256(`${d.normalized}\n${d.articleText}`),

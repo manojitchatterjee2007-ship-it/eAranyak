@@ -37,7 +37,7 @@ dependencies:
   path_provider: 2.1.6
   saver_gallery: 5.1.0
   rotating_shining_card: 0.1.2
-  shared_preferences_android: 2.5.0
+  shared_preferences_android: ^2.5.2
 
 
 dev_dependencies:

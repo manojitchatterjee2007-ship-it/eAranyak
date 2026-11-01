@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/tutorial.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
-import '../widgets/nature_background.dart';
 import '../widgets/scientific_text.dart';
 
 class TutorialDetailScreen extends StatelessWidget {
@@ -319,12 +318,6 @@ class TutorialDetailScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          const Positioned.fill(
-            child: Opacity(
-              opacity: 0.3,
-              child: NatureBackgroundSwitcher(),
-            ),
-          ),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

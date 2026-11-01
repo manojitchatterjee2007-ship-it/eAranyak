@@ -1,32 +1,15 @@
 /**
- * eআরণ্যক — Pollinations AI illustration generator (FALLBACK ONLY).
+ * eআরণ্যক — Pollinations AI illustration generator.
  *
  * Pollinations is invoked ONLY when a source article image is genuinely
- * unavailable, unfetchable or invalid. It is NEVER called when a valid source
- * image exists, and NEVER re-run for an article that already has an image
- * (idempotency lives in the calling pipeline).
+ * unavailable, or to perform image-to-image style transfer for watercolors.
  *
  * Secret: uses the EXISTING Supabase Edge Function secret `Pollination_image_API`
- * (server-side only — never exposed to Flutter, never stored in database rows).
- *
- * Verified API shape (from tools/test-pollinations-wildlife-images.ps1 PoC):
- *   GET https://gen.pollinations.ai/image/{urlEncodedPrompt}
- *       ?model={model}&width=1280&height=720&seed={seed}
- *   header: Authorization: Bearer <key>
- *   Model discovery: GET https://gen.pollinations.ai/image/models (no auth)
- *   Observed: openai/gpt-image-2 OK (~40-50s); microsoft/mai-image-2.5-flash
- *   FAILS at 1280x720 (min dimension 768px) — do not reuse those parameters
- *   blindly; tongyi-mai/z-image-turbo OK.
- *
- * Generated images are downloaded server-side, validated, and uploaded to the
- * public `earanyak_illustrations` Supabase Storage bucket, so articles never
- * depend on a temporary Pollinations URL.
  */
 
 const POLLINATIONS_BASE = "https://gen.pollinations.ai";
 const POLLINATIONS_MODELS_URI = `${POLLINATIONS_BASE}/image/models`;
-/** Production-approved model order (validated in the controlled PoC). */
-const PREFERRED_MODELS = ["openai/gpt-image-2", "tongyi-mai/z-image-turbo"];
+const PREFERRED_MODELS = ["microsoft/mai-image-2.6", "openai/gpt-image-2.5-flare"];
 const GENERATION_TIMEOUT_MS = 120000;
 const MODEL_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // discovery cached per isolate
 
@@ -36,15 +19,6 @@ const STYLE_BLOCK =
 
 const AVOID_BLOCK =
   "strictly avoid: cartoon, anime, comic, children book illustration, fantasy art, surrealism, glossy generic digital painting, 3D render, CGI, game artwork, exaggerated eyes, incorrect anatomy, extra limbs, duplicate animals, malformed paws, malformed wings, distorted faces, plastic-looking animals, oversaturated colours, artificial neon lighting, any text, captions, labels, typography, logos, watermarks, borders, frames";
-
-export type IllustrationFacts = {
-  subject: string;
-  scientificName?: string;
-  location?: string;
-  habitat?: string;
-  elements?: string;
-  scene?: string;
-};
 
 let cachedFreeImageModels: { at: number; names: string[] } | null = null;
 
@@ -57,68 +31,6 @@ export function seedForArticle(title: string): number {
   let h = 5381;
   for (let i = 0; i < title.length; i++) h = ((h << 5) + h + title.charCodeAt(i)) >>> 0;
   return 1 + (h % 999983);
-}
-
-/**
- * Extracts structured natural-history facts from the ORIGINAL ENGLISH article.
- * Only facts actually present in the source are used — species, habitat and
- * locations are never invented.
- */
-export function extractIllustrationFacts(title: string, articleText: string): IllustrationFacts {
-  const facts: IllustrationFacts = {
-    subject: title.replace(/\s*[—–|-]\s*[^—–|-]{1,40}$/, "").trim() || title.trim(),
-  };
-
-  const scope = articleText.slice(0, 4000);
-
-  // Scientific names: parenthesized Latin binomial/trinomial (validated rule).
-  const sci = /\((?:([A-Z][a-zA-Z-]+(?:\s+[a-z][a-z-]+){1,2}))\)/.exec(scope);
-  if (sci) facts.scientificName = sci[1];
-
-  // Location: "in/at/from/across <Capitalized Place Words>" in the lede.
-  const loc = /(?:\bin|\bat|\bfrom|\bacross)\s+((?:[A-Z][\w''-]+(?:\s+(?:of|the|de|da))?\s*){1,4})/.exec(scope);
-  if (loc) {
-    const place = loc[1].trim().replace(/\s+(?:the|of|and|with|its|their)$/i, "");
-    if (place.length >= 4) facts.location = place;
-  }
-
-  // Habitat keywords (only if present verbatim in the article).
-  const habitatKeywords: Array<[RegExp, string]> = [
-    [/\bmangrove\b/i, "mangrove forest"],
-    [/\b(?:tropical|moist|dry|evergreen|deciduous)?\s?rainforest\b|\bdeciduous forest\b/i, "forest"],
-    [/\bwetland\b|\bmarsh\b|\bswamp\b/i, "wetland"],
-    [/\bgrassland\b|\bmeadow\b|\bsavanna\b/i, "grassland"],
-    [/\bcoral reef\b/i, "coral reef"],
-    [/\briver\b|\bdelta\b|\bbackwater/i, "river or delta landscape"],
-    [/\bHimalaya/i, "Himalayan landscape"],
-    [/\bdesert\b|\barid\b/i, "arid landscape"],
-    [/\bcoast\b|\bshore\b|\bseagrass\b/i, "coastal landscape"],
-    [/\bmountain/i, "mountain landscape"],
-  ];
-  const habitats: string[] = [];
-  for (const [re, label] of habitatKeywords) {
-    if (re.test(scope)) habitats.push(label);
-    if (habitats.length >= 2) break;
-  }
-  if (habitats.length) facts.habitat = habitats.join(", ");
-
-  return facts;
-}
-
-/** Builds the controlled natural-history illustration prompt from facts. */
-export function buildIllustrationPrompt(facts: IllustrationFacts): string {
-  const sci = facts.scientificName ? ` (scientific name ${facts.scientificName})` : "";
-  const scene =
-    facts.scene ??
-    `${facts.subject} depicted faithfully in its authentic habitat and characteristic natural behaviour described by the article, restrained natural-history documentary composition, side or three-quarter full-body view, realistic lighting`;
-  const parts = [
-    `${facts.subject}${sci} in its authentic habitat: ${scene}`,
-    facts.location ? `Location context: ${facts.location}.` : "",
-    facts.habitat ? `Habitat: ${facts.habitat}.` : "",
-    `Style: ${STYLE_BLOCK}.`,
-    AVOID_BLOCK,
-  ].filter(Boolean);
-  return parts.join(" ");
 }
 
 /** Cached (per-isolate) free image model discovery. Not run per article. */
@@ -140,7 +52,6 @@ async function availableImageModels(): Promise<string[]> {
     cachedFreeImageModels = { at: Date.now(), names };
     return names;
   } catch (_) {
-    // Discovery failure is non-fatal: fall back to the known-good list.
     return PREFERRED_MODELS;
   }
 }
@@ -164,8 +75,6 @@ function sniffGeneratedImage(bytes: Uint8Array): string | null {
 
 /**
  * Generates a natural-history illustration via Pollinations.
- * Bounded: tries at most the two production-approved models, one request each.
- * Failures are always recoverable — the caller must not publish a broken URL.
  */
 export async function generateIllustration(
   prompt: string,
@@ -189,7 +98,11 @@ export async function generateIllustration(
         headers: { "Authorization": `Bearer ${key}` },
         signal: controller.signal,
       });
-      if (!res.ok) continue; // 401/402/429/500 — recoverable, try next model
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`[Pollinations] Text-to-Image Error (${res.status}): ${errorText}`);
+        continue;
+      }
       const contentType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
       const buf = await res.arrayBuffer();
       const bytes = new Uint8Array(buf);
@@ -198,13 +111,122 @@ export async function generateIllustration(
       if (bytes.length < 2048) continue;
       return { ok: true, bytes, mime: sniffed, model, ms: Date.now() - started };
     } catch (_) {
-      continue; // timeout/network — try next model
+      continue;
     } finally {
       clearTimeout(timer);
     }
   }
-  return { ok: false, reason: "all Pollinations models failed", ms: Date.now() - started };
+  return { ok: false, reason: "All Pollinations models failed", ms: Date.now() - started };
 }
+
+/**
+ * Perform a true Image-to-Image style transfer by posting the actual image bytes
+ * to the v1/images/edits endpoint.
+ */
+export async function generateIllustrationFromSource(
+  sourceImageBytes: Uint8Array,
+  sourceMime: string,
+  prompt: string,
+  seed: number,
+  timeoutMs = GENERATION_TIMEOUT_MS
+): Promise<GeneratedImage> {
+  const started = Date.now();
+  const key = pollinationsKey();
+  if (!key) return { ok: false, reason: "Pollinations secret not configured", ms: 0 };
+
+  // IMPORTANT: Do exactly ONE edit request. Do not chain paid fallbacks.
+  // A 402 means the account/key balance is insufficient; retrying another
+  // model would only risk spending more balance and does not solve 402.
+  // FLUX.2 Klein 4B is currently documented by Pollinations as an image
+  // generation/editing model and is a much more appropriate budget choice
+  // than the previous premium fallback chain.
+  const model = Deno.env.get("POLLINATIONS_WILDLIFE_EDIT_MODEL")?.trim()
+    || "black-forest-labs/flux.2-klein-4b";
+
+  const fullPrompt = `${prompt} Style: ${STYLE_BLOCK} ${AVOID_BLOCK}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const ext = sourceMime === "image/png" ? "png" : sourceMime === "image/webp" ? "webp" : "jpg";
+    const blob = new Blob([sourceImageBytes as any], { type: sourceMime });
+    const formData = new FormData();
+    formData.append("prompt", fullPrompt);
+    formData.append("model", model);
+    formData.append("seed", seed.toString());
+    formData.append("image", blob, `source.${ext}`);
+
+    const res = await fetch(`${POLLINATIONS_BASE}/v1/images/edits`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${key}` },
+      body: formData,
+      signal: controller.signal,
+    });
+
+    const errorText = res.ok ? "" : await res.text();
+    if (!res.ok) {
+      if (res.status === 402) {
+        return {
+          ok: false,
+          reason: `HTTP 402: ${errorText.substring(0, 800)}`,
+          model,
+          ms: Date.now() - started,
+        };
+      }
+      return {
+        ok: false,
+        reason: `HTTP ${res.status}: ${errorText.substring(0, 800)}`,
+        model,
+        ms: Date.now() - started,
+      };
+    }
+
+    const contentType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    let outBytes: Uint8Array | null = null;
+    let outMime: string | null = null;
+
+    if (contentType.startsWith("application/json")) {
+      const json = await res.json();
+      const item = json?.data?.[0];
+      if (item?.b64_json) {
+        const raw = atob(item.b64_json);
+        outBytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+        outMime = "image/png";
+      } else if (item?.url) {
+        const imgRes = await fetch(item.url);
+        if (imgRes.ok) {
+          outMime = (imgRes.headers.get("content-type") || "image/png").split(";")[0];
+          outBytes = new Uint8Array(await imgRes.arrayBuffer());
+        }
+      }
+    } else if (contentType.startsWith("image/")) {
+      outBytes = new Uint8Array(await res.arrayBuffer());
+      outMime = contentType;
+    }
+
+    if (!outBytes || outBytes.length < 2048) {
+      return { ok: false, reason: "Pollinations returned no valid image", model, ms: Date.now() - started };
+    }
+
+    return {
+      ok: true,
+      bytes: outBytes,
+      mime: outMime || "image/png",
+      model,
+      ms: Date.now() - started,
+    };
+  } catch (err: any) {
+    return {
+      ok: false,
+      reason: `Exception: ${err?.message || String(err)}`,
+      model,
+      ms: Date.now() - started,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 
 export type StoredImage = {
   ok: boolean;
@@ -222,9 +244,6 @@ interface StorageBucketApi {
 
 /**
  * Uploads a generated illustration to the public `earanyak_illustrations`
- * bucket (service-role client bypasses RLS; bucket + policies are provisioned
- * by the accompanying SQL migration). Returns the permanent public URL so the
- * article row never depends on a temporary Pollinations URL.
  */
 export async function storeIllustration(
   admin: { storage: { from: (bucket: string) => StorageBucketApi } },
@@ -234,7 +253,7 @@ export async function storeIllustration(
 ): Promise<StoredImage> {
   const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
   const path = `generated/${articleSlug}-${Date.now()}.${ext}`;
-  const bucket = "earanyak_illustrations";
+  const bucket = "daily_wildlife";
   try {
     const { error } = await admin.storage.from(bucket).upload(path, bytes, {
       contentType: mime,
@@ -250,18 +269,16 @@ export async function storeIllustration(
   }
 }
 
-/** Removes a previously stored generated illustration (rotation cleanup). */
 export async function removeStoredIllustration(
   admin: { storage: { from: (bucket: string) => StorageBucketApi } },
   publicUrl: string,
 ): Promise<void> {
   try {
-    const marker = "/earanyak_illustrations/";
+    const marker = "/daily_wildlife/";
     const idx = publicUrl.indexOf(marker);
-    if (idx === -1) return; // not one of ours (a source image) — never touch it
+    if (idx === -1) return;
     const path = publicUrl.substring(idx + marker.length).split("?")[0];
-    await admin.storage.from("earanyak_illustrations").remove([path]);
+    await admin.storage.from("daily_wildlife").remove([path]);
   } catch (_) {
-    // Cleanup is best-effort and must never break rotation.
   }
 }

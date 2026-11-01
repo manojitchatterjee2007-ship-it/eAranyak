@@ -3,16 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages selection of the four realistic forest background scenes
 /// (forest_scene1.png through forest_scene4.png) for Library and My Bookshelf.
-/// Ensures cross-screen uniqueness (Library scene != Bookshelf scene) and
-/// shuffles through scenes using a bag approach on each screen opening.
+/// Ensures cross-screen uniqueness (Library scene != Bookshelf scene) always.
 class ForestSceneManager {
   static const int sceneCount = 4;
-  static const String _libraryCurrent = 'forest_scene_library_current_v2';
-  static const String _bookshelfCurrent = 'forest_scene_bookshelf_current_v2';
-  static const String _libraryBag = 'forest_scene_library_bag_v2';
-  static const String _bookshelfBag = 'forest_scene_bookshelf_bag_v2';
+  static const String _libraryCurrent = 'forest_scene_library_current_v3';
+  static const String _bookshelfCurrent = 'forest_scene_bookshelf_current_v3';
 
   static final Random _random = Random();
+  static bool _isPicking = false;
 
   static String assetPath(int index) {
     final safe = (index.clamp(0, sceneCount - 1)) + 1;
@@ -20,50 +18,46 @@ class ForestSceneManager {
   }
 
   static Future<int> pickFor(String screen) async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLibrary = screen == 'library';
-
-    final currentKey = isLibrary ? _libraryCurrent : _bookshelfCurrent;
-    final otherKey = isLibrary ? _bookshelfCurrent : _libraryCurrent;
-    final bagKey = isLibrary ? _libraryBag : _bookshelfBag;
-
-    final otherCurrent = prefs.getInt(otherKey);
-
-    List<String> bagStr = prefs.getStringList(bagKey) ?? [];
-    List<int> bag = bagStr.map((e) => int.parse(e)).toList();
-
-    if (bag.isEmpty) {
-      bag = List<int>.generate(sceneCount, (i) => i)..shuffle(_random);
-      final current = prefs.getInt(currentKey);
-      if (current != null && bag.length > 1 && bag.first == current) {
-        final temp = bag[0];
-        bag[0] = bag[1];
-        bag[1] = temp;
-      }
+    // Basic spinlock to prevent race conditions during IndexedStack initialization
+    while (_isPicking) {
+      await Future.delayed(const Duration(milliseconds: 10));
     }
+    _isPicking = true;
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLibrary = screen == 'library';
 
-    int selected = bag.removeAt(0);
+      final currentKey = isLibrary ? _libraryCurrent : _bookshelfCurrent;
+      final otherKey = isLibrary ? _bookshelfCurrent : _libraryCurrent;
 
-    // Ensure cross-screen uniqueness: Library scene != Bookshelf scene
-    if (otherCurrent != null && selected == otherCurrent) {
-      if (bag.isNotEmpty) {
-        final altIndex = bag.indexWhere((i) => i != otherCurrent);
-        if (altIndex != -1) {
-          final alt = bag.removeAt(altIndex);
-          bag.add(selected);
-          selected = alt;
-        } else {
-          bag.add(selected);
-          selected = (otherCurrent + 1) % sceneCount;
-        }
+      final int? savedOther = prefs.getInt(otherKey);
+      
+      // Get what the other screen currently has, or default to a random choice
+      final int otherCurrent = savedOther ?? _random.nextInt(sceneCount);
+
+      // Pick a scene index from 0 to sceneCount - 1 that is strictly different from otherCurrent
+      int selected;
+      if (sceneCount > 1) {
+        do {
+          selected = _random.nextInt(sceneCount);
+        } while (selected == otherCurrent);
       } else {
-        selected = (otherCurrent + 1) % sceneCount;
+        selected = 0;
       }
-    }
 
-    await prefs.setStringList(bagKey, bag.map((e) => e.toString()).toList());
-    await prefs.setInt(currentKey, selected);
-    return selected;
+      await prefs.setInt(currentKey, selected);
+      
+      // If the other hasn't picked yet (first launch), save its assumed value too
+      // to ensure it doesn't accidentally pick the same if it was nil
+      if (savedOther == null) {
+        await prefs.setInt(otherKey, otherCurrent);
+      }
+      
+      return selected;
+    } finally {
+      _isPicking = false;
+    }
   }
 
   static Future<int?> currentFor(String screen) async {

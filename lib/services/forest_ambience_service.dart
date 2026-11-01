@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'sound_service.dart';
@@ -5,7 +7,8 @@ import 'sound_service.dart';
 class ForestAmbienceService {
   static bool get isPlaying => _player.state == PlayerState.playing;
 
-  static final AudioPlayer _player = AudioPlayer();
+  static final AudioPlayer _player = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+  static bool _isLoopingSetup = false;
   
   // The 3 specific ambient forest sounds
   static const List<String> ambienceSounds = [
@@ -48,11 +51,19 @@ class ForestAmbienceService {
       await prefs.setString('last_ambience_sound', selected);
       await prefs.setStringList('ambience_sound_bag', _bag);
 
-      // Loop the selected ambient track indefinitely
-      await _player.setReleaseMode(ReleaseMode.loop);
-      await _player.play(AssetSource('audio/$selected.mp3'), volume: 0.35);
+      if (!_isLoopingSetup) {
+        _player.onPlayerComplete.listen((_) {
+          if (_lastConsumedSound != null && !SoundService.isMuted) {
+            _player.play(AssetSource('audio/$_lastConsumedSound.mp3'), volume: 0.5);
+          }
+        });
+        _isLoopingSetup = true;
+      }
+
+      // Play the selected ambient track
+      await _player.play(AssetSource('audio/$selected.mp3'), volume: 0.5);
     } catch (e) {
-      // Fail silently if audio engine isn't ready
+      debugPrint('ForestAmbienceService: failed to start ambience (\${e})');
     }
   }
 

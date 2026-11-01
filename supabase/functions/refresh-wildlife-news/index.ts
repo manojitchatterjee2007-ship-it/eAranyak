@@ -30,7 +30,8 @@ const SOURCES: SourceDef[] = [
     linkRe: /<a[^>]+href="\s*(https?:\/\/www\.sanctuarynaturefoundation\.org\/article\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi,
   },
   {
-    name: "Down To Earth (RSS)", url: "https://www.downtoearth.org.in/rss/wildlife-and-biodiversity", kind: "rss",
+    name: "Down To Earth (Wildlife)", url: "https://www.downtoearth.org.in/wildlife-biodiversity", kind: "html", maxItems: 10,
+    linkRe: /<a[^>]+href="\s*(https?:\/\/www\.downtoearth\.org\.in\/[a-z0-9-]+\/[^"#?]{20,})"[^>]*>([\s\S]*?)<\/a>/gi,
   },
   {
     name: "Down To Earth", url: "https://www.downtoearth.org.in/", kind: "html", maxItems: 10,
@@ -112,7 +113,22 @@ function sanitizeBengaliHeadline(headline: string): string {
 
 function authorized(req: Request): boolean {
   const secret = Deno.env.get("NEWS_REFRESH_SECRET");
-  return !!secret && (req.headers.get("x-news-refresh-secret") ?? "") === secret;
+  const supplied = req.headers.get("x-news-refresh-secret") ?? "";
+  if (secret && supplied && supplied === secret) return true;
+
+  const auth = req.headers.get("Authorization") ?? "";
+  const match = /^Bearer\s+(.+)$/i.exec(auth);
+  if (!match) return false;
+
+  try {
+    const raw = match[1].trim().split(".")[1]
+      .replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(raw + "=".repeat((4 - (raw.length % 4)) % 4)));
+    const projectRef = new URL(Deno.env.get("SUPABASE_URL") ?? "http://invalid.invalid").hostname.split(".")[0];
+    return String(payload?.ref ?? "") === projectRef || String(payload?.iss ?? "").includes(projectRef);
+  } catch {
+    return false;
+  }
 }
 
 function clean(text: string): string {
@@ -151,9 +167,17 @@ function categoryFor(text: string): string {
 function normalizeUrl(url: string): string {
   try {
     const u = new URL(url);
+    u.hostname = u.hostname.toLowerCase();
     u.hash = "";
-    u.search = "";
-    return u.toString().replace(/\/+$/, "");
+    for (const key of [...u.searchParams.keys()]) {
+      if (/^(utm_[^=]+|fbclid|gclid|dclid|mc_cid|mc_eid|ref_src)$/i.test(key)) {
+        u.searchParams.delete(key);
+      }
+    }
+    u.searchParams.sort();
+    const normalizedPath = u.pathname.replace(/\/+$/, "");
+    u.pathname = normalizedPath || "/";
+    return u.toString().replace(/\/$/, "");
   } catch (_) {
     return url.split("#")[0].split("?")[0].replace(/\/+$/, "");
   }
@@ -205,6 +229,11 @@ function parseRss(xml: string, sourceName: string): NewsItem[] {
       ...item,
       content: body || title,
       date_str: (extractTag(block, "pubDate") ?? extractTag(block, "published") ?? "").trim(),
+      source_published_at: (() => {
+        const rawDate = (extractTag(block, "pubDate") ?? extractTag(block, "published") ?? "").trim();
+        const parsed = Date.parse(rawDate);
+        return Number.isFinite(parsed) ? new Date(parsed).toISOString() : null;
+      })(),
       ...(enclosure ? { image_url: enclosure } : {}),
     });
     if (out.length >= 12) break;
@@ -245,14 +274,14 @@ function parseHtml(html: string, src: SourceDef): NewsItem[] {
   return out;
 }
 
-async function rest(method: string, path: string, key: string, body?: unknown): Promise<Response> {
+async function rest(method: string, path: string, key: string, body?: unknown, prefer = "return=minimal"): Promise<Response> {
   return fetch(`${PROJECT_URL()}${path}`, {
     method,
     headers: {
       apikey: key,
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
-      Prefer: "return=minimal",
+      Prefer: prefer,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -330,7 +359,7 @@ async function processSingleCandidate(
   row: NewsItem,
   serviceKey: string,
   refreshStartTime: number
-): Promise<{ ok: boolean; reason?: string; publishedArticle?: NewsItem }> {
+): Promise<{ ok: boolean; reason?: string; stage?: string; httpStatus?: number; publishedArticle?: NewsItem; skippedDuplicate?: boolean }> {
   const secret = Deno.env.get("NEWS_REFRESH_SECRET") ?? "";
   const headers = {
     "Authorization": `Bearer ${serviceKey}`,
@@ -341,7 +370,7 @@ async function processSingleCandidate(
 
   // 1. Source URL Validation Gate
   if (!isValidSourceUrl(sourceUrl)) {
-    return { ok: false, reason: "Invalid or non-HTTP(S) source URL" };
+    return { ok: false, reason: "Invalid or non-HTTP(S) source URL", stage: "validation" };
   }
 
   try {
@@ -351,7 +380,7 @@ async function processSingleCandidate(
       Math.max(0, getRemainingTimeMs(refreshStartTime) - FAILED_CANDIDATE_CLEANUP_RESERVE_MS)
     );
     if (extractionTimeoutMs < 3000) {
-      return { ok: false, reason: "Insufficient runtime budget remaining for article extraction." };
+      return { ok: false, reason: "Insufficient runtime budget remaining for article extraction.", stage: "extraction" };
     }
 
     const extractController = new AbortController();
@@ -373,6 +402,7 @@ async function processSingleCandidate(
       const isTimeout = err instanceof Error && err.name === "AbortError";
       return {
         ok: false,
+        stage: "extraction",
         reason: isTimeout
           ? `Extraction timed out after ${Math.round(extractionTimeoutMs / 1000)}s`
           : `Extraction network error: ${err instanceof Error ? err.message : String(err)}`,
@@ -386,18 +416,20 @@ async function processSingleCandidate(
     } catch (_) {
       return {
         ok: false,
+        stage: "extraction",
+        httpStatus: fetchRes.status,
         reason: `Extraction returned non-JSON response (HTTP ${fetchRes.status}): ${extractText.slice(0, 100)}`,
       };
     }
 
     if (!fetchRes.ok || !article || article.success !== true || !article.articleText) {
       const errDetail = typeof article?.error === "string" ? article.error : `HTTP ${fetchRes.status}`;
-      return { ok: false, reason: `Extraction failed: ${errDetail}` };
+      return { ok: false, stage: "extraction", httpStatus: fetchRes.status, reason: `Extraction failed: ${errDetail}` };
     }
 
     const articleWords = String(article.articleText).split(/\s+/).filter(Boolean).length;
     if (articleWords < MIN_SOURCE_WORDS) {
-      return { ok: false, reason: `Article too thin (${articleWords} words; min ${MIN_SOURCE_WORDS})` };
+      return { ok: false, stage: "extraction", reason: `Article too thin (${articleWords} words; min ${MIN_SOURCE_WORDS})` };
     }
 
     // 3. Image URL Extraction & Image Validation Gate
@@ -416,7 +448,7 @@ async function processSingleCandidate(
     }
 
     if (!imageUrl) {
-      return { ok: false, reason: "No valid usable image URL extracted for article" };
+      return { ok: false, stage: "extraction", reason: "No valid usable image URL extracted for article" };
     }
 
     const imageCredit = article.imageCredit
@@ -445,7 +477,7 @@ async function processSingleCandidate(
       Math.max(0, currentRemainingMs - FAILED_CANDIDATE_CLEANUP_RESERVE_MS)
     );
     if (editorTimeoutMs < 5000) {
-      return { ok: false, reason: "Insufficient runtime budget remaining for Bengali editor." };
+      return { ok: false, stage: "editorial", reason: "Insufficient runtime budget remaining for Bengali editor." };
     }
 
     const editorController = new AbortController();
@@ -471,6 +503,7 @@ async function processSingleCandidate(
       const isTimeout = err instanceof Error && err.name === "AbortError";
       return {
         ok: false,
+        stage: "editorial",
         reason: isTimeout
           ? `Bengali editor timed out after ${Math.round(editorTimeoutMs / 1000)}s`
           : `Bengali editor network error: ${err instanceof Error ? err.message : String(err)}`,
@@ -484,13 +517,15 @@ async function processSingleCandidate(
     } catch (_) {
       return {
         ok: false,
+        stage: "editorial",
+        httpStatus: editorRes.status,
         reason: `Bengali editor returned non-JSON response (HTTP ${editorRes.status}): ${editorText.slice(0, 100)}`,
       };
     }
 
     if (!editorRes.ok || !editorial || editorial.success !== true || !editorial.headline || !editorial.body) {
       const errDetail = typeof editorial?.error === "string" ? editorial.error : `HTTP ${editorRes.status}`;
-      return { ok: false, reason: `Editorial editor failed: ${errDetail}` };
+      return { ok: false, stage: "editorial", httpStatus: editorRes.status, reason: `Editorial editor failed: ${errDetail}` };
     }
 
     const cleanHeadline = sanitizeBengaliHeadline(String(editorial.headline));
@@ -498,15 +533,20 @@ async function processSingleCandidate(
     const cleanDek = editorial.dek ? String(editorial.dek).trim() : null;
 
     if (!cleanHeadline || !BENGALI_CHAR.test(cleanHeadline)) {
-      return { ok: false, reason: "Editorial headline missing or contains no Bengali content" };
+      return { ok: false, stage: "editorial", reason: "Editorial headline missing or contains no Bengali content" };
     }
 
     if (!cleanBody || !BENGALI_CHAR.test(cleanBody)) {
-      return { ok: false, reason: "Editorial body missing or contains no Bengali content" };
+      return { ok: false, stage: "editorial", reason: "Editorial body missing or contains no Bengali content" };
     }
 
     // 5. Publication Gate Passed — Insert Complete Article into DB
     const now = new Date().toISOString();
+    const publisherDate = String(article.publishedAt ?? row.source_published_at ?? "");
+    const parsedPublisherDate = Date.parse(publisherDate);
+    const sourcePublishedAt = Number.isFinite(parsedPublisherDate)
+      ? new Date(parsedPublisherDate).toISOString()
+      : now;
     const fullArticle: NewsItem = {
       ...row,
       title: finalTitle,
@@ -518,21 +558,37 @@ async function processSingleCandidate(
       bengali_dek: cleanDek,
       bengali_body: cleanBody,
       content_hash: await contentHash(`${sourceUrl}\n${article.articleText}`),
+      first_seen_at: row.fetched_at ?? now,
+      last_fetched_at: now,
+      updated_at: now,
+      source_published_at: sourcePublishedAt,
+      is_published: true,
       processing_status: "published",
       processed_at: now,
-      published_at: now,
+      published_at: sourcePublishedAt,
       notification_ready_at: now,
     };
 
-    const insertRes = await rest("POST", "/rest/v1/wildlife_news", serviceKey, [fullArticle]);
+    const insertRes = await rest(
+      "POST",
+      "/rest/v1/wildlife_news?on_conflict=source_url",
+      serviceKey,
+      [fullArticle],
+      "resolution=merge-duplicates,return=representation",
+    );
     if (!insertRes.ok) {
       const errText = await insertRes.text();
-      return { ok: false, reason: `Database insert failed (${insertRes.status}): ${errText.slice(0, 100)}` };
+      return { ok: false, stage: "persistence", httpStatus: insertRes.status, reason: `Database insert failed (${insertRes.status}): ${errText.slice(0, 100)}` };
     }
 
-    return { ok: true, publishedArticle: fullArticle };
+    const insertedRows = await insertRes.json() as NewsItem[];
+    // An overlapping run may have inserted the same canonical URL. Ignore it
+    // without changing that row's editorial status or sending a duplicate push.
+    return insertedRows.length > 0
+      ? { ok: true, publishedArticle: fullArticle }
+      : { ok: true, skippedDuplicate: true, reason: "Duplicate article already present in database" };
   } catch (error) {
-    return { ok: false, reason: error instanceof Error ? error.message : String(error) };
+    return { ok: false, stage: "unknown", reason: `Unexpected error: ${error instanceof Error ? error.message : String(error)}` };
   }
 }
 
@@ -635,10 +691,11 @@ async function createNewsNotificationEvent(
             body: JSON.stringify({ eventId: String(event.id) }),
             signal: notifyController.signal,
           });
-      } catch (e) {
-        console.warn(`Notify function call failed for event ${event.id}:`, e);
-      } finally {
-        clearTimeout(notifyTimeoutId);
+        } catch (e) {
+          console.warn(`Notify function call failed for event ${event.id}:`, e);
+        } finally {
+          clearTimeout(notifyTimeoutId);
+        }
       }
     }
   } catch (err) {
@@ -656,42 +713,71 @@ serve(async (req) => {
   }
 
   const refreshStartTime = Date.now();
+  const runId = crypto.randomUUID();
+  const startedAt = new Date(refreshStartTime).toISOString();
 
   try {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     if (!serviceKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured.");
 
     const perSource: Record<string, number> = {};
+    const sourceDiagnostics: Record<string, { attempted: boolean; ok: boolean; candidates: number; error?: string }> = {};
     const fetched: NewsItem[] = [];
+    let retryCount = 0;
 
     // Fetch fresh items from sources with individual 8-second timeouts
     await Promise.all(SOURCES.map(async (src) => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), SOURCE_FETCH_TIMEOUT_MS);
-      try {
-        const res = await fetch(src.url, {
-          headers: { "User-Agent": UA, Accept: "*/*" },
-          redirect: "follow",
-          signal: controller.signal,
-        });
-        if (!res.ok) { perSource[src.name] = -res.status; return; }
-        const text = await res.text();
-        const items = src.kind === "rss" ? parseRss(text, src.name) : parseHtml(text, src);
-        perSource[src.name] = items.length;
-        fetched.push(...items);
-      } catch (_) {
-        perSource[src.name] = -1;
-      } finally {
-        clearTimeout(timeoutId);
+      let lastError = "Unknown source error";
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt > 0) retryCount++;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), SOURCE_FETCH_TIMEOUT_MS);
+        try {
+          const res = await fetch(src.url, {
+            headers: { "User-Agent": UA, Accept: "*/*" },
+            redirect: "follow",
+            signal: controller.signal,
+          });
+          if (!res.ok) {
+            lastError = `HTTP ${res.status}`;
+            if ((res.status < 500 && res.status !== 429) || attempt > 0) {
+              perSource[src.name] = -res.status;
+              sourceDiagnostics[src.name] = { attempted: true, ok: false, candidates: 0, error: lastError };
+              return;
+            }
+            continue;
+          }
+          const text = await res.text();
+          const items = src.kind === "rss" ? parseRss(text, src.name) : parseHtml(text, src);
+          perSource[src.name] = items.length;
+          sourceDiagnostics[src.name] = { attempted: true, ok: true, candidates: items.length };
+          fetched.push(...items);
+          return;
+        } catch (error) {
+          lastError = error instanceof Error ? error.message : String(error);
+          if (attempt > 0) {
+            perSource[src.name] = -1;
+            sourceDiagnostics[src.name] = { attempted: true, ok: false, candidates: 0, error: lastError };
+          }
+        } finally {
+          clearTimeout(timeoutId);
+        }
       }
+      perSource[src.name] = -1;
+      sourceDiagnostics[src.name] = { attempted: true, ok: false, candidates: 0, error: lastError };
     }));
 
     // 2. Filter out URLs already present in the database
-    const knownRes = await rest("GET", "/rest/v1/wildlife_news?select=source_url&limit=1000", serviceKey);
-    const known = new Set<string>();
-    if (knownRes.ok) {
-      for (const row of await knownRes.json()) known.add(String(row.source_url ?? ""));
+    const discoveredUrls = [...new Set(fetched.map((item) => String(item.source_url ?? "")).filter(Boolean))];
+    const knownQuery = discoveredUrls.length
+      ? `?select=source_url&source_url=in.(${discoveredUrls.map(encodeURIComponent).join(",")})`
+      : "?select=source_url&limit=0";
+    const knownRes = await rest("GET", `/rest/v1/wildlife_news${knownQuery}`, serviceKey);
+    if (!knownRes.ok) {
+      throw new Error(`Could not query known news URLs (${knownRes.status}).`);
     }
+    const known = new Set<string>();
+    for (const row of await knownRes.json()) known.add(String(row.source_url ?? ""));
 
     const seen = new Set<string>();
     const fresh = fetched.filter((item) => {
@@ -715,7 +801,7 @@ serve(async (req) => {
     }
 
     if (shortlisted.length === 0) {
-      return new Response(JSON.stringify({
+      const result = {
         ok: true,
         fetched: fetched.length,
         freshFound: fresh.length,
@@ -725,7 +811,25 @@ serve(async (req) => {
         publishedUrl: null,
         failures: [],
         perSource,
-      }), {
+        sourcesAttempted: Object.keys(sourceDiagnostics).length,
+        sourcesSucceeded: Object.values(sourceDiagnostics).filter((source) => source.ok).length,
+        sourcesFailed: Object.values(sourceDiagnostics).filter((source) => !source.ok).length,
+        duplicatesSkipped: fetched.length - fresh.length,
+        retryCount,
+        inserted: 0,
+        updated: 0,
+        pending: 0,
+        rejected: 0,
+        sourceDiagnostics,
+        runId,
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        durationMs: Date.now() - refreshStartTime,
+        publishedCount: 0,
+        status: Object.values(sourceDiagnostics).some((source) => !source.ok) ? "partial_success" : "success",
+      };
+      console.log(JSON.stringify({ event: "wildlife_news_refresh", ...result }));
+      return new Response(JSON.stringify(result), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -733,8 +837,10 @@ serve(async (req) => {
 
     // 4. Process shortlisted candidates sequentially with the Publication Gate
     let publishedArticle: NewsItem | null = null;
+    let publishedCount = 0;
+    let duplicatesSkipped = fetched.length - fresh.length;
     let attempted = 0;
-    const failures: Array<{ url: string; reason: string }> = [];
+    const failures: Array<{ url: string; reason: string; stage?: string; httpStatus?: number }> = [];
 
     for (let i = 0; i < shortlisted.length; i++) {
       const candidate = shortlisted[i];
@@ -750,27 +856,31 @@ serve(async (req) => {
       attempted++;
       const res = await processSingleCandidate(candidate, serviceKey, refreshStartTime);
 
-      if (res.ok && res.publishedArticle) {
-        publishedArticle = res.publishedArticle;
+      if (res.ok) {
+        if (res.publishedArticle) {
+          publishedArticle = res.publishedArticle;
+          publishedCount++;
 
-        // Trigger push notification event safely if runtime permits
-        try {
-          await createNewsNotificationEvent(publishedArticle, serviceKey, getRemainingTimeMs(refreshStartTime));
-        } catch (e) {
-          console.warn(`Notification event creation failed for ${sourceUrl}:`, e);
+          // Trigger push notification event safely if runtime permits
+          try {
+            await createNewsNotificationEvent(publishedArticle, serviceKey, getRemainingTimeMs(refreshStartTime));
+          } catch (e) {
+            console.warn(`Notification event creation failed for ${sourceUrl}:`, e);
+          }
+        } else if (res.skippedDuplicate) {
+          duplicatesSkipped++;
         }
-
-        // STOP processing immediately after first successful publication
-        break;
       } else {
         failures.push({
           url: sourceUrl,
-          reason: res.reason ?? "unknown error",
+          reason: res.reason ?? "Candidate processing failed without specific reason",
+          stage: res.stage ?? "unknown",
+          ...(res.httpStatus ? { httpStatus: res.httpStatus } : {}),
         });
       }
     }
 
-    return new Response(JSON.stringify({
+    const result = {
       ok: true,
       fetched: fetched.length,
       freshFound: fresh.length,
@@ -780,14 +890,49 @@ serve(async (req) => {
       publishedUrl: publishedArticle ? String(publishedArticle.source_url ?? "") : null,
       failures,
       perSource,
-    }), {
+      runId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - refreshStartTime,
+      publishedCount,
+      sourceDiagnostics,
+      sourcesAttempted: Object.keys(sourceDiagnostics).length,
+      sourcesSucceeded: Object.values(sourceDiagnostics).filter((source) => source.ok).length,
+      sourcesFailed: Object.values(sourceDiagnostics).filter((source) => !source.ok).length,
+      duplicatesSkipped,
+      retryCount,
+      inserted: publishedCount,
+      updated: 0,
+      pending: 0,
+      rejected: failures.length,
+      status: (failures.length > 0 || attempted < shortlisted.length || Object.values(sourceDiagnostics).some((source) => !source.ok))
+        ? "partial_success"
+        : "success",
+    };
+    console.log(JSON.stringify({ event: "wildlife_news_refresh", ...result }));
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(JSON.stringify({
+      event: "wildlife_news_refresh",
+      runId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - refreshStartTime,
+      status: "failed",
+      error: message,
+    }));
     return new Response(JSON.stringify({
       ok: false,
-      error: error instanceof Error ? error.message : String(error),
+      runId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - refreshStartTime,
+      status: "failed",
+      error: message,
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

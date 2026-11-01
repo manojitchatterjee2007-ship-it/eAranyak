@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config.dart';
 
 /// Handles authenticated, short-lived asset URL generation and anti-scraping controls.
 class ProtectedAssetService {
-  static final SupabaseClient _supabase = Supabase.instance.client;
+  static SupabaseClient get _supabase => supabase;
 
   // Client-side rate-limiting tracker
   static final List<DateTime> _requestTimestamps = [];

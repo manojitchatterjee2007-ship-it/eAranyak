@@ -44,17 +44,31 @@ class _LoginScreenState extends State<LoginScreen> {
         _passCtrl.text = savedPass;
         _rememberMe = true;
       });
+      
+      // Auto-submit login if credentials exist and Supabase isn't already restoring a session
+      if (supabase.auth.currentSession == null) {
+        // slight delay to let UI build before triggering async auth workflow
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_isLoading) {
+            _submitAuth();
+          }
+        });
+      }
     }
   }
 
   Future<void> _saveCredentials(String identity, String pass) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (_rememberMe) {
-      await prefs.setString('saved_identity', identity);
-      await prefs.setString('saved_pass', pass);
-    } else {
-      await prefs.remove('saved_identity');
-      await prefs.remove('saved_pass');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_rememberMe) {
+        await prefs.setString('saved_identity', identity);
+        await prefs.setString('saved_pass', pass);
+      } else {
+        await prefs.remove('saved_identity');
+        await prefs.remove('saved_pass');
+      }
+    } catch (e) {
+      debugPrint('Failed to save credentials: $e');
     }
   }
 

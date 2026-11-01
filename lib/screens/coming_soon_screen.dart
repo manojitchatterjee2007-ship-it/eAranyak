@@ -137,12 +137,14 @@ class ComingSoonScreen extends StatelessWidget {
                       color: Color(0xFF00E676),
                     ),
                     SizedBox(width: 8),
-                    Text(
-                      'শীঘ্রই আসছে... (Coming Soon)',
-                      style: TextStyle(
-                        color: Color(0xFF00E676),
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        'শীঘ্রই আসছে... (Coming Soon)',
+                        style: TextStyle(
+                          color: Color(0xFF00E676),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],

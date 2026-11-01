@@ -17,17 +17,28 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    pluginManager.withPlugin("org.jetbrains.kotlin.android") {
+        if (!pluginManager.hasPlugin("com.android.library") && !pluginManager.hasPlugin("com.android.application")) {
+            apply(plugin = "com.android.library")
+        }
+    }
+}
+
+subprojects {
+    if (project.name != "app") {
+        pluginManager.withPlugin("com.android.library") {
+            extensions.findByType(com.android.build.api.dsl.LibraryExtension::class.java)?.let { android ->
+                android.compileSdk = 36
+            }
+        }
+    }
+}
+
 // Fixed namespace handling (works with evaluation order)
 subprojects {
     pluginManager.withPlugin("com.android.library") {
         extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.let { android ->
-            if (android.namespace.isNullOrEmpty()) {
-                android.namespace = project.group.toString().ifEmpty { "com.example.${project.name}" }
-            }
-        }
-    }
-    pluginManager.withPlugin("com.android.application") {
-        extensions.findByType(com.android.build.gradle.AppExtension::class.java)?.let { android ->
             if (android.namespace.isNullOrEmpty()) {
                 android.namespace = project.group.toString().ifEmpty { "com.example.${project.name}" }
             }

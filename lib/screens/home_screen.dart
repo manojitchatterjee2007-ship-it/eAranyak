@@ -15,6 +15,7 @@ import '../models/daily_wildlife_feature.dart';
 import '../services/sound_service.dart';
 import '../services/forest_ambience_service.dart';
 import '../services/app_notification_service.dart';
+import '../services/news_freshness_policy.dart';
 import '../models/app_notification.dart';
 import '../widgets/daily_wildlife_oil_card.dart';
 import '../widgets/keyboard_press_effect.dart';
@@ -1180,27 +1181,7 @@ class _IndiaObservationMapState extends State<IndiaObservationMap> with SingleTi
               },
             ),
           ),
-          Positioned(
-            top: 9,
-            left: 11,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: const Color(0xCC07130B),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  'ভারত — পর্যবেক্ষণের অবস্থান',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
+
           if (!_validCoordinate || (!_loadingCalibration && _visibleMapRect == null))
             const Center(
               child: DecoratedBox(
@@ -1303,8 +1284,9 @@ class _IndiaObservationMarkerPainter extends CustomPainter {
 // -------------------------------------------------------------
 class _WildlifeDetailSheet extends StatefulWidget {
   final WildlifeLiveObservation observation;
+  final VoidCallback onClose;
 
-  const _WildlifeDetailSheet({required this.observation});
+  const _WildlifeDetailSheet({required this.observation, required this.onClose});
 
   @override
   State<_WildlifeDetailSheet> createState() => _WildlifeDetailSheetState();
@@ -1497,11 +1479,24 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4)),
+            SizedBox(
+              height: 48,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4)),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 24),
+                      onPressed: widget.onClose,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -1709,6 +1704,8 @@ class HomeScreenState extends State<HomeScreen> {
   final AppNotificationService _appNotificationService = AppNotificationService();
 
   List<Map<String, dynamic>> _visibleNews = [];
+  bool _loadingNews = false;
+  String? _newsLoadError;
   late final PageController _newsPageController;
   int _currentNewsPage = 0;
 
@@ -1827,19 +1824,34 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchLiveNews() async {
+    if (_loadingNews) return;
+    if (mounted) {
+      setState(() {
+        _loadingNews = true;
+        _newsLoadError = null;
+      });
+    }
     try {
+      final cutoff = DateTime.now()
+          .toUtc()
+          .subtract(const Duration(days: newsFreshnessDays))
+          .toIso8601String();
       final res = await supabase
           .from('wildlife_news')
           .select()
           .eq('is_published', true)
-          .order('editorial_priority', ascending: false)
-          .order('published_at', ascending: false)
+          .eq('processing_status', 'published')
+          .or('source_published_at.gte.$cutoff,and(source_published_at.is.null,publication_source.eq.editorial,published_at.gte.$cutoff)')
+          .order('source_published_at', ascending: false, nullsFirst: false)
+          .order('published_at', ascending: false, nullsFirst: false)
+          .order('id', ascending: true)
           .limit(10);
 
       if (mounted) {
         final rawItems = List<Map<String, dynamic>>.from(res);
         final validItems = <Map<String, dynamic>>[];
         for (var item in rawItems) {
+          if (!isRecentPublicNews(item)) continue;
           NewsEditorialService.applyBengaliEditorial(item);
           final imageUrl = item['image_url']?.toString();
           final hasValidImage = imageUrl != null && imageUrl.trim().isNotEmpty;
@@ -1854,6 +1866,7 @@ class HomeScreenState extends State<HomeScreen> {
           setState(() {
             _visibleNews = List<Map<String, dynamic>>.from(validItems)..shuffle();
             _visibleNews = _visibleNews.take(5).toList();
+            _loadingNews = false;
           });
         }
         if (rawItems.isEmpty) {
@@ -1862,7 +1875,16 @@ class HomeScreenState extends State<HomeScreen> {
           debugPrint('News: ${rawItems.length} published rows but none passed the image + Bengali-content filter');
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('News refresh failed: $error');
+      if (mounted) {
+        setState(() {
+          _visibleNews = [];
+          _loadingNews = false;
+          _newsLoadError = 'News could not be refreshed. Please try again.';
+        });
+      }
+    }
   }
 
   void _startAutoNewsShufflingTimer() {
@@ -3016,7 +3038,10 @@ class HomeScreenState extends State<HomeScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
-      builder: (sheetContext) => _WildlifeDetailSheet(observation: observation),
+      builder: (sheetContext) => _WildlifeDetailSheet(
+        observation: observation,
+        onClose: () => Navigator.of(sheetContext).pop(),
+      ),
     );
   }
 
@@ -3072,76 +3097,82 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 18),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF142419),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: const Color(0xFF00E676).withValues(alpha: 0.4)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 65,
-                      decoration: BoxDecoration(
-                          color: const Color(0xFF1E2E23),
-                          borderRadius: BorderRadius.circular(6)),
-                      child: MagazineCoverImage(
-                        magazineId: _lastReadMagId!,
-                        fit: BoxFit.cover,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
+              KeyboardPressEffect(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProtectedReaderScreen(
+                          magazineId: _lastReadMagId!,
+                          title: formatMagazineTitle(_lastReadTitle),
+                          userEmail: widget.userEmail,
+                          initialPage: _lastReadPage),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(formatMagazineTitle(_lastReadTitle),
-                              style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
-                          const SizedBox(height: 4),
-                          Text(
-                              'Page ${_lastReadPage + 1} / $_lastReadTotalPages (${((_lastReadPage + 1) / _lastReadTotalPages * 100).round()}% Completed)',
-                              style: const TextStyle(
-                                  fontSize: 12, color: Color(0xFF81C784))),
-                          Text(
-                            '(পৃষ্ঠা ${_lastReadPage + 1} / $_lastReadTotalPages)',
-                            style:
-                            const TextStyle(fontSize: 10, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                                value: (_lastReadPage + 1) / _lastReadTotalPages,
-                                minHeight: 5,
-                                backgroundColor: Colors.white12,
-                                color: const Color(0xFF00E676)),
-                          ),
-                        ],
+                  ).then((_) => _loadContinueReadingSession());
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 18),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF142419),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: const Color(0xFF00E676).withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 65,
+                        decoration: BoxDecoration(
+                            color: const Color(0xFF1E2E23),
+                            borderRadius: BorderRadius.circular(6)),
+                        child: MagazineCoverImage(
+                          magazineId: _lastReadMagId!,
+                          fit: BoxFit.cover,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    KeyboardPressEffect(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProtectedReaderScreen(
-                                magazineId: _lastReadMagId!,
-                                title: formatMagazineTitle(_lastReadTitle),
-                                userEmail: widget.userEmail,
-                                initialPage: _lastReadPage),
-                          ),
-                        ).then((_) => _loadContinueReadingSession());
-                      },
-                      child: Container(
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(formatMagazineTitle(_lastReadTitle),
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
+                            const SizedBox(height: 4),
+                            Text(
+                                _lastReadTotalPages > 0
+                                    ? 'Page ${_lastReadPage + 1} / $_lastReadTotalPages (${((_lastReadPage + 1) / _lastReadTotalPages * 100).round()}% Completed)'
+                                    : 'Page ${_lastReadPage + 1}',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Color(0xFF81C784))),
+                            Text(
+                              _lastReadTotalPages > 0
+                                  ? '(পৃষ্ঠা ${_lastReadPage + 1} / $_lastReadTotalPages)'
+                                  : '(পৃষ্ঠা ${_lastReadPage + 1})',
+                              style:
+                              const TextStyle(fontSize: 10, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                  value: _lastReadTotalPages > 0
+                                      ? (_lastReadPage + 1) / _lastReadTotalPages
+                                      : 0.0,
+                                  minHeight: 5,
+                                  backgroundColor: Colors.white12,
+                                  color: const Color(0xFF00E676)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
@@ -3164,8 +3195,8 @@ class HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -3216,6 +3247,29 @@ class HomeScreenState extends State<HomeScreen> {
                   return Stack(
                     fit: StackFit.expand,
                     children: [
+                      if (_visibleNews.isEmpty)
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_loadingNews)
+                                const CircularProgressIndicator()
+                              else ...[
+                                Text(
+                                  _newsLoadError ?? 'No recent approved news is available.',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                                const SizedBox(height: 8),
+                                TextButton.icon(
+                                  onPressed: _fetchLiveNews,
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Refresh news'),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       PageView.builder(
                         controller: _newsPageController,
                         scrollDirection: Axis.horizontal,

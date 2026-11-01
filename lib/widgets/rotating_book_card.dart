@@ -118,8 +118,8 @@ class _AranyakHardboundBookCardState extends State<AranyakHardboundBookCard>
         const SizedBox(height: 2),
         Text(
           _isDragging
-              ? 'Drag to rotate • ঘুরিয়ে দেখুন'
-              : 'Swipe / drag to rotate • সামনে ও পিছন দেখুন',
+              ? 'ঘুরিয়ে দেখুন • Drag to rotate'
+              : 'সামনে ও পিছন দেখুন • Swipe / drag to rotate',
           style: const TextStyle(
             color: Colors.white54,
             fontSize: 9,
@@ -139,14 +139,14 @@ class _AranyakHardboundBookCardState extends State<AranyakHardboundBookCard>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Look Inside',
+                'বইটি দেখুন',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                '(বইটি দেখুন)',
+                '(Look Inside)',
                 style: TextStyle(
                   fontSize: 9,
                   color: Colors.white70,

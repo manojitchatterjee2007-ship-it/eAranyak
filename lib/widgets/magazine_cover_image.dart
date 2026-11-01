@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config.dart';
 
 class MagazineCoverImage extends StatefulWidget {
   final String magazineId;
@@ -41,7 +41,7 @@ class _MagazineCoverImageState extends State<MagazineCoverImage> {
 
   Future<void> _loadCover() async {
     try {
-      final url = await Supabase.instance.client.storage
+      final url = await supabase.storage
           .from('magazine_pages')
           .createSignedUrl('${widget.magazineId}/page_1.jpg', 3600);
       if (mounted) setState(() => _signedUrl = url);
