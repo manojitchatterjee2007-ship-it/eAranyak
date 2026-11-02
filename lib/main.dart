@@ -1,9 +1,9 @@
+import 'core/prefs_helper.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -33,7 +33,7 @@ void callbackDispatcher() {
 
       if (res.isNotEmpty) {
         final latest = res.first;
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = await PrefsHelper.getPrefs();
         final lastNotifiedId = prefs.getString('last_background_news_id');
         final currentId = latest['id']?.toString() ?? latest['title'];
 

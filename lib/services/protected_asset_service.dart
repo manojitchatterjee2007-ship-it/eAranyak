@@ -9,7 +9,7 @@ class ProtectedAssetService {
 
   // Client-side rate-limiting tracker
   static final List<DateTime> _requestTimestamps = [];
-  static const int _maxRequestsPerMinute = 120; // Max page/image requests per min
+  static const int _maxRequestsPerMinute = 300; // Safe threshold for magazine reading & downloads
 
   // Short-lived in-memory URL cache: storagePath -> (signedUrl, expiresAt)
   static final Map<String, _CachedSignedUrl> _urlCache = {};

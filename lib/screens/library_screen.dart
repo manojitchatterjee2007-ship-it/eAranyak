@@ -34,6 +34,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
     _loadSceneIndex();
     _loadMagazines();
     _searchController.addListener(_onSearchChanged);
+    MagazineDownloadService.progressNotifier.addListener(_syncActiveDownloads);
+  }
+
+  void _syncActiveDownloads() {
+    if (!mounted) return;
+    final map = MagazineDownloadService.progressNotifier.value;
+    bool changed = false;
+    for (final entry in map.entries) {
+      final id = entry.key;
+      final progress = entry.value;
+      final current = _downloadStates[id];
+      final target = progress.isCompleted
+          ? 'downloaded'
+          : progress.error != null
+              ? 'none'
+              : 'downloading';
+      if (current != target) {
+        _downloadStates[id] = target;
+        changed = true;
+      }
+    }
+    if (changed && mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadSceneIndex() async {
@@ -47,6 +71,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   @override
   void dispose() {
+    MagazineDownloadService.progressNotifier.removeListener(_syncActiveDownloads);
     _searchController.dispose();
     super.dispose();
   }
@@ -62,6 +87,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
       for (final mag in mags) {
         final id = mag['id'].toString();
+        if (_downloadStates[id] == 'downloading' ||
+            MagazineDownloadService.isDownloading(id)) {
+          _downloadStates[id] = 'downloading';
+          continue;
+        }
         final isDownloaded =
             await MagazineDownloadService.isMagazineDownloaded(id);
         _downloadStates[id] = isDownloaded ? 'downloaded' : 'none';
@@ -83,6 +113,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _downloadMagazine(Map<String, dynamic> mag) async {
     final id = mag['id'].toString();
     final title = formatMagazineTitle(mag['title']?.toString());
+    if (_downloadStates[id] == 'downloading' ||
+        MagazineDownloadService.isDownloading(id)) {
+      return;
+    }
     setState(() {
       _downloadStates[id] = 'downloading';
     });
@@ -203,6 +237,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ForestAmbienceService.startAmbience();
                 _loadMagazines();
               });
+            } else if (downloadState == 'downloading') {
+              final p = MagazineDownloadService.progressNotifier.value[id];
+              final msg = p?.statusMessage ?? 'ম্যাগাজিনটি বর্তমানে ডাউনলোড হচ্ছে...';
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: const Color(0xFF142018),
+                  duration: const Duration(seconds: 2),
+                  content: Text(msg),
+                ),
+              );
             } else {
               ForestAmbienceService.stopAmbience();
               Navigator.push(
@@ -269,6 +314,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             ForestAmbienceService.startAmbience();
                             _loadMagazines();
                           });
+                        } else if (downloadState == 'downloading') {
+                          SoundService.playButtonSound();
+                          final p = MagazineDownloadService.progressNotifier.value[id];
+                          final msg = p?.statusMessage ?? 'ম্যাগাজিনটি বর্তমানে ডাউনলোড হচ্ছে...';
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: const Color(0xFF142018),
+                              duration: const Duration(seconds: 2),
+                              content: Text(msg),
+                            ),
+                          );
                         }
                       },
                       child: Container(

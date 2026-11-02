@@ -469,7 +469,7 @@ class _DailyWildlifeEditorState
 
         'is_published': _isPublished,
         'status':
-            _isPublished ? 'published' : 'draft',
+            _isPublished ? 'published' : (widget.feature.status == 'scheduled' ? 'scheduled' : 'draft'),
 
         'editor_override': true,
       }).eq('id', widget.feature.id);

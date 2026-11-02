@@ -1,3 +1,4 @@
+import '../core/prefs_helper.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -7,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cube_transition_plus/cube_transition_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../core/config.dart';
@@ -1920,7 +1920,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadContinueReadingSession() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await PrefsHelper.getPrefs();
       final id = prefs.getString('last_read_mag_id');
       final title = prefs.getString('last_read_title');
       final page = prefs.getInt('last_read_page') ?? 0;
@@ -2887,7 +2887,7 @@ class HomeScreenState extends State<HomeScreen> {
           .from('daily_wildlife_features')
           .select('*')
           .or('is_published.eq.true,status.eq.scheduled')
-          .lte('scheduled_publish_at', DateTime.now().toUtc().toIso8601String())
+          .lte('feature_date', DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30)).toIso8601String().substring(0, 10))
           .order('feature_date', ascending: false)
           .limit(1)
           .maybeSingle(),

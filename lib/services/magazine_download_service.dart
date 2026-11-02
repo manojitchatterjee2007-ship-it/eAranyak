@@ -1,3 +1,4 @@
+import '../core/prefs_helper.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -51,6 +52,10 @@ class MagazineDownloadService {
   static final ValueNotifier<Map<String, MagazineDownloadProgress>> progressNotifier =
       ValueNotifier<Map<String, MagazineDownloadProgress>>({});
 
+  static final Set<String> _activeDownloads = {};
+
+  static bool isDownloading(String magazineId) => _activeDownloads.contains(magazineId);
+
   static Future<Directory> _getBaseDirectory() async {
     final appDocDir = await getApplicationDocumentsDirectory();
     final base = Directory('${appDocDir.path}/magazines');
@@ -65,10 +70,23 @@ class MagazineDownloadService {
     return Directory('${base.path}/$magazineId');
   }
 
+  // Helper to prevent Pigeon InstanceManager crashes during concurrent SharedPreferences access
+  static Future<SharedPreferences> _getPrefsSafely() async {
+    for (int i = 0; i < 3; i++) {
+      try {
+        return await PrefsHelper.getPrefs();
+      } catch (e) {
+        if (i == 2) rethrow;
+        await Future.delayed(const Duration(milliseconds: 150));
+      }
+    }
+    throw Exception('Failed to get SharedPreferences');
+  }
+
   /// Checks whether a full magazine issue is stored locally and fully verified.
   static Future<bool> isMagazineDownloaded(String magazineId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _getPrefsSafely();
       final isFlagged = prefs.getBool('downloaded_mag_$magazineId') ?? false;
       if (!isFlagged) return false;
 
@@ -124,7 +142,59 @@ class MagazineDownloadService {
     }
   }
 
-  /// Downloads full issue pages sequentially and atomically stores them locally.
+  /// Downloads single page bytes with retry logic and fallback mechanisms.
+  static Future<Uint8List> _downloadPageBytesWithRetry({
+    required String storagePath,
+    required int pageNum,
+    int maxAttempts = 3,
+  }) async {
+    Object? lastError;
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // Strategy A: Direct authenticated Supabase storage download
+        try {
+          final bytes = await supabase.storage
+              .from('magazine_pages')
+              .download(storagePath)
+              .timeout(const Duration(seconds: 30));
+          if (bytes.length >= 512) {
+            return bytes;
+          }
+        } catch (e) {
+          lastError = e;
+        }
+
+        // Strategy B: Fallback to signed URL + HTTP GET
+        final signedUrl = await ProtectedAssetService.getSignedUrl(
+          bucket: 'magazine_pages',
+          storagePath: storagePath,
+          expiresInSeconds: 600,
+        );
+
+        if (signedUrl != null && signedUrl.isNotEmpty) {
+          final response = await http.get(Uri.parse(signedUrl)).timeout(
+            const Duration(seconds: 30),
+          );
+          if (response.statusCode == 200 && response.bodyBytes.length >= 512) {
+            return response.bodyBytes;
+          }
+          lastError = HttpException('HTTP ${response.statusCode} for page $pageNum');
+        } else {
+          lastError ??= StateError('Unable to generate access token for page $pageNum');
+        }
+      } catch (e) {
+        lastError = e;
+      }
+
+      if (attempt < maxAttempts) {
+        await Future.delayed(Duration(milliseconds: 300 * attempt));
+      }
+    }
+
+    throw lastError ?? HttpException('Failed to download page $pageNum after $maxAttempts attempts');
+  }
+
+  /// Downloads full issue pages with parallel pooling, retry, and atomic disk persistence.
   static Future<bool> downloadMagazine({
     required Map<String, dynamic> magazine,
     void Function(MagazineDownloadProgress progress)? onProgress,
@@ -133,6 +203,12 @@ class MagazineDownloadService {
     if (magazineId == null || magazineId.isEmpty) {
       throw ArgumentError('Invalid magazine metadata: missing id');
     }
+
+    if (_activeDownloads.contains(magazineId)) {
+      debugPrint('[MagazineDownloadService] Download already active for $magazineId, ignoring duplicate trigger.');
+      return true;
+    }
+    _activeDownloads.add(magazineId);
 
     final title = formatMagazineTitle(magazine['title']?.toString());
 
@@ -168,53 +244,66 @@ class MagazineDownloadService {
 
       final totalPages = pages.length;
       final baseDir = await _getBaseDirectory();
-      tempDir = Directory('${baseDir.path}/${magazineId}_tmp_${DateTime.now().millisecondsSinceEpoch}');
-      if (await tempDir.exists()) {
-        await tempDir.delete(recursive: true);
+      tempDir = Directory('${baseDir.path}/${magazineId}_tmp');
+      if (!await tempDir.exists()) {
+        await tempDir.create(recursive: true);
       }
-      await tempDir.create(recursive: true);
 
-      // 2. Download each page image
+      int completedPages = 0;
+
+      // Check existing files in temp directory to enable resuming
       for (int i = 0; i < totalPages; i++) {
-        final pageItem = pages[i];
-        final pageNum = pageItem['page_number'] as int? ?? (i + 1);
-        final storagePath = pageItem['storage_path']?.toString();
-
-        if (storagePath == null || storagePath.isEmpty) {
-          throw StateError('Page $pageNum has missing storage path.');
+        final existing = File('${tempDir.path}/page_${i + 1}.jpg');
+        if (existing.existsSync() && existing.lengthSync() >= 512) {
+          completedPages++;
         }
+      }
 
-        final currentProgress = i / totalPages;
+      if (completedPages > 0) {
+        final p = completedPages / totalPages;
         updateProgress(MagazineDownloadProgress(
           magazineId: magazineId,
-          progress: currentProgress,
-          currentPage: i + 1,
+          progress: p,
+          currentPage: completedPages,
           totalPages: totalPages,
-          statusMessage: 'পৃষ্ঠা $pageNum / $totalPages ডাউনলোড হচ্ছে... (${(currentProgress * 100).round()}%)',
+          statusMessage: 'ডাউনলোড পুনরুদ্ধার হচ্ছে... ($completedPages/$totalPages)',
         ));
+      }
 
-        // Generate signed URL
-        final signedUrl = await ProtectedAssetService.getSignedUrl(
-          bucket: 'magazine_pages',
-          storagePath: storagePath,
-          expiresInSeconds: 300,
-        );
+      // 2. Download missing pages with concurrency pool
+      const int concurrency = 3;
+      for (int i = 0; i < totalPages; i += concurrency) {
+        final end = (i + concurrency < totalPages) ? i + concurrency : totalPages;
+        final chunkIndices = List.generate(end - i, (k) => i + k);
 
-        if (signedUrl == null) {
-          throw StateError('Unable to generate access token for page $pageNum.');
-        }
+        await Future.wait(chunkIndices.map((idx) async {
+          final pageItem = pages[idx];
+          final pageTargetNum = idx + 1;
+          final storagePath = pageItem['storage_path']?.toString();
 
-        final response = await http.get(Uri.parse(signedUrl)).timeout(
-          const Duration(seconds: 45),
-          onTimeout: () => throw TimeoutException('Network timed out while downloading page $pageNum'),
-        );
+          if (storagePath == null || storagePath.isEmpty) {
+            throw StateError('Page $pageTargetNum has missing storage path.');
+          }
 
-        if (response.statusCode != 200 || response.bodyBytes.length < 512) {
-          throw HttpException('Download failed for page $pageNum (HTTP ${response.statusCode})');
-        }
+          final targetFile = File('${tempDir!.path}/page_$pageTargetNum.jpg');
+          if (!await targetFile.exists() || await targetFile.length() < 512) {
+            final bytes = await _downloadPageBytesWithRetry(
+              storagePath: storagePath,
+              pageNum: pageTargetNum,
+            );
+            await targetFile.writeAsBytes(bytes, flush: true);
+          }
 
-        final targetFile = File('${tempDir.path}/page_$pageNum.jpg');
-        await targetFile.writeAsBytes(response.bodyBytes, flush: true);
+          completedPages++;
+          final currentProgress = (completedPages / totalPages).clamp(0.0, 1.0);
+          updateProgress(MagazineDownloadProgress(
+            magazineId: magazineId,
+            progress: currentProgress,
+            currentPage: completedPages,
+            totalPages: totalPages,
+            statusMessage: 'পৃষ্ঠা $completedPages / $totalPages ডাউনলোড হচ্ছে... (${(currentProgress * 100).round()}%)',
+          ));
+        }));
       }
 
       // 3. Write manifest.json
@@ -229,19 +318,43 @@ class MagazineDownloadService {
       final manifestFile = File('${tempDir.path}/manifest.json');
       await manifestFile.writeAsString(jsonEncode(manifest), flush: true);
 
-      // 4. Atomic move to final directory
+      // 4. Robust transfer to final directory
       final finalDir = await getMagazineDirectory(magazineId);
-      if (await finalDir.exists()) {
-        await finalDir.delete(recursive: true);
+      if (!await finalDir.exists()) {
+        await finalDir.create(recursive: true);
       }
-      await tempDir.rename(finalDir.path);
+
+      final tempEntities = tempDir.listSync();
+      for (final entity in tempEntities) {
+        if (entity is File) {
+          final fileName = entity.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
+          final dest = File('${finalDir.path}/$fileName');
+          if (await dest.exists()) {
+            try {
+              await dest.delete();
+            } catch (_) {}
+          }
+          try {
+            await entity.rename(dest.path);
+          } catch (_) {
+            await entity.copy(dest.path);
+            try {
+              await entity.delete();
+            } catch (_) {}
+          }
+        }
+      }
+
+      try {
+        await tempDir.delete(recursive: true);
+      } catch (_) {}
       tempDir = null; // Successfully transferred
 
       // 5. Update SharedPreferences metadata
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _getPrefsSafely();
       await prefs.setBool('downloaded_mag_$magazineId', true);
 
-      List<String> downloadedIds = prefs.getStringList('downloaded_magazine_ids') ?? [];
+      List<String> downloadedIds = List<String>.from(prefs.getStringList('downloaded_magazine_ids') ?? []);
       if (!downloadedIds.contains(magazineId)) {
         downloadedIds.add(magazineId);
         await prefs.setStringList('downloaded_magazine_ids', downloadedIds);
@@ -260,15 +373,8 @@ class MagazineDownloadService {
 
       debugPrint('[MagazineDownloadService] Magazine $magazineId downloaded successfully ($totalPages pages).');
       return true;
-    } catch (e) {
-      debugPrint('[MagazineDownloadService] Download failed for $magazineId: $e');
-
-      // Cleanup temp directory on failure
-      if (tempDir != null && await tempDir.exists()) {
-        try {
-          await tempDir.delete(recursive: true);
-        } catch (_) {}
-      }
+    } catch (e, stackTrace) {
+      debugPrint('[MagazineDownloadService] Download failed for $magazineId: $e\n$stackTrace');
 
       final errorMsg = e is SocketException
           ? 'ইন্টারনেট সংযোগ বিচ্ছিন্ন হয়েছে। (Network disconnected)'
@@ -287,6 +393,8 @@ class MagazineDownloadService {
       ));
 
       return false;
+    } finally {
+      _activeDownloads.remove(magazineId);
     }
   }
 
@@ -298,12 +406,18 @@ class MagazineDownloadService {
         await magDir.delete(recursive: true);
       }
 
-      final prefs = await SharedPreferences.getInstance();
+      final baseDir = await _getBaseDirectory();
+      final tempDir = Directory('${baseDir.path}/${magazineId}_tmp');
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+
+      final prefs = await _getPrefsSafely();
       await prefs.remove('downloaded_mag_$magazineId');
       await prefs.remove('mag_meta_$magazineId');
       await prefs.remove('mag_pages_count_$magazineId');
 
-      final downloadedIds = prefs.getStringList('downloaded_magazine_ids') ?? [];
+      final downloadedIds = List<String>.from(prefs.getStringList('downloaded_magazine_ids') ?? []);
       downloadedIds.remove(magazineId);
       await prefs.setStringList('downloaded_magazine_ids', downloadedIds);
 

@@ -1,6 +1,6 @@
+import '../core/prefs_helper.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
 import '../services/sound_service.dart';
@@ -63,7 +63,7 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
     Map<String, double> newProgress = {};
     
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await PrefsHelper.getPrefs();
       final downloadedIds = prefs.getStringList('downloaded_magazine_ids') ?? [];
       
       for (final id in downloadedIds) {
@@ -164,7 +164,7 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
             SoundService.playButtonSound();
             // FIX: Stop ambience before launching reader
             ForestAmbienceService.stopAmbience();
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = await PrefsHelper.getPrefs();
             final savedPage = prefs.getInt('last_read_page_$id');
             int initialPage = savedPage ?? 0;
             if (initialPage == 0 && progress > 0.01) {

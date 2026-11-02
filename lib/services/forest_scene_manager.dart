@@ -1,5 +1,5 @@
+import '../core/prefs_helper.dart';
 import 'dart:math';
-import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages selection of the four realistic forest background scenes
 /// (forest_scene1.png through forest_scene4.png) for Library and My Bookshelf.
@@ -25,7 +25,7 @@ class ForestSceneManager {
     _isPicking = true;
     
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await PrefsHelper.getPrefs();
       final isLibrary = screen == 'library';
 
       final currentKey = isLibrary ? _libraryCurrent : _bookshelfCurrent;
@@ -61,7 +61,7 @@ class ForestSceneManager {
   }
 
   static Future<int?> currentFor(String screen) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await PrefsHelper.getPrefs();
     return prefs.getInt(
       screen == 'library' ? _libraryCurrent : _bookshelfCurrent,
     );

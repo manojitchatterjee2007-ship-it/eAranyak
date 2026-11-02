@@ -1,7 +1,7 @@
+import '../core/prefs_helper.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'sound_service.dart';
 
 class ForestAmbienceService {
@@ -27,7 +27,7 @@ class ForestAmbienceService {
     await stopAmbience();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await PrefsHelper.getPrefs();
       _lastConsumedSound = prefs.getString('last_ambience_sound');
       final savedBag = prefs.getStringList('ambience_sound_bag');
 

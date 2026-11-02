@@ -96,6 +96,10 @@ void main() {
       expect(downloaded, isFalse);
     });
 
+    test('isDownloading returns correct state', () {
+      expect(MagazineDownloadService.isDownloading('random-id-999'), isFalse);
+    });
+
     test('removeMagazine cleans up files and preferences', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('downloaded_mag_$testMagId', true);

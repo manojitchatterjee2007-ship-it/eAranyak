@@ -469,7 +469,7 @@ Deno.serve(async (req) => {
             is_published: true,
             published_at: nowUtc.toISOString()
         })
-        .eq('feature_date', todayStr)
+        .lte('feature_date', todayStr)
         .eq('status', 'scheduled')
         .eq('image_generation_status', 'completed')
         .eq('is_published', false)

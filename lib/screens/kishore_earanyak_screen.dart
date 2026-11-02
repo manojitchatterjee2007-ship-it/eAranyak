@@ -63,7 +63,7 @@ class _KishoreEaranyakScreenState extends State<KishoreEaranyakScreen> {
           .from('daily_wildlife_features')
           .select('*')
           .eq('is_published', true)
-          .lte('scheduled_publish_at', DateTime.now().toIso8601String())
+          .lte('feature_date', DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30)).toIso8601String().substring(0, 10))
           .order('feature_date', ascending: false)
           .limit(1)
           .maybeSingle();
