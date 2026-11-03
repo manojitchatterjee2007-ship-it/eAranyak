@@ -965,8 +965,9 @@ Rules:
   (e.g. never put a dolphin title over tiger details).
 - 'scientific_name' MUST exactly equal "${feature.scientific_name}".
 - 'common_name' MUST equal "${feature.common_name}".
-- The PRIMARY language for this content must be natural, readable BENGALI.
-- Write the following fields entirely in BENGALI: title_bn, bengali_name, description_bn, species_description, habitat, distribution, diet, behaviour, ecological_role, conservation_status, interesting_facts, did_you_know.
+- The PRIMARY language for this content must be natural, readable INDIAN BENGALI (West Bengal standard).
+- STRICT REGIONAL VOCABULARY DIRECTIVE: DO NOT use Bangladeshi Bengali vocabulary anywhere in the app content. For example, ALWAYS translate "water" as "জল" (Jol), NEVER as "পানি" (Pani). Ensure all terminology and spelling strictly aligns with Indian Bengali usage.
+- Write the following fields entirely in INDIAN BENGALI: title_bn, bengali_name, description_bn, species_description, habitat, distribution, diet, behaviour, ecological_role, conservation_status, interesting_facts, did_you_know.
 - For 'title' and 'common_name', you may use English or standard English common names.
 - 'scientific_name' MUST remain in Latin script (e.g., Panthera tigris tigris).
 - iucn_status must be a real IUCN Red List status (in English). If unknown, use "Not Evaluated".
