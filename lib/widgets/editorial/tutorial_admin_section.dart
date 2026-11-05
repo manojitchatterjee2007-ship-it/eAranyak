@@ -7,6 +7,7 @@ import '../../models/tutorial.dart';
 import '../../services/tutorial_service.dart';
 import '../../services/push_notification_service.dart';
 import '../scientific_text.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class TutorialAdminSection extends StatefulWidget {
   final VoidCallback onUploadComplete;
@@ -143,7 +144,7 @@ class _TutorialAdminSectionState
           '(আপনি কি নিশ্চিত যে টিউটোরিয়াল নির্দেশিকাটি স্থায়ীভাবে মুছে ফেলতে চান?)',
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () =>
                 Navigator.pop(ctx, false),
             child: const Text(
@@ -152,8 +153,8 @@ class _TutorialAdminSectionState
                 color: Colors.white54,
               ),
             ),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor:
                   Colors.redAccent,
@@ -161,7 +162,7 @@ class _TutorialAdminSectionState
             onPressed: () =>
                 Navigator.pop(ctx, true),
             child: const Text('Delete'),
-          ),
+          )),
         ],
       ),
     );
@@ -912,7 +913,7 @@ class _TutorialAdminSectionState
                             ),
                             Row(
                               children: [
-                                ElevatedButton.icon(
+                                AnimatedButtonWrapper(child: ElevatedButton.icon(
                                   style:
                                       ElevatedButton.styleFrom(
                                     backgroundColor:
@@ -959,7 +960,7 @@ class _TutorialAdminSectionState
                                           FontWeight.bold,
                                     ),
                                   ),
-                                ),
+                                )),
                                 const SizedBox(
                                   width: 10,
                                 ),
@@ -1438,7 +1439,7 @@ class _TutorialAdminSectionState
                           ),
                         )
                       else ...[
-                        ElevatedButton.icon(
+                        AnimatedButtonWrapper(child: ElevatedButton.icon(
                           style:
                               ElevatedButton.styleFrom(
                             backgroundColor:
@@ -1508,13 +1509,13 @@ class _TutorialAdminSectionState
                                   Colors.white,
                             ),
                           ),
-                        ),
+                        )),
                         const SizedBox(
                           height: 8,
                         ),
                       ],
 
-                      ElevatedButton.icon(
+                      AnimatedButtonWrapper(child: ElevatedButton.icon(
                         style:
                             ElevatedButton.styleFrom(
                           backgroundColor:
@@ -1560,7 +1561,7 @@ class _TutorialAdminSectionState
                                 Colors.white,
                           ),
                         ),
-                      ),
+                      )),
 
                       const SizedBox(
                         height: 12,
@@ -1743,7 +1744,7 @@ class _TutorialAdminSectionState
                 ),
               ),
               actions: [
-                TextButton(
+                AnimatedButtonWrapper(child: TextButton(
                   onPressed:
                       isUploading ||
                               isImportingSource
@@ -1759,8 +1760,8 @@ class _TutorialAdminSectionState
                           Colors.white54,
                     ),
                   ),
-                ),
-                ElevatedButton(
+                )),
+                AnimatedButtonWrapper(child: ElevatedButton(
                   style:
                       ElevatedButton.styleFrom(
                     backgroundColor:
@@ -2083,7 +2084,7 @@ class _TutorialAdminSectionState
                           FontWeight.bold,
                     ),
                   ),
-                ),
+                )),
               ],
             );
           },
@@ -2339,7 +2340,7 @@ class _TutorialAdminSectionState
           ),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () =>
                 Navigator.pop(ctx),
             child:
@@ -2351,7 +2352,7 @@ class _TutorialAdminSectionState
                     Colors.white70,
               ),
             ),
-          ),
+          )),
         ],
       ),
     );
@@ -2411,7 +2412,7 @@ class _TutorialAdminSectionState
                 ),
               ],
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon:
                   const Icon(
                 Icons.refresh,
@@ -2424,13 +2425,13 @@ class _TutorialAdminSectionState
                   'রিফ্রেশ করুন',
               onPressed:
                   _loadTutorials,
-            ),
+            )),
           ],
         ),
         const SizedBox(
           height: 12,
         ),
-        ElevatedButton.icon(
+        AnimatedButtonWrapper(child: ElevatedButton.icon(
           style:
               ElevatedButton.styleFrom(
             backgroundColor:
@@ -2470,7 +2471,7 @@ class _TutorialAdminSectionState
                   13,
             ),
           ),
-        ),
+        )),
         const SizedBox(
           height: 12,
         ),
@@ -3002,7 +3003,7 @@ class _TutorialAdminSectionState
                                     'সম্পাদনা',
                                   ),
                                 ),
-                                ElevatedButton.icon(
+                                AnimatedButtonWrapper(child: ElevatedButton.icon(
                                   style:
                                       ElevatedButton.styleFrom(
                                     backgroundColor:
@@ -3048,8 +3049,8 @@ class _TutorialAdminSectionState
                                           FontWeight.bold,
                                     ),
                                   ),
-                                ),
-                                IconButton(
+                                )),
+                                AnimatedButtonWrapper(child: IconButton(
                                   icon:
                                       const Icon(
                                     Icons
@@ -3066,7 +3067,7 @@ class _TutorialAdminSectionState
                                           _handleDelete(
                                     item,
                                   ),
-                                ),
+                                )),
                               ],
                             ),
                           ],

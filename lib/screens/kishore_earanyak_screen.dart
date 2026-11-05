@@ -11,6 +11,7 @@ import 'daily_wildlife_screen.dart';
 import 'kishor_medal_screen.dart';
 import 'nature_games_screen.dart';
 import 'user_bookshelf_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class KishoreEaranyakScreen extends StatefulWidget {
   const KishoreEaranyakScreen({super.key});
@@ -258,7 +259,7 @@ class _KishoreEaranyakScreenState extends State<KishoreEaranyakScreen> {
                             ],
                           ),
                         )
-                      : ElevatedButton(
+                      : AnimatedButtonWrapper(child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF00E676),
                             foregroundColor: Colors.black,
@@ -301,7 +302,7 @@ class _KishoreEaranyakScreenState extends State<KishoreEaranyakScreen> {
                                   'মিশন সম্পন্ন করুন (Complete Mission)',
                                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                 ),
-                        ),
+                        )),
                 ),
               ],
             ),

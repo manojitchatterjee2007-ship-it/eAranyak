@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../services/sound_service.dart';
 import '../screens/magazine_reader_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 const String _aranyakFrontCoverAsset =
     'assets/images/banglar_ubhochar_front.png';
@@ -126,7 +127,7 @@ class _AranyakHardboundBookCardState extends State<AranyakHardboundBookCard>
           ),
         ),
         const SizedBox(height: 9),
-        ElevatedButton.icon(
+        AnimatedButtonWrapper(child: ElevatedButton.icon(
           onPressed: () {
             SoundService.playButtonSound();
             _openInside();
@@ -166,7 +167,7 @@ class _AranyakHardboundBookCardState extends State<AranyakHardboundBookCard>
             ),
             elevation: 5,
           ),
-        ),
+        )),
       ],
     );
   }

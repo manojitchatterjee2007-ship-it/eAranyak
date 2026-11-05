@@ -21,6 +21,7 @@ import '../services/magazine_download_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/protected_watermark.dart';
 import '../widgets/magazine_flipbook_layout_gate.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 enum ReaderViewState { spread, single, zoomed }
 
@@ -529,7 +530,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70)),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
+              AnimatedButtonWrapper(child: ElevatedButton.icon(
                 onPressed: () {
                   debugPrint(
                       'MagazineReader retry requested issue=${widget.magazineId}');
@@ -537,7 +538,7 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                 },
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
-              ),
+              )),
             ],
           ),
         ),
@@ -642,27 +643,27 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                     }),
                 Align(
                     alignment: Alignment.topCenter,
-                    child: IconButton(
+                    child: AnimatedButtonWrapper(child: IconButton(
                         icon: const Icon(Icons.arrow_drop_up,
                             color: Colors.white),
-                        onPressed: () => _nudgeZoom(0, 50))),
+                        onPressed: () => _nudgeZoom(0, 50)))),
                 Align(
                     alignment: Alignment.bottomCenter,
-                    child: IconButton(
+                    child: AnimatedButtonWrapper(child: IconButton(
                         icon: const Icon(Icons.arrow_drop_down,
                             color: Colors.white),
-                        onPressed: () => _nudgeZoom(0, -50))),
+                        onPressed: () => _nudgeZoom(0, -50)))),
                 Align(
                     alignment: Alignment.centerLeft,
-                    child: IconButton(
+                    child: AnimatedButtonWrapper(child: IconButton(
                         icon: const Icon(Icons.arrow_left, color: Colors.white),
-                        onPressed: () => _nudgeZoom(50, 0))),
+                        onPressed: () => _nudgeZoom(50, 0)))),
                 Align(
                     alignment: Alignment.centerRight,
-                    child: IconButton(
+                    child: AnimatedButtonWrapper(child: IconButton(
                         icon:
                             const Icon(Icons.arrow_right, color: Colors.white),
-                        onPressed: () => _nudgeZoom(-50, 0))),
+                        onPressed: () => _nudgeZoom(-50, 0)))),
               ],
             ),
           ),
@@ -910,16 +911,16 @@ class _ProtectedReaderScreenState extends State<ProtectedReaderScreen>
                                   style: const TextStyle(fontSize: 15),
                                 ),
                                 actions: [
-                                  IconButton(
+                                  AnimatedButtonWrapper(child: IconButton(
                                     icon: const Icon(Icons.tune_rounded,
                                         color: Color(0xFF00E676)),
                                     onPressed: _openReaderSettings,
-                                  ),
-                                  IconButton(
+                                  )),
+                                  AnimatedButtonWrapper(child: IconButton(
                                     icon: const Icon(
                                         Icons.fullscreen_exit_rounded),
                                     onPressed: _toggleControls,
-                                  ),
+                                  )),
                                 ],
                               ),
                             ),

@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import '../core/config.dart';
 import '../services/forest_ambience_service.dart';
 import '../widgets/keyboard_press_effect.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 // ============================================================================
 // eআরণ্যক — Nature Games
@@ -1081,7 +1082,7 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
         backgroundColor: const Color(0xFF18221B),
         title: const Text('Game Complete!', style: TextStyle(color: Colors.white)),
         content: Text('Your score: $_score / ${_questions.length}', style: const TextStyle(color: Colors.white70)),
-        actions: [TextButton(onPressed: () { Navigator.pop(ctx); Navigator.pop(context); }, child: const Text('Back to Games', style: TextStyle(color: Color(0xFF00E676))))],
+        actions: [AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); Navigator.pop(context); }, child: const Text('Back to Games', style: TextStyle(color: Color(0xFF00E676)))))],
       ),
     );
   }
@@ -1247,12 +1248,12 @@ class _WildlifeQuizGameState extends State<WildlifeQuizGame> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             iconSize: 64,
             color: const Color(0xFF00E676),
             icon: Icon(_audioPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill),
             onPressed: _toggleQuizAudio,
-          ),
+          )),
           const Text(
             'পাখির ডাক শুনুন',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -1377,8 +1378,8 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
         title: Text(correct ? 'Correct! 🎉' : 'Not quite', style: TextStyle(color: correct ? const Color(0xFF00E676) : Colors.orangeAccent)),
         content: Text(correct ? 'You restored ${q.english} correctly in $_moveCount moves.' : 'Try again. Rearrange the tiles and submit once the picture is complete.', style: const TextStyle(color: Colors.white70)),
         actions: [
-          if (correct) TextButton(onPressed: () { Navigator.pop(ctx); _initGame(); }, child: const Text('Next Puzzle', style: TextStyle(color: Color(0xFF00E676)))),
-          TextButton(onPressed: () { Navigator.pop(ctx); if (correct) Navigator.pop(context); }, child: Text(correct ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70))),
+          if (correct) AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); _initGame(); }, child: const Text('Next Puzzle', style: TextStyle(color: Color(0xFF00E676))))),
+          AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); if (correct) Navigator.pop(context); }, child: Text(correct ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70)))),
         ],
       ),
     );
@@ -1465,12 +1466,12 @@ class _ScrambledImageGameState extends State<ScrambledImageGame> {
                               SizedBox(
                                 width: maxBoard,
                                 height: 50,
-                                child: ElevatedButton.icon(
+                                child: AnimatedButtonWrapper(child: ElevatedButton.icon(
                                   onPressed: _submitPuzzle,
                                   icon: const Icon(Icons.check_circle_outline),
                                   label: const Text('SUBMIT PICTURE / ছবি জমা দিন'),
                                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                                ),
+                                )),
                               ),
                             ] else ...[
                               const Text('Submitted', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
@@ -1617,8 +1618,8 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
         title: Text(ok ? 'Correct! (সঠিক!)' : 'Try again', style: TextStyle(color: ok ? const Color(0xFF00E676) : Colors.orangeAccent)),
         content: Text(ok ? 'সঠিক উত্তর: ${q.bengali}' : 'শব্দটির অক্ষরগুলি আবার সাজিয়ে চেষ্টা করুন।', style: const TextStyle(color: Colors.white70)),
         actions: [
-          if (ok) TextButton(onPressed: () { Navigator.pop(ctx); _loadNextPuzzle(); }, child: const Text('Next Bird', style: TextStyle(color: Color(0xFF00E676)))),
-          TextButton(onPressed: () { Navigator.pop(ctx); if (ok) Navigator.pop(context); }, child: Text(ok ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70))),
+          if (ok) AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); _loadNextPuzzle(); }, child: const Text('Next Bird', style: TextStyle(color: Color(0xFF00E676))))),
+          AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); if (ok) Navigator.pop(context); }, child: Text(ok ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70)))),
         ],
       ),
     );
@@ -1691,7 +1692,7 @@ class _WordPuzzleGameState extends State<WordPuzzleGame> {
                 )).toList(),
               ),
               const SizedBox(height: 24),
-              SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(onPressed: _slots.contains('') ? null : _submitWord, icon: const Icon(Icons.check_circle_outline), label: const Text('SUBMIT / জমা দিন'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, disabledBackgroundColor: Colors.white12, disabledForegroundColor: Colors.white38, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))))),
+              SizedBox(width: double.infinity, height: 50, child: AnimatedButtonWrapper(child: ElevatedButton.icon(onPressed: _slots.contains('') ? null : _submitWord, icon: const Icon(Icons.check_circle_outline), label: const Text('SUBMIT / জমা দিন'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, disabledBackgroundColor: Colors.white12, disabledForegroundColor: Colors.white38, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)))))),
               if (_submitted) _resourceAcknowledgement(source: _media?.source, attribution: _media?.attribution),
               TextButton(onPressed: _loadNextPuzzle, child: const Text('Skip (এড়িয়ে যান)', style: TextStyle(color: Colors.white54))),
             ],

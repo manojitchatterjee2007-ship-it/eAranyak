@@ -5,6 +5,7 @@ import '../keyboard_press_effect.dart';
 import '../protected_image.dart';
 import '../scientific_text.dart';
 import '../../services/sound_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 /// Shared visual language for the Citizen Science module:
 /// nature-journal palette, photographic cards and generous whitespace.
@@ -372,7 +373,7 @@ class CitizenScienceEmptyState extends StatelessWidget {
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 18),
-            ElevatedButton.icon(
+            AnimatedButtonWrapper(child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: CitizenSciencePalette.accent,
                 foregroundColor: Colors.black,
@@ -384,7 +385,7 @@ class CitizenScienceEmptyState extends StatelessWidget {
               icon: const Icon(Icons.add_a_photo_outlined, size: 18),
               label: Text(actionLabel!,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
+            )),
           ],
         ],
       ),

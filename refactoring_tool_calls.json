@@ -1,0 +1,3141 @@
+{
+  "lib/screens\\admin_dashboard_screen.dart": [
+    {
+      "targetContent": "import '../widgets/editorial/wildlife_help_admin_section.dart';",
+      "replacementContent": "import '../widgets/editorial/wildlife_help_admin_section.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 30,
+      "endLine": 30,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 589,
+      "endLine": 589,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 592,
+      "endLine": 592,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ElevatedButton.icon(",
+      "replacementContent": "              AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 593,
+      "endLine": 593,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 614,
+      "endLine": 614,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ElevatedButton.icon(",
+      "replacementContent": "              AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 615,
+      "endLine": 615,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 636,
+      "endLine": 636,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              IconButton(",
+      "replacementContent": "              AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 769,
+      "endLine": 769,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 779,
+      "endLine": 779,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "    return ElevatedButton.icon(",
+      "replacementContent": "    return AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 865,
+      "endLine": 865,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "    );",
+      "replacementContent": "    ));",
+      "startLine": 878,
+      "endLine": 878,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 923,
+      "endLine": 923,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 927,
+      "endLine": 927,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ElevatedButton.icon(",
+      "replacementContent": "        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 931,
+      "endLine": 931,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 938,
+      "endLine": 938,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton.icon(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 943,
+      "endLine": 943,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 951,
+      "endLine": 951,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 1148,
+      "endLine": 1148,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 1159,
+      "endLine": 1159,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 1161,
+      "endLine": 1161,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 1172,
+      "endLine": 1172,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          IconButton(",
+      "replacementContent": "                          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 1173,
+      "endLine": 1173,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ),",
+      "replacementContent": "                          )),",
+      "startLine": 1201,
+      "endLine": 1201,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1278,
+      "endLine": 1278,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1281,
+      "endLine": 1281,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            TextButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1322,
+      "endLine": 1322,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 1325,
+      "endLine": 1325,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1326,
+      "endLine": 1326,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 1352,
+      "endLine": 1352,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1370,
+      "endLine": 1370,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1373,
+      "endLine": 1373,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1374,
+      "endLine": 1374,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1382,
+      "endLine": 1382,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1418,
+      "endLine": 1418,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1421,
+      "endLine": 1421,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1422,
+      "endLine": 1422,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1430,
+      "endLine": 1430,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1447,
+      "endLine": 1447,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1450,
+      "endLine": 1450,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1451,
+      "endLine": 1451,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1459,
+      "endLine": 1459,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            TextButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1492,
+      "endLine": 1492,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 1495,
+      "endLine": 1495,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1496,
+      "endLine": 1496,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 1504,
+      "endLine": 1504,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1770,
+      "endLine": 1770,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1773,
+      "endLine": 1773,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1774,
+      "endLine": 1774,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1778,
+      "endLine": 1778,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            TextButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1874,
+      "endLine": 1874,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 1877,
+      "endLine": 1877,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1878,
+      "endLine": 1878,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 1903,
+      "endLine": 1903,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1963,
+      "endLine": 1963,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1969,
+      "endLine": 1969,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  trailing: IconButton(",
+      "replacementContent": "                  trailing: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 2325,
+      "endLine": 2325,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  ),",
+      "replacementContent": "                  )),",
+      "startLine": 2332,
+      "endLine": 2332,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                child: ElevatedButton.icon(",
+      "replacementContent": "                child: AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 2433,
+      "endLine": 2433,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 2448,
+      "endLine": 2448,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ElevatedButton.icon(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 2569,
+      "endLine": 2569,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 2585,
+      "endLine": 2585,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    TextButton(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 2586,
+      "endLine": 2586,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 2596,
+      "endLine": 2596,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 2626,
+      "endLine": 2626,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 2630,
+      "endLine": 2630,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 2657,
+      "endLine": 2657,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 2661,
+      "endLine": 2661,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 2917,
+      "endLine": 2917,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 2928,
+      "endLine": 2928,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 2930,
+      "endLine": 2930,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 2938,
+      "endLine": 2938,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 2940,
+      "endLine": 2940,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 2948,
+      "endLine": 2948,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 2961,
+      "endLine": 2961,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 2969,
+      "endLine": 2969,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          IconButton(",
+      "replacementContent": "                          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 2970,
+      "endLine": 2970,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ),",
+      "replacementContent": "                          )),",
+      "startLine": 2974,
+      "endLine": 2974,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 3003,
+      "endLine": 3003,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 3007,
+      "endLine": 3007,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            TextButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 3165,
+      "endLine": 3165,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 3173,
+      "endLine": 3173,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              TextButton.icon(",
+      "replacementContent": "                              AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 3175,
+      "endLine": 3175,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              )",
+      "replacementContent": "                              ))",
+      "startLine": 3183,
+      "endLine": 3183,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              TextButton.icon(",
+      "replacementContent": "                              AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 3185,
+      "endLine": 3185,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              ),",
+      "replacementContent": "                              )),",
+      "startLine": 3193,
+      "endLine": 3193,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            IconButton(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 3194,
+      "endLine": 3194,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 3198,
+      "endLine": 3198,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 3577,
+      "endLine": 3577,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 3580,
+      "endLine": 3580,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ElevatedButton.icon(",
+      "replacementContent": "              AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3581,
+      "endLine": 3581,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 3602,
+      "endLine": 3602,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ElevatedButton.icon(",
+      "replacementContent": "              AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3603,
+      "endLine": 3603,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 3624,
+      "endLine": 3624,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 3732,
+      "endLine": 3732,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 3736,
+      "endLine": 3736,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ElevatedButton.icon(",
+      "replacementContent": "        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3740,
+      "endLine": 3740,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 3747,
+      "endLine": 3747,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton.icon(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3752,
+      "endLine": 3752,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 3760,
+      "endLine": 3760,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3975,
+      "endLine": 3975,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 3992,
+      "endLine": 3992,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ElevatedButton.icon(",
+      "replacementContent": "                            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3994,
+      "endLine": 3994,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            ),",
+      "replacementContent": "                            )),",
+      "startLine": 4006,
+      "endLine": 4006,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          IconButton(",
+      "replacementContent": "                          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 4007,
+      "endLine": 4007,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ),",
+      "replacementContent": "                          )),",
+      "startLine": 4036,
+      "endLine": 4036,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\book_detail_screen.dart": [
+    {
+      "targetContent": "import 'magazine_reader_screen.dart';",
+      "replacementContent": "import 'magazine_reader_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 12,
+      "endLine": 12,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "      child: TextButton.icon(",
+      "replacementContent": "      child: AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 536,
+      "endLine": 536,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "      ),",
+      "replacementContent": "      )),",
+      "startLine": 547,
+      "endLine": 547,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    children: List.generate(5, (index) => IconButton(",
+      "replacementContent": "                    children: List.generate(5, (index) => AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 568,
+      "endLine": 568,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    )),",
+      "replacementContent": "                    ))),",
+      "startLine": 574,
+      "endLine": 574,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                TextButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 592,
+      "endLine": 592,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 595,
+      "endLine": 595,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 596,
+      "endLine": 596,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 613,
+      "endLine": 613,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\citizen_science_screen.dart": [
+    {
+      "targetContent": "import 'sighting_submission_screen.dart';",
+      "replacementContent": "import 'sighting_submission_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 9,
+      "endLine": 9,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 265,
+      "endLine": 265,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 271,
+      "endLine": 271,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 293,
+      "endLine": 293,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 298,
+      "endLine": 298,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              child: ElevatedButton.icon(",
+      "replacementContent": "              child: AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 353,
+      "endLine": 353,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 365,
+      "endLine": 365,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  : IconButton(",
+      "replacementContent": "                  : AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 531,
+      "endLine": 531,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 538,
+      "endLine": 538,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\daily_wildlife_screen.dart": [
+    {
+      "targetContent": "import '../services/sound_service.dart';",
+      "replacementContent": "import '../services/sound_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 6,
+      "endLine": 6,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ElevatedButton.icon(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 216,
+      "endLine": 216,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 224,
+      "endLine": 224,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\home_screen.dart": [
+    {
+      "targetContent": "import 'library_screen.dart';",
+      "replacementContent": "import 'library_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 32,
+      "endLine": 32,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: IconButton(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 1494,
+      "endLine": 1494,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 1497,
+      "endLine": 1497,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            TextButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 2263,
+      "endLine": 2263,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 2267,
+      "endLine": 2267,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                TextButton.icon(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 3264,
+      "endLine": 3264,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 3268,
+      "endLine": 3268,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: ElevatedButton.icon(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3708,
+      "endLine": 3708,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 3721,
+      "endLine": 3721,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            child: ElevatedButton.icon(",
+      "replacementContent": "            child: AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3883,
+      "endLine": 3883,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 3896,
+      "endLine": 3896,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\kishore_earanyak_screen.dart": [
+    {
+      "targetContent": "import 'user_bookshelf_screen.dart';",
+      "replacementContent": "import 'user_bookshelf_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 13,
+      "endLine": 13,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      : ElevatedButton(",
+      "replacementContent": "                      : AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 261,
+      "endLine": 261,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        ),",
+      "replacementContent": "                        )),",
+      "startLine": 304,
+      "endLine": 304,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\kishor_medal_screen.dart": [
+    {
+      "targetContent": "import '../services/medal_export_service.dart';",
+      "replacementContent": "import '../services/medal_export_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 9,
+      "endLine": 9,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "    return ElevatedButton.icon(",
+      "replacementContent": "    return AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 458,
+      "endLine": 458,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "    );",
+      "replacementContent": "    ));",
+      "startLine": 472,
+      "endLine": 472,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "    return ElevatedButton.icon(",
+      "replacementContent": "    return AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 510,
+      "endLine": 510,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "    );",
+      "replacementContent": "    ));",
+      "startLine": 535,
+      "endLine": 535,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\library_screen.dart": [
+    {
+      "targetContent": "import 'magazine_reader_screen.dart';",
+      "replacementContent": "import 'magazine_reader_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 12,
+      "endLine": 12,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ? IconButton(",
+      "replacementContent": "                                ? AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 433,
+      "endLine": 433,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                  )",
+      "replacementContent": "                                  ))",
+      "startLine": 440,
+      "endLine": 440,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\login_screen.dart": [
+    {
+      "targetContent": "import '../widgets/keyboard_press_effect.dart';",
+      "replacementContent": "import '../widgets/keyboard_press_effect.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 6,
+      "endLine": 6,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      TextButton(",
+      "replacementContent": "                      AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 287,
+      "endLine": 287,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 297,
+      "endLine": 297,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 344,
+      "endLine": 344,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 369,
+      "endLine": 369,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\magazine_preview_screen.dart": [
+    {
+      "targetContent": "import '../widgets/magazine_cover_image.dart';",
+      "replacementContent": "import '../widgets/magazine_cover_image.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 12,
+      "endLine": 12,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        leading: IconButton(",
+      "replacementContent": "        leading: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 287,
+      "endLine": 287,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 290,
+      "endLine": 290,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        ElevatedButton.icon(",
+      "replacementContent": "                        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 310,
+      "endLine": 310,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        ),",
+      "replacementContent": "                        )),",
+      "startLine": 318,
+      "endLine": 318,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                      ElevatedButton.icon(",
+      "replacementContent": "                                      AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 431,
+      "endLine": 431,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                      ),",
+      "replacementContent": "                                      )),",
+      "startLine": 452,
+      "endLine": 452,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\magazine_reader_screen.dart": [
+    {
+      "targetContent": "import '../widgets/magazine_flipbook_layout_gate.dart';",
+      "replacementContent": "import '../widgets/magazine_flipbook_layout_gate.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 23,
+      "endLine": 23,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ElevatedButton.icon(",
+      "replacementContent": "              AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 532,
+      "endLine": 532,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 540,
+      "endLine": 540,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: IconButton(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 645,
+      "endLine": 645,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        onPressed: () => _nudgeZoom(0, 50))),",
+      "replacementContent": "                        onPressed: () => _nudgeZoom(0, 50)))),",
+      "startLine": 648,
+      "endLine": 648,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: IconButton(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 651,
+      "endLine": 651,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        onPressed: () => _nudgeZoom(0, -50))),",
+      "replacementContent": "                        onPressed: () => _nudgeZoom(0, -50)))),",
+      "startLine": 654,
+      "endLine": 654,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: IconButton(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 657,
+      "endLine": 657,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        onPressed: () => _nudgeZoom(50, 0))),",
+      "replacementContent": "                        onPressed: () => _nudgeZoom(50, 0)))),",
+      "startLine": 659,
+      "endLine": 659,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: IconButton(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 662,
+      "endLine": 662,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        onPressed: () => _nudgeZoom(-50, 0))),",
+      "replacementContent": "                        onPressed: () => _nudgeZoom(-50, 0)))),",
+      "startLine": 665,
+      "endLine": 665,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                  IconButton(",
+      "replacementContent": "                                  AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 913,
+      "endLine": 913,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                  ),",
+      "replacementContent": "                                  )),",
+      "startLine": 917,
+      "endLine": 917,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                  IconButton(",
+      "replacementContent": "                                  AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 918,
+      "endLine": 918,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                  ),",
+      "replacementContent": "                                  )),",
+      "startLine": 922,
+      "endLine": 922,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\main_navigation_shell.dart": [
+    {
+      "targetContent": "import 'kishore_earanyak_screen.dart';",
+      "replacementContent": "import 'kishore_earanyak_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 23,
+      "endLine": 23,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  child: ElevatedButton(",
+      "replacementContent": "                  child: AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 211,
+      "endLine": 211,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  ),",
+      "replacementContent": "                  )),",
+      "startLine": 247,
+      "endLine": 247,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                TextButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 250,
+      "endLine": 250,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 256,
+      "endLine": 256,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 276,
+      "endLine": 276,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 279,
+      "endLine": 279,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 280,
+      "endLine": 280,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 284,
+      "endLine": 284,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 313,
+      "endLine": 313,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 320,
+      "endLine": 320,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 321,
+      "endLine": 321,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 337,
+      "endLine": 337,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            TextButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 458,
+      "endLine": 458,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 465,
+      "endLine": 465,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 496,
+      "endLine": 496,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 503,
+      "endLine": 503,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    IconButton(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 553,
+      "endLine": 553,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 559,
+      "endLine": 559,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    IconButton(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 561,
+      "endLine": 561,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 567,
+      "endLine": 567,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          TextButton(",
+      "replacementContent": "                          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 777,
+      "endLine": 777,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ),",
+      "replacementContent": "                          )),",
+      "startLine": 780,
+      "endLine": 780,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    TextButton(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 829,
+      "endLine": 829,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 832,
+      "endLine": 832,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          builder: (ctx) => IconButton(",
+      "replacementContent": "          builder: (ctx) => AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 919,
+      "endLine": 919,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 931,
+      "endLine": 931,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 935,
+      "endLine": 935,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 950,
+      "endLine": 950,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\nature_games_screen.dart": [
+    {
+      "targetContent": "import '../widgets/keyboard_press_effect.dart';",
+      "replacementContent": "import '../widgets/keyboard_press_effect.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 12,
+      "endLine": 12,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        actions: [TextButton(onPressed: () { Navigator.pop(ctx); Navigator.pop(context); }, child: const Text('Back to Games', style: TextStyle(color: Color(0xFF00E676))))],",
+      "replacementContent": "        actions: [AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); Navigator.pop(context); }, child: const Text('Back to Games', style: TextStyle(color: Color(0xFF00E676)))))],",
+      "startLine": 1084,
+      "endLine": 1084,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(onPressed: _skipQuestion, child: const Text('Skip (\u098f\u09a1\u09bc\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09a8)', style: TextStyle(color: Colors.white54, fontSize: 16))),",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(onPressed: _skipQuestion, child: const Text('Skip (\u098f\u09a1\u09bc\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09a8)', style: TextStyle(color: Colors.white54, fontSize: 16)))),",
+      "startLine": 1206,
+      "endLine": 1206,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 1250,
+      "endLine": 1250,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1255,
+      "endLine": 1255,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          if (correct) TextButton(onPressed: () { Navigator.pop(ctx); _initGame(); }, child: const Text('Next Puzzle', style: TextStyle(color: Color(0xFF00E676)))),",
+      "replacementContent": "          if (correct) AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); _initGame(); }, child: const Text('Next Puzzle', style: TextStyle(color: Color(0xFF00E676))))),",
+      "startLine": 1380,
+      "endLine": 1380,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(onPressed: () { Navigator.pop(ctx); if (correct) Navigator.pop(context); }, child: Text(correct ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70))),",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); if (correct) Navigator.pop(context); }, child: Text(correct ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70)))),",
+      "startLine": 1381,
+      "endLine": 1381,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                child: ElevatedButton.icon(",
+      "replacementContent": "                                child: AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 1468,
+      "endLine": 1468,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 1473,
+      "endLine": 1473,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                            TextButton(onPressed: _initGame, child: const Text('Skip (\u098f\u09a1\u09bc\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09a8)', style: TextStyle(color: Colors.white54))),",
+      "replacementContent": "                            AnimatedButtonWrapper(child: TextButton(onPressed: _initGame, child: const Text('Skip (\u098f\u09a1\u09bc\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09a8)', style: TextStyle(color: Colors.white54)))),",
+      "startLine": 1480,
+      "endLine": 1480,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          if (ok) TextButton(onPressed: () { Navigator.pop(ctx); _loadNextPuzzle(); }, child: const Text('Next Bird', style: TextStyle(color: Color(0xFF00E676)))),",
+      "replacementContent": "          if (ok) AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); _loadNextPuzzle(); }, child: const Text('Next Bird', style: TextStyle(color: Color(0xFF00E676))))),",
+      "startLine": 1620,
+      "endLine": 1620,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(onPressed: () { Navigator.pop(ctx); if (ok) Navigator.pop(context); }, child: Text(ok ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70))),",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(onPressed: () { Navigator.pop(ctx); if (ok) Navigator.pop(context); }, child: Text(ok ? 'Quit' : 'Try Again', style: const TextStyle(color: Colors.white70)))),",
+      "startLine": 1621,
+      "endLine": 1621,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(onPressed: _slots.contains('') ? null : _submitWord, icon: const Icon(Icons.check_circle_outline), label: const Text('SUBMIT / \u099c\u09ae\u09be \u09a6\u09bf\u09a8'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, disabledBackgroundColor: Colors.white12, disabledForegroundColor: Colors.white38, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))))),",
+      "replacementContent": "              SizedBox(width: double.infinity, height: 50, child: AnimatedButtonWrapper(child: ElevatedButton.icon(onPressed: _slots.contains('') ? null : _submitWord, icon: const Icon(Icons.check_circle_outline), label: const Text('SUBMIT / \u099c\u09ae\u09be \u09a6\u09bf\u09a8'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black, disabledBackgroundColor: Colors.white12, disabledForegroundColor: Colors.white38, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)))))),",
+      "startLine": 1694,
+      "endLine": 1694,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(onPressed: _loadNextPuzzle, child: const Text('Skip (\u098f\u09a1\u09bc\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09a8)', style: TextStyle(color: Colors.white54))),",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(onPressed: _loadNextPuzzle, child: const Text('Skip (\u098f\u09a1\u09bc\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09a8)', style: TextStyle(color: Colors.white54)))),",
+      "startLine": 1696,
+      "endLine": 1696,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\news_detail_screen.dart": [
+    {
+      "targetContent": "import 'home_screen.dart';",
+      "replacementContent": "import 'home_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 12,
+      "endLine": 12,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 180,
+      "endLine": 180,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 188,
+      "endLine": 188,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\notification_detail_screen.dart": [
+    {
+      "targetContent": "import '../services/analytics_service.dart';",
+      "replacementContent": "import '../services/analytics_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 6,
+      "endLine": 6,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ElevatedButton.icon(",
+      "replacementContent": "              AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 288,
+      "endLine": 288,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 297,
+      "endLine": 297,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\onboarding_screen.dart": [
+    {
+      "targetContent": "import '../widgets/keyboard_press_effect.dart';",
+      "replacementContent": "import '../widgets/keyboard_press_effect.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 7,
+      "endLine": 7,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 170,
+      "endLine": 170,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 173,
+      "endLine": 173,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\online_book_store_screen.dart": [
+    {
+      "targetContent": "import '../widgets/keyboard_press_effect.dart';",
+      "replacementContent": "import '../widgets/keyboard_press_effect.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 7,
+      "endLine": 7,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 150,
+      "endLine": 150,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 153,
+      "endLine": 153,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton.icon(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 155,
+      "endLine": 155,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 163,
+      "endLine": 163,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\podcast_detail_screen.dart": [
+    {
+      "targetContent": "import '../widgets/nature_background.dart';",
+      "replacementContent": "import '../widgets/nature_background.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 10,
+      "endLine": 10,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 199,
+      "endLine": 199,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 203,
+      "endLine": 203,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ElevatedButton.icon(",
+      "replacementContent": "                          AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 387,
+      "endLine": 387,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ),",
+      "replacementContent": "                          )),",
+      "startLine": 395,
+      "endLine": 395,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              IconButton(",
+      "replacementContent": "                              AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 447,
+      "endLine": 447,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              ),",
+      "replacementContent": "                              )),",
+      "startLine": 452,
+      "endLine": 452,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              IconButton(",
+      "replacementContent": "                              AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 495,
+      "endLine": 495,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                              ),",
+      "replacementContent": "                              )),",
+      "startLine": 500,
+      "endLine": 500,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\podcast_screen.dart": [
+    {
+      "targetContent": "import 'podcast_detail_screen.dart';",
+      "replacementContent": "import 'podcast_detail_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 8,
+      "endLine": 8,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 121,
+      "endLine": 121,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 128,
+      "endLine": 128,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\sighting_detail_screen.dart": [
+    {
+      "targetContent": "import '../widgets/scientific_text.dart';",
+      "replacementContent": "import '../widgets/scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 10,
+      "endLine": 10,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 52,
+      "endLine": 52,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 55,
+      "endLine": 55,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 56,
+      "endLine": 56,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 60,
+      "endLine": 60,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        leading: IconButton(",
+      "replacementContent": "        leading: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 95,
+      "endLine": 95,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 101,
+      "endLine": 101,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 105,
+      "endLine": 105,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 109,
+      "endLine": 109,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\sighting_submission_screen.dart": [
+    {
+      "targetContent": "import '../widgets/citizen_science/sighting_card.dart';",
+      "replacementContent": "import '../widgets/citizen_science/sighting_card.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 10,
+      "endLine": 10,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 234,
+      "endLine": 234,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 237,
+      "endLine": 237,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              TextButton(",
+      "replacementContent": "              AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 238,
+      "endLine": 238,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 242,
+      "endLine": 242,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        leading: IconButton(",
+      "replacementContent": "        leading: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 320,
+      "endLine": 320,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 330,
+      "endLine": 330,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          child: ElevatedButton(",
+      "replacementContent": "          child: AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 410,
+      "endLine": 410,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 439,
+      "endLine": 439,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 443,
+      "endLine": 443,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 447,
+      "endLine": 447,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  TextButton.icon(",
+      "replacementContent": "                  AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 753,
+      "endLine": 753,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  ),",
+      "replacementContent": "                  )),",
+      "startLine": 762,
+      "endLine": 762,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 1163,
+      "endLine": 1163,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 1166,
+      "endLine": 1166,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                child: ElevatedButton(",
+      "replacementContent": "                child: AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1234,
+      "endLine": 1234,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 1246,
+      "endLine": 1246,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\tutorial_detail_screen.dart": [
+    {
+      "targetContent": "import '../widgets/scientific_text.dart';",
+      "replacementContent": "import '../widgets/scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 9,
+      "endLine": 9,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 312,
+      "endLine": 312,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 316,
+      "endLine": 316,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\tutorial_screen.dart": [
+    {
+      "targetContent": "import 'tutorial_detail_screen.dart';",
+      "replacementContent": "import 'tutorial_detail_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 9,
+      "endLine": 9,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 122,
+      "endLine": 122,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 129,
+      "endLine": 129,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\user_bookshelf_screen.dart": [
+    {
+      "targetContent": "import '../services/magazine_download_service.dart';",
+      "replacementContent": "import '../services/magazine_download_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 15,
+      "endLine": 15,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 124,
+      "endLine": 124,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 127,
+      "endLine": 127,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 128,
+      "endLine": 128,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 132,
+      "endLine": 132,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                        ElevatedButton.icon(",
+      "replacementContent": "                                        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 341,
+      "endLine": 341,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                        ),",
+      "replacementContent": "                                        )),",
+      "startLine": 365,
+      "endLine": 365,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\vlog_detail_screen.dart": [
+    {
+      "targetContent": "import '../widgets/scientific_text.dart';",
+      "replacementContent": "import '../widgets/scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 10,
+      "endLine": 10,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 91,
+      "endLine": 91,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 95,
+      "endLine": 95,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\vlog_screen.dart": [
+    {
+      "targetContent": "import 'vlog_detail_screen.dart';",
+      "replacementContent": "import 'vlog_detail_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 9,
+      "endLine": 9,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 122,
+      "endLine": 122,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 129,
+      "endLine": 129,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\wildlife_gallery_screen.dart": [
+    {
+      "targetContent": "import '../widgets/scientific_text.dart';",
+      "replacementContent": "import '../widgets/scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 13,
+      "endLine": 13,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 120,
+      "endLine": 120,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 123,
+      "endLine": 123,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 124,
+      "endLine": 124,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 128,
+      "endLine": 128,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 503,
+      "endLine": 503,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 512,
+      "endLine": 512,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: IconButton(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 563,
+      "endLine": 563,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 567,
+      "endLine": 567,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    child: IconButton(",
+      "replacementContent": "                    child: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 581,
+      "endLine": 581,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 585,
+      "endLine": 585,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\wildlife_help_screen.dart": [
+    {
+      "targetContent": "import '../services/wildlife_help_service.dart';",
+      "replacementContent": "import '../services/wildlife_help_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 5,
+      "endLine": 5,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ElevatedButton.icon(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 89,
+      "endLine": 89,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 100,
+      "endLine": 100,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                TextButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 105,
+      "endLine": 105,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 108,
+      "endLine": 108,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 109,
+      "endLine": 109,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 138,
+      "endLine": 138,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ElevatedButton.icon(",
+      "replacementContent": "                          AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 191,
+      "endLine": 191,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                          ),",
+      "replacementContent": "                          )),",
+      "startLine": 200,
+      "endLine": 200,
+      "allowMultiple": false
+    }
+  ],
+  "lib/screens\\writing_submission_screen.dart": [
+    {
+      "targetContent": "import '../services/writing_submission_service.dart';",
+      "replacementContent": "import '../services/writing_submission_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 5,
+      "endLine": 5,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 208,
+      "endLine": 208,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 221,
+      "endLine": 221,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      child: ElevatedButton(",
+      "replacementContent": "                      child: AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 527,
+      "endLine": 527,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 566,
+      "endLine": 566,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\capture_blocked_overlay.dart": [
+    {
+      "targetContent": "import 'package:flutter/material.dart';",
+      "replacementContent": "import 'package:flutter/material.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 1,
+      "endLine": 1,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ElevatedButton.icon(",
+      "replacementContent": "              AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 57,
+      "endLine": 57,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 69,
+      "endLine": 69,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\daily_wildlife_oil_card.dart": [
+    {
+      "targetContent": "import '../services/sound_service.dart';",
+      "replacementContent": "import '../services/sound_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 6,
+      "endLine": 6,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    TextButton.icon(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 127,
+      "endLine": 127,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 133,
+      "endLine": 133,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    TextButton.icon(",
+      "replacementContent": "                    AnimatedButtonWrapper(child: TextButton.icon(",
+      "startLine": 135,
+      "endLine": 135,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                    ),",
+      "replacementContent": "                    )),",
+      "startLine": 140,
+      "endLine": 140,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\rotating_book_card.dart": [
+    {
+      "targetContent": "import '../screens/magazine_reader_screen.dart';",
+      "replacementContent": "import '../screens/magazine_reader_screen.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 4,
+      "endLine": 4,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ElevatedButton.icon(",
+      "replacementContent": "        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 129,
+      "endLine": 129,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 169,
+      "endLine": 169,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\citizen_science\\sighting_card.dart": [
+    {
+      "targetContent": "import '../../services/sound_service.dart';",
+      "replacementContent": "import '../../services/sound_service.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 7,
+      "endLine": 7,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton.icon(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 375,
+      "endLine": 375,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 387,
+      "endLine": 387,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\editorial\\about_us_admin_section.dart": [
+    {
+      "targetContent": "import '../../models/about_us_content.dart';",
+      "replacementContent": "import '../../models/about_us_content.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 4,
+      "endLine": 4,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ElevatedButton.icon(",
+      "replacementContent": "        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 121,
+      "endLine": 121,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        )",
+      "replacementContent": "        ))",
+      "startLine": 126,
+      "endLine": 126,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\editorial\\daily_wildlife_admin_section.dart": [
+    {
+      "targetContent": "import '../../models/daily_wildlife_feature.dart';",
+      "replacementContent": "import '../../models/daily_wildlife_feature.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 5,
+      "endLine": 5,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton.icon(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 157,
+      "endLine": 157,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 164,
+      "endLine": 164,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton.icon(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 165,
+      "endLine": 165,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 179,
+      "endLine": 179,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  trailing: IconButton(",
+      "replacementContent": "                  trailing: AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 257,
+      "endLine": 257,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                  ),",
+      "replacementContent": "                  )),",
+      "startLine": 263,
+      "endLine": 263,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          IconButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 520,
+      "endLine": 520,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 524,
+      "endLine": 524,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              child: ElevatedButton.icon(",
+      "replacementContent": "              child: AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 843,
+      "endLine": 843,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "              ),",
+      "replacementContent": "              )),",
+      "startLine": 869,
+      "endLine": 869,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\editorial\\gallery_admin_section.dart": [
+    {
+      "targetContent": "import '../scientific_text.dart';",
+      "replacementContent": "import '../scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 8,
+      "endLine": 8,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 111,
+      "endLine": 111,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 114,
+      "endLine": 114,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 115,
+      "endLine": 115,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 119,
+      "endLine": 119,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ElevatedButton.icon(",
+      "replacementContent": "                      AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 252,
+      "endLine": 252,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 271,
+      "endLine": 271,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                TextButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 409,
+      "endLine": 409,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 412,
+      "endLine": 412,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 413,
+      "endLine": 413,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 540,
+      "endLine": 540,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 592,
+      "endLine": 592,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 595,
+      "endLine": 595,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 621,
+      "endLine": 621,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 625,
+      "endLine": 625,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ElevatedButton.icon(",
+      "replacementContent": "            AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 632,
+      "endLine": 632,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 640,
+      "endLine": 640,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ElevatedButton.icon(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 802,
+      "endLine": 802,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 813,
+      "endLine": 813,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                IconButton(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 814,
+      "endLine": 814,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 818,
+      "endLine": 818,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\editorial\\podcast_admin_section.dart": [
+    {
+      "targetContent": "import '../scientific_text.dart';",
+      "replacementContent": "import '../scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 7,
+      "endLine": 7,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 91,
+      "endLine": 91,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 94,
+      "endLine": 94,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 95,
+      "endLine": 95,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 99,
+      "endLine": 99,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ElevatedButton.icon(",
+      "replacementContent": "                      AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 260,
+      "endLine": 260,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 281,
+      "endLine": 281,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ElevatedButton.icon(",
+      "replacementContent": "                      AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 285,
+      "endLine": 285,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 305,
+      "endLine": 305,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                TextButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 340,
+      "endLine": 340,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 343,
+      "endLine": 343,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 344,
+      "endLine": 344,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 463,
+      "endLine": 463,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 510,
+      "endLine": 510,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 513,
+      "endLine": 513,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 540,
+      "endLine": 540,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 544,
+      "endLine": 544,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ElevatedButton.icon(",
+      "replacementContent": "        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 549,
+      "endLine": 549,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 557,
+      "endLine": 557,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ElevatedButton.icon(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 698,
+      "endLine": 698,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 709,
+      "endLine": 709,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                IconButton(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 710,
+      "endLine": 710,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 714,
+      "endLine": 714,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\editorial\\tutorial_admin_section.dart": [
+    {
+      "targetContent": "import '../scientific_text.dart';",
+      "replacementContent": "import '../scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 9,
+      "endLine": 9,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 146,
+      "endLine": 146,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 155,
+      "endLine": 155,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 156,
+      "endLine": 156,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 164,
+      "endLine": 164,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ElevatedButton.icon(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 915,
+      "endLine": 915,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 962,
+      "endLine": 962,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        ElevatedButton.icon(",
+      "replacementContent": "                        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 1441,
+      "endLine": 1441,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                        ),",
+      "replacementContent": "                        )),",
+      "startLine": 1511,
+      "endLine": 1511,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ElevatedButton.icon(",
+      "replacementContent": "                      AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 1517,
+      "endLine": 1517,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 1563,
+      "endLine": 1563,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                TextButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 1746,
+      "endLine": 1746,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 1762,
+      "endLine": 1762,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 1763,
+      "endLine": 1763,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 2086,
+      "endLine": 2086,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 2342,
+      "endLine": 2342,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 2354,
+      "endLine": 2354,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 2414,
+      "endLine": 2414,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 2427,
+      "endLine": 2427,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ElevatedButton.icon(",
+      "replacementContent": "        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 2433,
+      "endLine": 2433,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 2473,
+      "endLine": 2473,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ElevatedButton.icon(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 3005,
+      "endLine": 3005,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 3051,
+      "endLine": 3051,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                IconButton(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 3052,
+      "endLine": 3052,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 3069,
+      "endLine": 3069,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\editorial\\vlog_admin_section.dart": [
+    {
+      "targetContent": "import '../scientific_text.dart';",
+      "replacementContent": "import '../scientific_text.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 7,
+      "endLine": 7,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 91,
+      "endLine": 91,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 94,
+      "endLine": 94,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ElevatedButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 95,
+      "endLine": 95,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 99,
+      "endLine": 99,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ElevatedButton.icon(",
+      "replacementContent": "                      AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 251,
+      "endLine": 251,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 271,
+      "endLine": 271,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ElevatedButton.icon(",
+      "replacementContent": "                      AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 275,
+      "endLine": 275,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                      ),",
+      "replacementContent": "                      )),",
+      "startLine": 295,
+      "endLine": 295,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                TextButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 330,
+      "endLine": 330,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 333,
+      "endLine": 333,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ElevatedButton(",
+      "replacementContent": "                AnimatedButtonWrapper(child: ElevatedButton(",
+      "startLine": 334,
+      "endLine": 334,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                ),",
+      "replacementContent": "                )),",
+      "startLine": 446,
+      "endLine": 446,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          TextButton(",
+      "replacementContent": "          AnimatedButtonWrapper(child: TextButton(",
+      "startLine": 490,
+      "endLine": 490,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "          ),",
+      "replacementContent": "          )),",
+      "startLine": 493,
+      "endLine": 493,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 520,
+      "endLine": 520,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 524,
+      "endLine": 524,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ElevatedButton.icon(",
+      "replacementContent": "        AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 529,
+      "endLine": 529,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "        ),",
+      "replacementContent": "        )),",
+      "startLine": 537,
+      "endLine": 537,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ElevatedButton.icon(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: ElevatedButton.icon(",
+      "startLine": 678,
+      "endLine": 678,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 689,
+      "endLine": 689,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                IconButton(",
+      "replacementContent": "                                AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 690,
+      "endLine": 690,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "                                ),",
+      "replacementContent": "                                )),",
+      "startLine": 694,
+      "endLine": 694,
+      "allowMultiple": false
+    }
+  ],
+  "lib/widgets\\editorial\\wildlife_help_admin_section.dart": [
+    {
+      "targetContent": "import '../../models/wildlife_help.dart';",
+      "replacementContent": "import '../../models/wildlife_help.dart';\nimport 'package:earanyak/widgets/animated_button_wrapper.dart';",
+      "startLine": 3,
+      "endLine": 3,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            IconButton(",
+      "replacementContent": "            AnimatedButtonWrapper(child: IconButton(",
+      "startLine": 70,
+      "endLine": 70,
+      "allowMultiple": false
+    },
+    {
+      "targetContent": "            ),",
+      "replacementContent": "            )),",
+      "startLine": 74,
+      "endLine": 74,
+      "allowMultiple": false
+    }
+  ]
+}

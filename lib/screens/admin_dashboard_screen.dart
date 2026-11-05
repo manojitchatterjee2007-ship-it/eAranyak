@@ -28,6 +28,7 @@ import '../widgets/editorial/tutorial_admin_section.dart';
 import '../widgets/editorial/daily_wildlife_admin_section.dart';
 import '../widgets/editorial/about_us_admin_section.dart';
 import '../widgets/editorial/wildlife_help_admin_section.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class UploadTask {
   final String id;
@@ -586,11 +587,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             actions: [
-              TextButton(
+              AnimatedButtonWrapper(child: TextButton(
                 onPressed: () => Navigator.pop(ctx),
                 child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-              ),
-              ElevatedButton.icon(
+              )),
+              AnimatedButtonWrapper(child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade800),
                 onPressed: () => _submitBook(
                   ctx: ctx,
@@ -611,8 +612,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 icon: const Icon(Icons.save_outlined, size: 16),
                 label: const Text('💾 Save Draft', style: TextStyle(color: Colors.white)),
-              ),
-              ElevatedButton.icon(
+              )),
+              AnimatedButtonWrapper(child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
                 onPressed: () => _submitBook(
                   ctx: ctx,
@@ -633,7 +634,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 icon: const Icon(Icons.publish_rounded, size: 16),
                 label: const Text('📢 Publish Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
+              )),
             ],
           );
         },
@@ -766,7 +767,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                 ],
               ),
-              IconButton(
+              AnimatedButtonWrapper(child: IconButton(
                 icon: const Icon(Icons.refresh_rounded, color: Color(0xFF00E676)),
                 tooltip: 'ড্যাশবোর্ড রিফ্রেশ করুন',
                 onPressed: () {
@@ -776,7 +777,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   _loadAdminOnlineBooks();
                   _loadAdminAnalytics();
                 },
-              ),
+              )),
             ],
           ),
           const SizedBox(height: 4),
@@ -862,7 +863,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickNavButton(String label, int index, IconData icon) {
-    return ElevatedButton.icon(
+    return AnimatedButtonWrapper(child: ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF142419),
         side: const BorderSide(color: Color(0xFF00E676)),
@@ -875,7 +876,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       },
       icon: Icon(icon, size: 18, color: const Color(0xFF00E676)),
       label: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
-    );
+    ));
   }
 
   Widget _buildDashboardStatCard(String title, String mainStat, String subText, Color color) {
@@ -920,27 +921,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
               tooltip: 'রিফ্রেশ করুন',
               onPressed: _loadAdminOnlineBooks,
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
-        ElevatedButton.icon(
+        AnimatedButtonWrapper(child: ElevatedButton.icon(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Manage Reviews coming soon...')));
           },
           icon: const Icon(Icons.rate_review, color: Colors.white, size: 18),
           label: const Text('Manage Reviews', style: TextStyle(color: Colors.white)),
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E2E23)),
-        ),
+        )),
         const SizedBox(height: 12),
 
         Row(
           children: [
-            ElevatedButton.icon(
+            AnimatedButtonWrapper(child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2E7D32),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -948,7 +949,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onPressed: () => _showCreateOrEditBookDialog(),
               icon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
               label: const Text('➕ নতুন বই যুক্ত করুন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
@@ -1145,7 +1146,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             label: const Text('সম্পাদনা'),
                           ),
                           if (!book.isPublished)
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00E676),
                                 visualDensity: VisualDensity.compact,
@@ -1156,9 +1157,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               },
                               icon: const Icon(Icons.publish_rounded, size: 16, color: Colors.black),
                               label: const Text('📢 Publish', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                            ),
+                            )),
                           if (book.isPublished)
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orange.shade800,
                                 visualDensity: VisualDensity.compact,
@@ -1169,8 +1170,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               },
                               icon: const Icon(Icons.visibility_off_rounded, size: 16),
                               label: const Text('Unpublish'),
-                            ),
-                          IconButton(
+                            )),
+                          AnimatedButtonWrapper(child: IconButton(
                             icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                             tooltip: 'স্থায়ীভাবে মুছে ফেলুন',
                             onPressed: () {
@@ -1198,7 +1199,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 ),
                               );
                             },
-                          ),
+                          )),
                         ],
                       ),
                     ],
@@ -1275,10 +1276,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('বন্ধ করুন', style: TextStyle(color: Colors.white70)),
-          ),
+          )),
         ],
       ),
     );
@@ -1319,11 +1320,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
           actions: [
-            TextButton(
+            AnimatedButtonWrapper(child: TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-            ),
-            ElevatedButton(
+            )),
+            AnimatedButtonWrapper(child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
@@ -1349,7 +1350,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 }
               },
               child: const Text('প্রকাশ করুন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
+            )),
           ],
         ),
       ),
@@ -1367,11 +1368,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade800),
             onPressed: () async {
               Navigator.pop(ctx);
@@ -1379,7 +1380,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               _loadAdminSubmissions();
             },
             child: const Text('অপ্রকাশিত করুন', style: TextStyle(color: Colors.white)),
-          ),
+          )),
         ],
       ),
     );
@@ -1415,11 +1416,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () async {
               Navigator.pop(ctx);
@@ -1427,7 +1428,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               _loadAdminSubmissions();
             },
             child: const Text('প্রত্যাখ্যান নিশ্চিত করুন', style: TextStyle(color: Colors.white)),
-          ),
+          )),
         ],
       ),
     );
@@ -1444,11 +1445,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.pop(ctx);
@@ -1456,7 +1457,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               _loadAdminSubmissions();
             },
             child: const Text('মুছে ফেলুন', style: TextStyle(color: Colors.white)),
-          ),
+          )),
         ],
       ),
     );
@@ -1489,11 +1490,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
           actions: [
-            TextButton(
+            AnimatedButtonWrapper(child: TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-            ),
-            ElevatedButton(
+            )),
+            AnimatedButtonWrapper(child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
               onPressed: () async {
                 Navigator.pop(ctx);
@@ -1501,7 +1502,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 _loadAdminSubmissions();
               },
               child: const Text('সংরক্ষণ করুন', style: TextStyle(color: Colors.white)),
-            ),
+            )),
           ],
         ),
       ),
@@ -1767,15 +1768,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           style: const TextStyle(fontSize: 13, color: Colors.white70),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('বাতিল (Cancel)', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('মুছে ফেলুন (Delete)', style: TextStyle(color: Colors.white)),
-          ),
+          )),
         ],
       ),
     );
@@ -1871,11 +1872,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ),
           actions: [
-            TextButton(
+            AnimatedButtonWrapper(child: TextButton(
               onPressed: isSaving ? null : () => Navigator.pop(ctx),
               child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-            ),
-            ElevatedButton(
+            )),
+            AnimatedButtonWrapper(child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
               onPressed: isSaving ? null : () async {
                 setDlgState(() => isSaving = true);
@@ -1900,7 +1901,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 }
               },
               child: const Text('Save', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            ),
+            )),
           ],
         ),
       ),
@@ -1960,13 +1961,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         content: Text(
             'Are you sure you want to completely delete "$issueDate" issue from servers?\n(আপনি কি নিশ্চিত যে "$issueDate" সংখ্যাটি মুছে ফেলতে চান?)'),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () {
               Navigator.pop(ctx, false);
             },
             child: const Text('Cancel (বাতিল)',
                 style: TextStyle(color: Colors.white70)),
-          ),
+          )),
           KeyboardPressEffect(
             onTap: () {
               Navigator.pop(ctx, true);
@@ -2322,14 +2323,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
                       'Total Pages: ${mag['total_pages']} (মোট পৃষ্ঠা: ${mag['total_pages']} টি)'),
-                  trailing: IconButton(
+                  trailing: AnimatedButtonWrapper(child: IconButton(
                     icon: const Icon(Icons.delete_forever_rounded,
                         color: Colors.redAccent),
                     tooltip: 'Delete Issue / সংখ্যাটি মুছে ফেলুন',
                     onPressed: () {
                       _deleteMagazine(mag['id'], mag['issue_date']);
                     },
-                  ),
+                  )),
                 ),
               );
             },
@@ -2430,7 +2431,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               // Preview Button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: AnimatedButtonWrapper(child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00E676),
                       padding: const EdgeInsets.symmetric(vertical: 12)),
@@ -2445,7 +2446,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     _newsBusy ? 'বাংলা সম্পাদকীয় সংস্করণ প্রস্তুত হচ্ছে…' : '👁 Preview Bengali Article',
                     style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
                   ),
-                ),
+                )),
               ),
 
               if (_newsError != null)
@@ -2566,7 +2567,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   spacing: 12,
                   runSpacing: 8,
                   children: [
-                    ElevatedButton.icon(
+                    AnimatedButtonWrapper(child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00E676),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -2582,8 +2583,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         _publishing ? 'প্রকাশ করা হচ্ছে…' : '✅ Publish Article',
                         style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
-                    ),
-                    TextButton(
+                    )),
+                    AnimatedButtonWrapper(child: TextButton(
                       onPressed: _publishing
                           ? null
                           : () {
@@ -2593,7 +2594,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         });
                       },
                       child: const Text('Discard (বাতিল)', style: TextStyle(color: Colors.white70)),
-                    ),
+                    )),
                   ],
                 ),
 
@@ -2623,11 +2624,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               tooltip: 'Refresh News List / তালিকা রিফ্রেশ করুন',
               onPressed: _loadAdminNews,
               icon: const Icon(Icons.refresh_rounded, color: Color(0xFF00E676)),
-            ),
+            )),
           ],
         ),
 
@@ -2654,11 +2655,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
               tooltip: 'রিফ্রেশ করুন',
               onPressed: _loadAdminSubmissions,
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
@@ -2914,7 +2915,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             label: const Text('পড়ুন'),
                           ),
                           if (sub.status != 'approved' && sub.status != 'published')
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF2E7D32),
                                 visualDensity: VisualDensity.compact,
@@ -2925,9 +2926,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               },
                               icon: const Icon(Icons.check, size: 16),
                               label: const Text('✓ Approve'),
-                            ),
+                            )),
                           if (sub.status != 'published')
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00E676),
                                 visualDensity: VisualDensity.compact,
@@ -2935,9 +2936,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               onPressed: () => _showPublishDialog(sub),
                               icon: const Icon(Icons.publish_rounded, size: 16, color: Colors.black),
                               label: const Text('📢 Publish', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                            ),
+                            )),
                           if (sub.status == 'published')
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orange.shade800,
                                 visualDensity: VisualDensity.compact,
@@ -2945,7 +2946,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               onPressed: () => _showUnpublishDialog(sub),
                               icon: const Icon(Icons.visibility_off_rounded, size: 16),
                               label: const Text('Unpublish'),
-                            ),
+                            )),
                           if (sub.status == 'published')
                             OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
@@ -2958,7 +2959,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               label: const Text('Priority'),
                             ),
                           if (sub.status != 'rejected')
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red.shade900,
                                 visualDensity: VisualDensity.compact,
@@ -2966,12 +2967,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               onPressed: () => _showRejectDialog(sub),
                               icon: const Icon(Icons.close, size: 16),
                               label: const Text('✕ Reject'),
-                            ),
-                          IconButton(
+                            )),
+                          AnimatedButtonWrapper(child: IconButton(
                             icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                             tooltip: 'স্থায়ীভাবে মুছে ফেলুন',
                             onPressed: () => _showDeleteSubmissionDialog(sub),
-                          ),
+                          )),
                         ],
                       ),
                     ],
@@ -3000,11 +3001,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               tooltip: 'Refresh News List / তালিকা রিফ্রেশ করুন',
               onPressed: _loadAdminNews,
               icon: const Icon(Icons.refresh_rounded, color: Color(0xFF00E676)),
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
@@ -3162,7 +3163,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         Wrap(
                           spacing: 4,
                           children: [
-                            TextButton.icon(
+                            AnimatedButtonWrapper(child: TextButton.icon(
                               style: TextButton.styleFrom(
                                 visualDensity: VisualDensity.compact,
                                 foregroundColor: const Color(0xFF81C784),
@@ -3170,9 +3171,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               onPressed: () => _editNewsDialog(news),
                               icon: const Icon(Icons.edit_note_rounded, size: 16),
                               label: const Text('Edit / সম্পাদনা', style: TextStyle(fontSize: 12)),
-                            ),
+                            )),
                             if (isPub)
-                              TextButton.icon(
+                              AnimatedButtonWrapper(child: TextButton.icon(
                                 style: TextButton.styleFrom(
                                   visualDensity: VisualDensity.compact,
                                   foregroundColor: Colors.amber,
@@ -3180,9 +3181,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 onPressed: () => _unpublishAdminNews(news),
                                 icon: const Icon(Icons.visibility_off_outlined, size: 16),
                                 label: const Text('👁‍🗨 Unpublish', style: TextStyle(fontSize: 12)),
-                              )
+                              ))
                             else
-                              TextButton.icon(
+                              AnimatedButtonWrapper(child: TextButton.icon(
                                 style: TextButton.styleFrom(
                                   visualDensity: VisualDensity.compact,
                                   foregroundColor: const Color(0xFF00E676),
@@ -3190,12 +3191,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 onPressed: () => _publishExistingAdminNews(news),
                                 icon: const Icon(Icons.publish_rounded, size: 16),
                                 label: const Text('📢 Publish', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              ),
-                            IconButton(
+                              )),
+                            AnimatedButtonWrapper(child: IconButton(
                               icon: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent, size: 20),
                               tooltip: 'Delete permanently',
                               onPressed: () => _deleteAdminNews(news),
-                            ),
+                            )),
                           ],
                         ),
                       ],
@@ -3574,11 +3575,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             actions: [
-              TextButton(
+              AnimatedButtonWrapper(child: TextButton(
                 onPressed: () => Navigator.pop(ctx),
                 child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-              ),
-              ElevatedButton.icon(
+              )),
+              AnimatedButtonWrapper(child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade800),
                 onPressed: () => _submitNotification(
                   ctx: ctx,
@@ -3599,8 +3600,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 icon: const Icon(Icons.save_outlined, size: 16),
                 label: const Text('💾 Save Draft', style: TextStyle(color: Colors.white)),
-              ),
-              ElevatedButton.icon(
+              )),
+              AnimatedButtonWrapper(child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
                 onPressed: () => _submitNotification(
                   ctx: ctx,
@@ -3621,7 +3622,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 icon: const Icon(Icons.publish_rounded, size: 16),
                 label: const Text('📢 Publish Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
+              )),
             ],
           );
         },
@@ -3729,27 +3730,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
               tooltip: 'রিফ্রেশ করুন',
               onPressed: _loadAdminNotifications,
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
-        ElevatedButton.icon(
+        AnimatedButtonWrapper(child: ElevatedButton.icon(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Manage Reviews coming soon...')));
           },
           icon: const Icon(Icons.rate_review, color: Colors.white, size: 18),
           label: const Text('Manage Reviews', style: TextStyle(color: Colors.white)),
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E2E23)),
-        ),
+        )),
         const SizedBox(height: 12),
 
         Row(
           children: [
-            ElevatedButton.icon(
+            AnimatedButtonWrapper(child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2E7D32),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -3757,7 +3758,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onPressed: _showCreateNotificationDialog,
               icon: const Icon(Icons.add_alert_rounded, size: 18, color: Colors.white),
               label: const Text('➕ নতুন বিজ্ঞপ্তি প্রকাশ করুন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
@@ -3972,7 +3973,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             label: const Text('পড়ুন'),
                           ),
                           if (!notif.isPublished)
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00E676),
                                 visualDensity: VisualDensity.compact,
@@ -3989,9 +3990,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               },
                               icon: const Icon(Icons.publish_rounded, size: 16, color: Colors.black),
                               label: const Text('📢 Publish', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                            ),
+                            )),
                           if (notif.isPublished)
-                            ElevatedButton.icon(
+                            AnimatedButtonWrapper(child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orange.shade800,
                                 visualDensity: VisualDensity.compact,
@@ -4003,8 +4004,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               },
                               icon: const Icon(Icons.visibility_off_rounded, size: 16),
                               label: const Text('Unpublish'),
-                            ),
-                          IconButton(
+                            )),
+                          AnimatedButtonWrapper(child: IconButton(
                             icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                             tooltip: 'স্থায়ীভাবে মুছে ফেলুন',
                             onPressed: () {
@@ -4033,7 +4034,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 ),
                               );
                             },
-                          ),
+                          )),
                         ],
                       ),
                     ],

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/keyboard_press_effect.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final String userId;
@@ -167,10 +168,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextButton(
+              AnimatedButtonWrapper(child: TextButton(
                 onPressed: () => openAppSettings(),
                 child: const Text('সিস্টেম সেটিংস খুলুন (Open Settings)', style: TextStyle(color: Color(0xFF81C784))),
-              ),
+              )),
             ],
           ),
         ),

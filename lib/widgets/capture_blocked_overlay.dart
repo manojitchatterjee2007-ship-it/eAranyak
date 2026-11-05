@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 /// Overlay widget displayed when screen capture or screen recording is active.
 class CaptureBlockedOverlay extends StatelessWidget {
@@ -54,7 +55,7 @@ class CaptureBlockedOverlay extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 24),
-              ElevatedButton.icon(
+              AnimatedButtonWrapper(child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00E676),
                   foregroundColor: Colors.black,
@@ -66,7 +67,7 @@ class CaptureBlockedOverlay extends StatelessWidget {
                   'Resume Viewing (পুনরায় শুরু করুন)',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
+              )),
             ],
           ],
         ),

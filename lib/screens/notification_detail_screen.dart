@@ -4,6 +4,7 @@ import '../models/app_notification.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/scientific_text.dart';
 import '../services/analytics_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class NotificationDetailScreen extends StatefulWidget {
   final AppNotificationItem notification;
@@ -285,7 +286,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
             // PDF Download/Open Button
             if (notification.notificationType == 'pdf' && notification.pdfUrl != null && notification.pdfUrl!.isNotEmpty) ...[
-              ElevatedButton.icon(
+              AnimatedButtonWrapper(child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFB74D),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -294,7 +295,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                 icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.black),
                 label: const Text('📄 PDF বিজ্ঞপ্তিটি খুলুন / ডাউনলোড করুন',
                     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
-              ),
+              )),
               const SizedBox(height: 20),
             ],
 

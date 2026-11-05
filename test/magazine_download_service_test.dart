@@ -100,6 +100,33 @@ void main() {
       expect(MagazineDownloadService.isDownloading('random-id-999'), isFalse);
     });
 
+    test('isMagazineDownloaded returns true even if SharedPreferences is empty/unregistered', () async {
+      // Clear preferences completely
+      SharedPreferences.setMockInitialValues({});
+
+      final dir = await MagazineDownloadService.getMagazineDirectory(testMagId);
+      await dir.create(recursive: true);
+
+      final page1 = File('${dir.path}/page_1.jpg');
+      await page1.writeAsBytes(List.filled(1024, 42));
+
+      final manifest = File('${dir.path}/manifest.json');
+      await manifest.writeAsString(jsonEncode({
+        'id': testMagId,
+        'title': 'Offline Resilient Issue',
+        'total_pages': 1,
+        'magazine': {'id': testMagId, 'title': 'Offline Resilient Issue'},
+      }));
+
+      // Must succeed based on filesystem ground truth
+      final downloaded = await MagazineDownloadService.isMagazineDownloaded(testMagId);
+      expect(downloaded, isTrue);
+
+      final diskMags = await MagazineDownloadService.getDownloadedMagazinesFromDisk();
+      expect(diskMags.length, 1);
+      expect(diskMags.first['id'], testMagId);
+    });
+
     test('removeMagazine cleans up files and preferences', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('downloaded_mag_$testMagId', true);

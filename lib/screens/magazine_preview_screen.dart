@@ -10,6 +10,7 @@ import '../services/sound_service.dart';
 import '../core/config.dart';
 import '../widgets/magazine_flipbook_layout_gate.dart';
 import '../widgets/magazine_cover_image.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class MagazinePreviewScreen extends StatefulWidget {
   final String magazineId;
@@ -284,10 +285,30 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
           '${formatMagazineTitle(widget.title)} (Preview)',
           style: const TextStyle(fontSize: 16),
         ),
-        leading: IconButton(
+        leading: AnimatedButtonWrapper(child: IconButton(
           icon: const Icon(Icons.close_rounded, color: Color(0xFF00E676)),
           onPressed: () => Navigator.pop(context),
-        ),
+        )),
+        actions: [
+          AnimatedButtonWrapper(
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF00E676),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                widget.onDownloadTriggered();
+              },
+              icon: const Icon(Icons.download_rounded, size: 20),
+              label: const Text(
+                'ডাউনলোড (Download)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _isLoading
           ? _buildLoadingCoverPlaceholder()
@@ -307,7 +328,7 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
                           style: const TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 16),
-                        ElevatedButton.icon(
+                        AnimatedButtonWrapper(child: ElevatedButton.icon(
                           onPressed: () {
                             debugPrint(
                                 '[MagazinePreview] retry requested issue=${widget.magazineId}');
@@ -315,7 +336,7 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
                           },
                           icon: const Icon(Icons.refresh_rounded),
                           label: const Text('Retry'),
-                        ),
+                        )),
                       ],
                     ),
                   ),
@@ -428,7 +449,7 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
                                             fontSize: 12),
                                       ),
                                       const SizedBox(height: 24),
-                                      ElevatedButton.icon(
+                                      AnimatedButtonWrapper(child: ElevatedButton.icon(
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
                                               const Color(0xFF00E676),
@@ -449,7 +470,7 @@ class _MagazinePreviewScreenState extends State<MagazinePreviewScreen> {
                                             'ডাউনলোড করুন (Download)',
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold)),
-                                      ),
+                                      )),
                                     ],
                                   ),
                                 ),

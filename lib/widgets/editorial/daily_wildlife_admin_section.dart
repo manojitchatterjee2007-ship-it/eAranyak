@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/daily_wildlife_feature.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class DailyWildlifeAdminSection extends StatefulWidget {
   const DailyWildlifeAdminSection({super.key});
@@ -154,15 +155,15 @@ class _DailyWildlifeAdminSectionState
               spacing: 8,
               runSpacing: 8,
               children: [
-                ElevatedButton.icon(
+                AnimatedButtonWrapper(child: ElevatedButton.icon(
                   onPressed: _fetchFeatures,
                   icon: const Icon(Icons.refresh),
                   label: const Text('Refresh'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white10,
                   ),
-                ),
-                ElevatedButton.icon(
+                )),
+                AnimatedButtonWrapper(child: ElevatedButton.icon(
                   onPressed: _isGenerating ? null : _generateFeature,
                   icon: _isGenerating
                       ? const SizedBox(
@@ -176,7 +177,7 @@ class _DailyWildlifeAdminSectionState
                     backgroundColor: const Color(0xFF00E676),
                     foregroundColor: Colors.black,
                   ),
-                ),
+                )),
               ],
             ),
           ],
@@ -254,13 +255,13 @@ class _DailyWildlifeAdminSectionState
                       color: Colors.white70,
                     ),
                   ),
-                  trailing: IconButton(
+                  trailing: AnimatedButtonWrapper(child: IconButton(
                     icon: const Icon(
                       Icons.edit,
                       color: Colors.white,
                     ),
                     onPressed: () => _openEditor(f),
-                  ),
+                  )),
                 ),
               );
             },
@@ -517,11 +518,11 @@ class _DailyWildlifeEditorState
         title: const Text('Edit Feature'),
         backgroundColor: const Color(0xFF1B3322),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             icon: const Icon(Icons.save),
             tooltip: 'Save',
             onPressed: _isSaving ? null : _save,
-          ),
+          )),
         ],
       ),
       body: SingleChildScrollView(
@@ -840,7 +841,7 @@ class _DailyWildlifeEditorState
 
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
+              child: AnimatedButtonWrapper(child: ElevatedButton.icon(
                 onPressed: _isSaving ? null : _save,
                 icon: _isSaving
                     ? const SizedBox(
@@ -866,7 +867,7 @@ class _DailyWildlifeEditorState
                     vertical: 14,
                   ),
                 ),
-              ),
+              )),
             ),
 
             const SizedBox(height: 20),

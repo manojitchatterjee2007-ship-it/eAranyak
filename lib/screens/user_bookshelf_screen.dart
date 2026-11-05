@@ -13,6 +13,7 @@ import '../widgets/seamless_scrolling_background.dart';
 import 'magazine_reader_screen.dart';
 import 'library_screen.dart';
 import '../services/magazine_download_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class UserBookshelfScreen extends StatefulWidget {
   final String userEmail;
@@ -89,6 +90,14 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
         } catch (_) {}
       }
 
+      // Secondary fallback: check local disk storage directly
+      if (mags.isEmpty) {
+        final diskMags = await MagazineDownloadService.getDownloadedMagazinesFromDisk();
+        if (diskMags.isNotEmpty) {
+          mags = diskMags;
+        }
+      }
+
       for (final mag in mags) {
         final String magId = mag['id'].toString();
         final double p = prefs.getDouble('progress_$magId') ?? 0.0;
@@ -121,15 +130,15 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
         content: Text('"$title" ম্যাগাজিনটি আপনার বইয়ের তাক থেকে সরিয়ে নেওয়া হবে।',
             style: const TextStyle(color: Colors.white70, fontSize: 13)),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('সরিয়ে নিন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
+          )),
         ],
       ),
     );
@@ -338,7 +347,7 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
                                           style: TextStyle(color: Colors.white60, fontSize: 12.5, height: 1.5),
                                         ),
                                         const SizedBox(height: 20),
-                                        ElevatedButton.icon(
+                                        AnimatedButtonWrapper(child: ElevatedButton.icon(
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color(0xFF00E676),
                                             foregroundColor: Colors.black,
@@ -362,7 +371,7 @@ class UserBookshelfScreenState extends State<UserBookshelfScreen> {
                                           },
                                           icon: const Icon(Icons.library_books_rounded),
                                           label: const Text('📚 লাইব্রেরি ব্রাউজ করুন', style: TextStyle(fontWeight: FontWeight.bold)),
-                                        ),
+                                        )),
                                       ],
                                     ),
                                   ),

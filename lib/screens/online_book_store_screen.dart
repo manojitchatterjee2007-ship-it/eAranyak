@@ -5,6 +5,7 @@ import '../models/online_book.dart';
 import '../services/online_book_service.dart';
 import '../services/analytics_service.dart';
 import '../widgets/keyboard_press_effect.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class OnlineBookStoreScreen extends StatefulWidget {
   const OnlineBookStoreScreen({super.key});
@@ -147,12 +148,12 @@ class _OnlineBookStoreScreenState extends State<OnlineBookStoreScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('বন্ধ করুন', style: TextStyle(color: Colors.white54)),
-          ),
+          )),
           if (book.isAvailable)
-            ElevatedButton.icon(
+            AnimatedButtonWrapper(child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
               onPressed: () {
                 Navigator.pop(ctx);
@@ -160,7 +161,7 @@ class _OnlineBookStoreScreenState extends State<OnlineBookStoreScreen> {
               },
               icon: const Icon(Icons.shopping_cart_rounded, color: Colors.black, size: 18),
               label: const Text('🛒 অর্ডার করুন', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            ),
+            )),
         ],
       ),
     );

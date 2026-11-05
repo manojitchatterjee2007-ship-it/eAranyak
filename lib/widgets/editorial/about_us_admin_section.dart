@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/about_us_content.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class AboutUsAdminSection extends StatefulWidget {
   const AboutUsAdminSection({super.key});
@@ -118,12 +119,12 @@ class _AboutUsAdminSectionState extends State<AboutUsAdminSection> {
           activeThumbColor: const Color(0xFF00E676),
         ),
         const SizedBox(height: 16),
-        ElevatedButton.icon(
+        AnimatedButtonWrapper(child: ElevatedButton.icon(
           onPressed: _isSaving ? null : _save,
           icon: const Icon(Icons.save),
           label: const Text('Save Content'),
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), foregroundColor: Colors.black),
-        )
+        ))
       ],
     );
   }

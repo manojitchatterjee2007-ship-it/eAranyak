@@ -4,6 +4,7 @@ import '../core/config.dart';
 import '../services/sound_service.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/keyboard_press_effect.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -284,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     if (!_isSignUp)
-                      TextButton(
+                      AnimatedButtonWrapper(child: TextButton(
                         onPressed: () {
                           SoundService.playButtonSound();
                           _forgotPassword();
@@ -294,7 +295,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.right,
                             style: TextStyle(
                                 fontSize: 10, color: Color(0xFF00E676))),
-                      ),
+                      )),
                   ],
                 ),
               ),
@@ -341,7 +342,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextButton(
+              AnimatedButtonWrapper(child: TextButton(
                 onPressed: () {
                   SoundService.playButtonSound();
                   setState(() {
@@ -366,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-              ),
+              )),
             ],
           ),
         ),

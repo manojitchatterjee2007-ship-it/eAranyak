@@ -6,6 +6,7 @@ import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/nature_background.dart';
 import 'podcast_detail_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class PodcastScreen extends StatefulWidget {
   final String? initialPodcastId;
@@ -118,14 +119,14 @@ class _PodcastScreenState extends State<PodcastScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
         ),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF00E676)),
             tooltip: 'রিফ্রেশ / Refresh',
             onPressed: () {
               SoundService.playButtonSound();
               _loadPodcasts();
             },
-          ),
+          )),
         ],
       ),
       body: Stack(

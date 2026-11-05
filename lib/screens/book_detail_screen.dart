@@ -10,6 +10,7 @@ import '../services/analytics_service.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import 'magazine_reader_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class BookDetailScreen extends StatefulWidget {
   final OnlineBook book;
@@ -533,7 +534,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
 
   Widget _buildReviewButton() {
     return Center(
-      child: TextButton.icon(
+      child: AnimatedButtonWrapper(child: TextButton.icon(
         onPressed: _showReviewDialog,
         icon: const Icon(Icons.rate_review, color: Color(0xFF00E676), size: 18),
         label: const Text('আপনার মতামত দিন', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
@@ -544,7 +545,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
             side: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.5)),
           ),
         ),
-      ),
+      )),
     );
   }
 
@@ -565,13 +566,13 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) => IconButton(
+                    children: List.generate(5, (index) => AnimatedButtonWrapper(child: IconButton(
                       icon: Icon(
                         index < selectedRating ? Icons.star : Icons.star_border,
                         color: const Color(0xFFFFD54F),
                       ),
                       onPressed: () => setDialogState(() => selectedRating = index + 1),
-                    )),
+                    ))),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -589,11 +590,11 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 ],
               ),
               actions: [
-                TextButton(
+                AnimatedButtonWrapper(child: TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-                ),
-                ElevatedButton(
+                )),
+                AnimatedButtonWrapper(child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
                   onPressed: () async {
                     if (bodyController.text.trim().isEmpty) return;
@@ -610,7 +611,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                     }
                   },
                   child: const Text('জমা দিন', style: TextStyle(color: Colors.black)),
-                ),
+                )),
               ],
             );
           }

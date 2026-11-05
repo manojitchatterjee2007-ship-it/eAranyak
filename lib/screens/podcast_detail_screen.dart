@@ -8,6 +8,7 @@ import '../models/podcast.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/nature_background.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class PodcastDetailScreen extends StatefulWidget {
   final Podcast podcast;
@@ -196,11 +197,11 @@ class _PodcastDetailScreenState extends State<PodcastDetailScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             icon: const Icon(Icons.share_rounded, color: Color(0xFF00E676)),
             tooltip: 'শেয়ার করুন / Share',
             onPressed: _sharePodcast,
-          ),
+          )),
         ],
       ),
       body: Stack(
@@ -384,7 +385,7 @@ class _PodcastDetailScreenState extends State<PodcastDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          ElevatedButton.icon(
+                          AnimatedButtonWrapper(child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00E676),
                               foregroundColor: Colors.black,
@@ -392,7 +393,7 @@ class _PodcastDetailScreenState extends State<PodcastDetailScreen> {
                             onPressed: _playAudio,
                             icon: const Icon(Icons.refresh_rounded, size: 18),
                             label: const Text('পুনরায় চেষ্টা করুন / Retry'),
-                          ),
+                          )),
                         ] else ...[
                           // Seekbar Slider
                           SliderTheme(
@@ -444,12 +445,12 @@ class _PodcastDetailScreenState extends State<PodcastDetailScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               // Replay 10s
-                              IconButton(
+                              AnimatedButtonWrapper(child: IconButton(
                                 iconSize: 36,
                                 icon: const Icon(Icons.replay_10_rounded, color: Colors.white),
                                 tooltip: '১০ সেকেন্ড পিছনে',
                                 onPressed: () => _seekRelative(-10),
-                              ),
+                              )),
                               const SizedBox(width: 20),
 
                               // Play / Pause Button
@@ -492,12 +493,12 @@ class _PodcastDetailScreenState extends State<PodcastDetailScreen> {
                               const SizedBox(width: 20),
 
                               // Forward 10s
-                              IconButton(
+                              AnimatedButtonWrapper(child: IconButton(
                                 iconSize: 36,
                                 icon: const Icon(Icons.forward_10_rounded, color: Colors.white),
                                 tooltip: '১০ সেকেন্ড সামনে',
                                 onPressed: () => _seekRelative(10),
-                              ),
+                              )),
                             ],
                           ),
                         ],

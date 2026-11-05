@@ -84,12 +84,9 @@ class MagazineDownloadService {
   }
 
   /// Checks whether a full magazine issue is stored locally and fully verified.
+  /// Filesystem (manifest.json and valid page files) is the primary ground truth.
   static Future<bool> isMagazineDownloaded(String magazineId) async {
     try {
-      final prefs = await _getPrefsSafely();
-      final isFlagged = prefs.getBool('downloaded_mag_$magazineId') ?? false;
-      if (!isFlagged) return false;
-
       final magDir = await getMagazineDirectory(magazineId);
       if (!await magDir.exists()) return false;
 
@@ -107,11 +104,50 @@ class MagazineDownloadService {
           return false;
         }
       }
+
+      // Best-effort sync to SharedPreferences for quick lookup
+      try {
+        final prefs = await _getPrefsSafely();
+        if (prefs.getBool('downloaded_mag_$magazineId') != true) {
+          await prefs.setBool('downloaded_mag_$magazineId', true);
+        }
+      } catch (_) {}
+
       return true;
     } catch (e) {
       debugPrint('[MagazineDownloadService] Check error for $magazineId: $e');
       return false;
     }
+  }
+
+  /// Discovers all locally downloaded magazines directly from disk storage.
+  static Future<List<Map<String, dynamic>>> getDownloadedMagazinesFromDisk() async {
+    final List<Map<String, dynamic>> results = [];
+    try {
+      final base = await _getBaseDirectory();
+      if (!await base.exists()) return results;
+      final entities = base.listSync();
+      for (final e in entities) {
+        if (e is Directory && !e.path.endsWith('_tmp')) {
+          final id = e.path.split(Platform.pathSeparator).last;
+          if (await isMagazineDownloaded(id)) {
+            final manifestFile = File('${e.path}/manifest.json');
+            if (await manifestFile.exists()) {
+              try {
+                final raw = await manifestFile.readAsString();
+                final map = jsonDecode(raw) as Map<String, dynamic>;
+                if (map['magazine'] is Map) {
+                  results.add(Map<String, dynamic>.from(map['magazine'] as Map));
+                }
+              } catch (_) {}
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[MagazineDownloadService] getDownloadedMagazinesFromDisk error: $e');
+    }
+    return results;
   }
 
   /// Returns sorted list of local page image files if downloaded; otherwise null.
@@ -350,17 +386,21 @@ class MagazineDownloadService {
       } catch (_) {}
       tempDir = null; // Successfully transferred
 
-      // 5. Update SharedPreferences metadata
-      final prefs = await _getPrefsSafely();
-      await prefs.setBool('downloaded_mag_$magazineId', true);
+      // 5. Update SharedPreferences metadata (best-effort, non-fatal)
+      try {
+        final prefs = await _getPrefsSafely();
+        await prefs.setBool('downloaded_mag_$magazineId', true);
 
-      List<String> downloadedIds = List<String>.from(prefs.getStringList('downloaded_magazine_ids') ?? []);
-      if (!downloadedIds.contains(magazineId)) {
-        downloadedIds.add(magazineId);
-        await prefs.setStringList('downloaded_magazine_ids', downloadedIds);
+        List<String> downloadedIds = List<String>.from(prefs.getStringList('downloaded_magazine_ids') ?? []);
+        if (!downloadedIds.contains(magazineId)) {
+          downloadedIds.add(magazineId);
+          await prefs.setStringList('downloaded_magazine_ids', downloadedIds);
+        }
+        await prefs.setString('mag_meta_$magazineId', jsonEncode(magazine));
+        await prefs.setInt('mag_pages_count_$magazineId', totalPages);
+      } catch (prefsErr) {
+        debugPrint('[MagazineDownloadService] SharedPreferences metadata update warning (non-fatal): $prefsErr');
       }
-      await prefs.setString('mag_meta_$magazineId', jsonEncode(magazine));
-      await prefs.setInt('mag_pages_count_$magazineId', totalPages);
 
       updateProgress(MagazineDownloadProgress(
         magazineId: magazineId,
@@ -412,14 +452,18 @@ class MagazineDownloadService {
         await tempDir.delete(recursive: true);
       }
 
-      final prefs = await _getPrefsSafely();
-      await prefs.remove('downloaded_mag_$magazineId');
-      await prefs.remove('mag_meta_$magazineId');
-      await prefs.remove('mag_pages_count_$magazineId');
+      try {
+        final prefs = await _getPrefsSafely();
+        await prefs.remove('downloaded_mag_$magazineId');
+        await prefs.remove('mag_meta_$magazineId');
+        await prefs.remove('mag_pages_count_$magazineId');
 
-      final downloadedIds = List<String>.from(prefs.getStringList('downloaded_magazine_ids') ?? []);
-      downloadedIds.remove(magazineId);
-      await prefs.setStringList('downloaded_magazine_ids', downloadedIds);
+        final downloadedIds = List<String>.from(prefs.getStringList('downloaded_magazine_ids') ?? []);
+        downloadedIds.remove(magazineId);
+        await prefs.setStringList('downloaded_magazine_ids', downloadedIds);
+      } catch (prefsErr) {
+        debugPrint('[MagazineDownloadService] SharedPreferences removal warning: $prefsErr');
+      }
 
       final current = Map<String, MagazineDownloadProgress>.from(progressNotifier.value);
       current.remove(magazineId);

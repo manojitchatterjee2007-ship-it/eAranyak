@@ -21,6 +21,7 @@ import 'podcast_screen.dart';
 import 'vlog_screen.dart';
 import 'tutorial_screen.dart';
 import 'kishore_earanyak_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class MainNavigationShell extends StatefulWidget {
   final String userEmail;
@@ -39,11 +40,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
   final GlobalKey<UserBookshelfScreenState> _bookshelfKey =
-  GlobalKey<UserBookshelfScreenState>();
+      GlobalKey<UserBookshelfScreenState>();
   final GlobalKey<WildlifeGalleryScreenState> _galleryKey =
-  GlobalKey<WildlifeGalleryScreenState>();
+      GlobalKey<WildlifeGalleryScreenState>();
   final GlobalKey<NatureGamesScreenState> _gamesKey =
-  GlobalKey<NatureGamesScreenState>();
+      GlobalKey<NatureGamesScreenState>();
 
   @override
   void initState() {
@@ -53,6 +54,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     _fetchProfile();
     _initPackageInfo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      } catch (_) {}
       final raw = PendingDeepLink.take();
       if (raw != null) {
         unawaited(handleNotificationPayload(raw));
@@ -97,6 +101,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   }
 
   void _switchTab(int index) {
+    try {
+      ScaffoldMessenger.of(context).clearSnackBars();
+    } catch (_) {}
     setState(() {
       _currentIndex = index;
     });
@@ -133,7 +140,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           backgroundColor: const Color(0xFF142419),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.4)),
+            side: BorderSide(
+                color: const Color(0xFF00E676).withValues(alpha: 0.4)),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -152,7 +160,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       child: Image.asset(
                         'assets/icon/app_icon.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.eco, color: Color(0xFF00E676), size: 34),
+                        errorBuilder: (_, __, ___) => const Icon(Icons.eco,
+                            color: Color(0xFF00E676), size: 34),
                       ),
                     ),
                   ),
@@ -160,7 +169,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 const SizedBox(height: 12),
                 const Text(
                   'আপনার প্রোফাইল আপডেট করুন',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18),
                 ),
                 const Text(
                   '(Update Your Profile)',
@@ -175,7 +187,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     labelStyle: TextStyle(color: Color(0xFF00E676)),
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person, color: Color(0xFF00E676)),
-                    suffixIcon: Icon(Icons.edit, color: Colors.white54, size: 18),
+                    suffixIcon:
+                        Icon(Icons.edit, color: Colors.white54, size: 18),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -187,7 +200,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     labelStyle: TextStyle(color: Color(0xFF00E676)),
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.phone, color: Color(0xFF00E676)),
-                    suffixIcon: Icon(Icons.edit, color: Colors.white54, size: 18),
+                    suffixIcon:
+                        Icon(Icons.edit, color: Colors.white54, size: 18),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -208,11 +222,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
+                  child: AnimatedButtonWrapper(
+                      child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00E676),
                       foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     onPressed: isSaving
                         ? null
@@ -227,13 +243,16 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                                   'id': user.id,
                                   'full_name': nameCtrl.text.trim(),
                                   'mobile_number': mobileCtrl.text.trim(),
-                                  'updated_at': DateTime.now().toIso8601String(),
+                                  'updated_at':
+                                      DateTime.now().toIso8601String(),
                                 });
                                 await _fetchProfile();
                                 if (mounted) {
                                   nav.pop();
                                   messenger.showSnackBar(
-                                    const SnackBar(content: Text('প্রোফাইল আপডেট সম্পন্ন হয়েছে!')),
+                                    const SnackBar(
+                                        content: Text(
+                                            'প্রোফাইল আপডেট সম্পন্ন হয়েছে!')),
                                   );
                                 }
                               }
@@ -242,18 +261,26 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                             }
                           },
                     child: isSaving
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                        : const Text('আপডেট (Update)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  ),
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.black, strokeWidth: 2))
+                        : const Text('আপডেট (Update)',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15)),
+                  )),
                 ),
                 const SizedBox(height: 12),
-                TextButton(
+                AnimatedButtonWrapper(
+                    child: TextButton(
                   onPressed: () {
                     Navigator.pop(ctx);
                     _deleteAccount();
                   },
-                  child: const Text('ডিলিট অ্যাকাউন্ট (Delete Account)', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
-                ),
+                  child: const Text('ডিলিট অ্যাকাউন্ট (Delete Account)',
+                      style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+                )),
               ],
             ),
           ),
@@ -267,21 +294,26 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF18221B),
-        title: const Text('🗑 Delete Account (অ্যাকাউন্ট মুছে ফেলুন)', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+        title: const Text('🗑 Delete Account (অ্যাকাউন্ট মুছে ফেলুন)',
+            style: TextStyle(
+                color: Colors.redAccent, fontWeight: FontWeight.bold)),
         content: const Text(
           'Are you sure you want to completely delete your eআরণ্যক account and all data from servers?\n(আপনি কি নিশ্চিত যে আপনার অ্যাকাউন্ট এবং সমস্ত তথ্য সম্পূর্ণভাবে মুছে ফেলতে চান?)',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(
+              child: TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel (বাতিল)', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
+            child: const Text('Cancel (বাতিল)',
+                style: TextStyle(color: Colors.white70)),
+          )),
+          AnimatedButtonWrapper(
+              child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete Account'),
-          ),
+          )),
         ],
       ),
     );
@@ -304,21 +336,24 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         backgroundColor: const Color(0xFF18221B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Logout (প্রস্থান)',
-            style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: Colors.redAccent, fontWeight: FontWeight.bold)),
         content: const Text(
           'Are you sure you want to sign out?\n(আপনি কি নিশ্চিতভাবে সাইন আউট করতে চান?)',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(
+              child: TextButton(
             onPressed: () {
               SoundService.playButtonSound();
               Navigator.pop(ctx);
             },
             child: const Text('Cancel (বাতিল)',
                 style: TextStyle(color: Colors.white70)),
-          ),
-          TextButton(
+          )),
+          AnimatedButtonWrapper(
+              child: TextButton(
             onPressed: () async {
               SoundService.playButtonSound();
               Navigator.pop(ctx);
@@ -333,8 +368,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               }
             },
             child: const Text('Logout (প্রস্থান)',
-                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-          ),
+                style: TextStyle(
+                    color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          )),
         ],
       ),
     );
@@ -386,7 +422,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                         color: Colors.white.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Image.asset('assets/images/baya_weaver_nest_button.png',
+                      child: Image.asset(
+                          'assets/images/baya_weaver_nest_button.png',
                           width: 24,
                           height: 24,
                           filterQuality: FilterQuality.medium),
@@ -443,7 +480,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       filterQuality: FilterQuality.medium),
                 ),
                 title: const Text('Logout',
-                    style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        color: Colors.redAccent, fontWeight: FontWeight.bold)),
                 subtitle: const Text('(প্রস্থান)',
                     style: TextStyle(fontSize: 11, color: Colors.redAccent)),
                 onTap: () {
@@ -455,14 +493,16 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             ],
           ),
           actions: [
-            TextButton(
+            AnimatedButtonWrapper(
+                child: TextButton(
               onPressed: () {
                 SoundService.playButtonSound();
                 Navigator.pop(ctx);
               },
               child: const Text('Close (বন্ধ করুন)',
-                  style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
-            ),
+                  style: TextStyle(
+                      color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
+            )),
           ],
         ),
       ),
@@ -479,10 +519,16 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         title: Column(
           children: [
             Image.asset('assets/images/about_us.png',
-                width: 72, height: 72, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                width: 72,
+                height: 72,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium),
             const SizedBox(height: 12),
             const Text('আমাদের সম্বন্ধে - About us',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
           ],
         ),
         content: const SingleChildScrollView(
@@ -493,14 +539,16 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           ),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(
+              child: TextButton(
             onPressed: () {
               SoundService.playButtonSound();
               Navigator.pop(ctx);
             },
             child: const Text('বন্ধ করুন (Close)',
-                style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
-          ),
+                style: TextStyle(
+                    color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
+          )),
         ],
       ),
     );
@@ -512,7 +560,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.only(top: 50, bottom: 20, left: 16, right: 12),
+            padding:
+                const EdgeInsets.only(top: 50, bottom: 20, left: 16, right: 12),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF1E2E23), Color(0xFF141F17)],
@@ -530,41 +579,52 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     children: [
                       const Text(
                         'eআরণ্যক',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         _fullName.isNotEmpty ? 'স্বাগত, $_fullName' : 'স্বাগতম',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF00E676), fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF00E676),
+                            fontWeight: FontWeight.bold),
                       ),
                       Text(
                         widget.userEmail,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 10, color: Colors.white54),
+                        style: const TextStyle(
+                            fontSize: 10, color: Colors.white54),
                       ),
                     ],
                   ),
                 ),
                 Column(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_note_rounded, color: Colors.white70, size: 20),
+                    AnimatedButtonWrapper(
+                        child: IconButton(
+                      icon: const Icon(Icons.edit_note_rounded,
+                          color: Colors.white70, size: 20),
                       onPressed: _openProfileDialog,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       tooltip: 'Edit Profile',
-                    ),
+                    )),
                     const SizedBox(height: 8),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                    AnimatedButtonWrapper(
+                        child: IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded,
+                          color: Colors.redAccent, size: 20),
                       onPressed: _deleteAccount,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       tooltip: 'Delete Account',
-                    ),
+                    )),
                   ],
                 ),
               ],
@@ -576,10 +636,17 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               padding: EdgeInsets.zero,
               children: [
                 ListTile(
-                  leading: Image.asset('assets/images/baya_weaver_nest_button.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('নীড়', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(Home)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  leading: Image.asset(
+                      'assets/images/baya_weaver_nest_button.png',
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('নীড়',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(Home)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     _switchTab(0);
@@ -587,9 +654,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/bookworm_bookshelf.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('আমার বইয়ের তাক', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(📖 My Bookshelf)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('আমার বইয়ের তাক',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(📖 My Bookshelf)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     _switchTab(1);
@@ -597,9 +670,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/library.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('লাইব্রেরি', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(📚 Library)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('লাইব্রেরি',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(📚 Library)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     _switchTab(2);
@@ -607,9 +686,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/gallery.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('চিত্রশালা', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(Wildlife Gallery)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('চিত্রশালা',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(Wildlife Gallery)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     _switchTab(4);
@@ -617,9 +702,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/red_panda_games.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('খেলার ছলে প্রকৃতি পাঠ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(Nature Games)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('খেলার ছলে প্রকৃতি পাঠ',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(Nature Games)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     _switchTab(3);
@@ -627,29 +718,53 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/book_store.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('অনলাইন বই ঘর', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(🛒 Online Book Store)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('অনলাইন বই ঘর',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(🛒 Online Book Store)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const OnlineBookStoreScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const OnlineBookStoreScreen()));
                   },
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/help.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('বন্যপ্রাণী সহায়তা', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(Wildlife Help)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('বন্যপ্রাণী সহায়তা',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(Wildlife Help)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const WildlifeHelpScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const WildlifeHelpScreen()));
                   },
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/podcast.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('পডকাস্ট', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(🎧 Podcast)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('পডকাস্ট',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(🎧 Podcast)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -662,9 +777,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/kishor.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('কিশোর আরণ্যক', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(Kishore Aranyak)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('কিশোর আরণ্যক',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(Kishore Aranyak)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -677,9 +798,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/nature_log.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('প্রকৃতির দর্পণ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(▶️ Nature Vlogs)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('প্রকৃতির দর্পণ',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(▶️ Nature Vlogs)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -692,9 +819,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/tutorials.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('টিউটোরিয়াল', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(🎓 Tutorials)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('টিউটোরিয়াল',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(🎓 Tutorials)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -708,9 +841,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 if (_isAdmin)
                   ListTile(
                     leading: Image.asset('assets/images/owl_editor_glasses.png',
-                        width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                    title: const Text('সম্পাদক মোড', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    subtitle: const Text('(Editor Mode)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium),
+                    title: const Text('সম্পাদক মোড',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    subtitle: const Text('(Editor Mode)',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
                     onTap: () {
                       Navigator.pop(context);
                       _switchTab(5);
@@ -718,9 +857,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   ),
                 ListTile(
                   leading: Image.asset('assets/images/about_us.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('আমাদের সম্বন্ধে', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(About us)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('আমাদের সম্বন্ধে',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(About us)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     _openAboutUsDialog();
@@ -728,9 +873,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ),
                 ListTile(
                   leading: Image.asset('assets/images/settings.png',
-                      width: 48, height: 48, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                  title: const Text('সেটিংস', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: const Text('(Settings)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium),
+                  title: const Text('সেটিংস',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: const Text('(Settings)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   onTap: () {
                     Navigator.pop(context);
                     _openSettingsDialog();
@@ -740,11 +891,17 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   leading: Padding(
                     padding: const EdgeInsets.only(left: 12),
                     child: Image.asset('assets/images/copyright.png',
-                        width: 24, height: 24, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium),
                   ),
                   title: const Text(
                     'কপিরাইট পলিসি',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 14),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                        fontSize: 14),
                   ),
                   subtitle: const Text(
                     '(Copyright Policy)',
@@ -757,27 +914,38 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                         backgroundColor: const Color(0xFF18221B),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                          side: BorderSide(
+                              color: const Color(0xFF00E676)
+                                  .withValues(alpha: 0.3)),
                         ),
                         title: const Row(
                           children: [
                             Icon(Icons.gavel_rounded, color: Color(0xFF00E676)),
                             SizedBox(width: 10),
-                            Text('বিধিবদ্ধ সতর্কীকরণ', style: TextStyle(color: Colors.white, fontSize: 18)),
+                            Text('বিধিবদ্ধ সতর্কীকরণ',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18)),
                           ],
                         ),
                         content: const SingleChildScrollView(
                           child: Text(
                             "eআরণ্যক অ্যাপের নাম, লোগো, নকশা, লেখা, চিত্র, আলোকচিত্র, গ্রাফিক্স, তথ্য, শিক্ষামূলক উপাদান, গেম ও অন্যান্য সৃজনশীল বিষয়বস্তু অনুমতি ব্যতীত সম্পূর্ণ বা আংশিকভাবে অনুলিপি, পুনরুৎপাদন, পরিবর্তন, প্রকাশ, পুনঃপ্রকাশ, বাণিজ্যিকভাবে ব্যবহার, বিতরণ বা অন্য কোনো মাধ্যমে প্রচার করা নিষিদ্ধ। কোনো ব্যক্তি বা প্রতিষ্ঠান যথাযথ অনুমতি ছাড়া এসব বিষয়বস্তু ব্যবহার বা বিতরণ করলে, প্রযোজ্য মেধাস্বত্ব ও অন্যান্য আইনের অধীনে আইনানুগ ব্যবস্থা গ্রহণ করা হতে পারে। তৃতীয় পক্ষের উৎস থেকে প্রদত্ত বিষয়বস্তুর ক্ষেত্রে সংশ্লিষ্ট উৎস ও স্বত্বাধিকারীর অধিকারও প্রযোজ্য। অনুমতি ব্যতীত ব্যবহার থেকে বিরত থাকুন।",
-                            style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                            style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                height: 1.5),
                             textAlign: TextAlign.justify,
                           ),
                         ),
                         actions: [
-                          TextButton(
+                          AnimatedButtonWrapper(
+                              child: TextButton(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('সম্মত (Agreed)', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
-                          ),
+                            child: const Text('সম্মত (Agreed)',
+                                style: TextStyle(
+                                    color: Color(0xFF00E676),
+                                    fontWeight: FontWeight.bold)),
+                          )),
                         ],
                       ),
                     );
@@ -794,16 +962,21 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   backgroundColor: const Color(0xFF18221B),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                    side: BorderSide(
+                        color: const Color(0xFF00E676).withValues(alpha: 0.3)),
                   ),
                   title: Row(
                     children: [
-                      const Icon(Icons.system_update_alt_rounded, color: Color(0xFF00E676)),
+                      const Icon(Icons.system_update_alt_rounded,
+                          color: Color(0xFF00E676)),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'eআরণ্যক 3.0 — প্রকৃতির সঙ্গে পরিচয়ের এক নতুন অধ্যায়!',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -821,15 +994,20 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       "⚙️ সামগ্রিক উন্নয়ন: সংবাদ, ছবি, নেভিগেশন ও অ্যাপের বিভিন্ন অংশে সংশোধন ও উন্নয়নের কাজ।\n\n"
                       "প্রকৃতিকে জানুন। বন্যপ্রাণীকে ভালোবাসুন। সংরক্ষণের অংশ হয়ে উঠুন।\n\n"
                       "eআরণ্যক 3.0 — প্রকৃতির জন্য, আগামী প্রজন্মের জন্য।",
-                      style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                      style: TextStyle(
+                          color: Colors.white70, fontSize: 13, height: 1.5),
                       textAlign: TextAlign.justify,
                     ),
                   ),
                   actions: [
-                    TextButton(
+                    AnimatedButtonWrapper(
+                        child: TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('বন্ধ করুন', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
-                    ),
+                      child: const Text('বন্ধ করুন',
+                          style: TextStyle(
+                              color: Color(0xFF00E676),
+                              fontWeight: FontWeight.bold)),
+                    )),
                   ],
                 ),
               );
@@ -846,8 +1024,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   'Version $_appVersion',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: Colors.white54, 
-                    fontSize: 12, 
+                    color: Colors.white54,
+                    fontSize: 12,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -859,18 +1037,19 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     );
   }
 
-  Widget _buildNavIcon(String assetPath, IconData fallbackIcon, {bool active = false}) {
+  Widget _buildNavIcon(String assetPath, IconData fallbackIcon,
+      {bool active = false}) {
     final img = Image.asset(
       assetPath,
-      width: 32,
-      height: 32,
+      width: 48,
+      height: 48,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
       errorBuilder: (context, error, stackTrace) {
         debugPrint('Error loading nav icon $assetPath: $error');
         return Icon(
           fallbackIcon,
-          size: 30,
+          size: 44,
           color: active ? const Color(0xFF00E676) : Colors.white54,
         );
       },
@@ -896,9 +1075,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       LibraryScreen(userEmail: widget.userEmail),
       NatureGamesScreen(key: _gamesKey),
       WildlifeGalleryScreen(
-          key: _galleryKey,
-          userEmail: widget.userEmail,
-          isAdmin: _isAdmin),
+          key: _galleryKey, userEmail: widget.userEmail, isAdmin: _isAdmin),
       if (_isAdmin)
         AdminDashboardScreen(
           onUploadComplete: () {
@@ -916,29 +1093,33 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         centerTitle: true,
         toolbarHeight: 64,
         leading: Builder(
-          builder: (ctx) => IconButton(
+          builder: (ctx) => AnimatedButtonWrapper(
+              child: IconButton(
             icon: Image.asset('assets/images/options.png',
                 width: 48,
                 height: 48,
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.medium,
-                errorBuilder: (_, __, ___) => const Icon(Icons.menu, color: Colors.white70, size: 28)),
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.menu, color: Colors.white70, size: 28)),
             tooltip: 'Options / বিকল্প',
             onPressed: () {
               SoundService.playButtonSound();
               Scaffold.of(ctx).openDrawer();
             },
-          ),
+          )),
         ),
         title: const AnimatedEAranyakLogo(size: 56),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(
+              child: IconButton(
             icon: Image.asset('assets/images/refresh.png',
                 width: 36,
                 height: 36,
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.medium,
-                errorBuilder: (_, __, ___) => const Icon(Icons.refresh, color: Colors.white70, size: 28)),
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.refresh, color: Colors.white70, size: 28)),
             tooltip: 'Refresh / রিফ্রেশ করুন',
             onPressed: () {
               SoundService.playButtonSound();
@@ -947,7 +1128,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               _galleryKey.currentState?.loadPhotos();
               _gamesKey.currentState?.refresh();
             },
-          ),
+          )),
         ],
       ),
       drawer: _buildDrawer(),
@@ -1032,24 +1213,39 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             },
             items: [
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/images/baya_weaver_nest_button.png', Icons.home_rounded),
-                activeIcon: _buildNavIcon('assets/images/baya_weaver_nest_button.png', Icons.home_rounded, active: true),
+                icon: _buildNavIcon('assets/images/baya_weaver_nest_button.png',
+                    Icons.home_rounded),
+                activeIcon: _buildNavIcon(
+                    'assets/images/baya_weaver_nest_button.png',
+                    Icons.home_rounded,
+                    active: true),
                 label: '  নীড়\n(Home)',
               ),
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/images/bookworm_bookshelf.png', Icons.collections_bookmark_rounded),
-                activeIcon: _buildNavIcon('assets/images/bookworm_bookshelf.png', Icons.collections_bookmark_rounded, active: true),
+                icon: _buildNavIcon('assets/images/bookworm_bookshelf.png',
+                    Icons.collections_bookmark_rounded),
+                activeIcon: _buildNavIcon(
+                    'assets/images/bookworm_bookshelf.png',
+                    Icons.collections_bookmark_rounded,
+                    active: true),
                 label: 'বইয়ের তাক\n(Bookshelf)',
               ),
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/images/library.png', Icons.local_library_rounded),
-                activeIcon: _buildNavIcon('assets/images/library.png', Icons.local_library_rounded, active: true),
+                icon: _buildNavIcon(
+                    'assets/images/library.png', Icons.local_library_rounded),
+                activeIcon: _buildNavIcon(
+                    'assets/images/library.png', Icons.local_library_rounded,
+                    active: true),
                 label: 'লাইব্রেরি\n(Library)',
               ),
               if (_isAdmin)
                 BottomNavigationBarItem(
-                  icon: _buildNavIcon('assets/images/owl_editor_glasses.png', Icons.admin_panel_settings_rounded),
-                  activeIcon: _buildNavIcon('assets/images/owl_editor_glasses.png', Icons.admin_panel_settings_rounded, active: true),
+                  icon: _buildNavIcon('assets/images/owl_editor_glasses.png',
+                      Icons.admin_panel_settings_rounded),
+                  activeIcon: _buildNavIcon(
+                      'assets/images/owl_editor_glasses.png',
+                      Icons.admin_panel_settings_rounded,
+                      active: true),
                   label: 'সম্পাদক\n(Editor)',
                 ),
             ],

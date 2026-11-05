@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/wildlife_help.dart';
 import '../services/wildlife_help_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class WildlifeHelpScreen extends StatefulWidget {
   const WildlifeHelpScreen({super.key});
@@ -86,7 +87,7 @@ class _WildlifeHelpScreenState extends State<WildlifeHelpScreen> {
                       decoration: const InputDecoration(labelText: 'বিস্তারিত বিবরণ', labelStyle: TextStyle(color: Colors.white54)),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton.icon(
+                    AnimatedButtonWrapper(child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.white10),
                       onPressed: () async {
                         final picker = ImagePicker();
@@ -97,16 +98,16 @@ class _WildlifeHelpScreenState extends State<WildlifeHelpScreen> {
                       },
                       icon: const Icon(Icons.camera_alt, color: Colors.white),
                       label: Text(selectedMedia != null ? 'ছবি নির্বাচন করা হয়েছে' : 'ছবি যোগ করুন (ঐচ্ছিক)', style: const TextStyle(color: Colors.white)),
-                    ),
+                    )),
                   ],
                 ),
               ),
               actions: [
-                TextButton(
+                AnimatedButtonWrapper(child: TextButton(
                   onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
                   child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-                ),
-                ElevatedButton(
+                )),
+                AnimatedButtonWrapper(child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
                   onPressed: isSubmitting ? null : () async {
                     if (catController.text.trim().isEmpty || descController.text.trim().isEmpty) {
@@ -135,7 +136,7 @@ class _WildlifeHelpScreenState extends State<WildlifeHelpScreen> {
                   child: isSubmitting 
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
                     : const Text('জমা দিন', style: TextStyle(color: Colors.black)),
-                ),
+                )),
               ],
             );
           }
@@ -188,7 +189,7 @@ class _WildlifeHelpScreenState extends State<WildlifeHelpScreen> {
                             style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
                           ),
                           const SizedBox(height: 16),
-                          ElevatedButton.icon(
+                          AnimatedButtonWrapper(child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -197,7 +198,7 @@ class _WildlifeHelpScreenState extends State<WildlifeHelpScreen> {
                             onPressed: _showRequestHelpDialog,
                             icon: const Icon(Icons.health_and_safety, color: Colors.white),
                             label: const Text('সহায়তার আবেদন করুন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          ),
+                          )),
                         ],
                       ),
                     ),

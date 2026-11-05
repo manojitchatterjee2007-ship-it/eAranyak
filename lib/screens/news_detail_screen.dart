@@ -10,6 +10,7 @@ import '../services/analytics_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/scientific_text.dart';
 import 'home_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class NewsDetailScreen extends StatefulWidget {
   final Map<String, dynamic> newsItem;
@@ -177,7 +178,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
         backgroundColor: Colors.black87,
         actions: [
           if (newsItem['source_url'] != null)
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon: const Icon(Icons.open_in_browser_rounded,
                   color: Color(0xFF00E676)),
               tooltip: 'Open in browser / ব্রাউজারে পড়ুন',
@@ -185,7 +186,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                 SoundService.playButtonSound();
                 _launchSourceUrl(context);
               },
-            ),
+            )),
         ],
       ),
       body: SingleChildScrollView(

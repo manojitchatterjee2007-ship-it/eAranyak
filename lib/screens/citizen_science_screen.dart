@@ -7,6 +7,7 @@ import '../widgets/keyboard_press_effect.dart';
 import '../widgets/citizen_science/sighting_card.dart';
 import 'sighting_detail_screen.dart';
 import 'sighting_submission_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 /// Public "নাগরিক বিজ্ঞান — বন্যপ্রাণ দর্শন" experience.
 ///
@@ -262,13 +263,13 @@ class _CitizenScienceScreenState extends State<CitizenScienceScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             onPressed: () {
               SoundService.playButtonSound();
               Navigator.of(context).maybePop();
             },
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
-          ),
+          )),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,12 +291,12 @@ class _CitizenScienceScreenState extends State<CitizenScienceScreen> {
               ],
             ),
           ),
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             tooltip: 'আমার দর্শন ও বার্তা',
             onPressed: _openContributorArea,
             icon: const Icon(Icons.person_pin_circle_outlined,
                 color: CitizenSciencePalette.accentSoft),
-          ),
+          )),
         ],
       ),
     );
@@ -350,7 +351,7 @@ class _CitizenScienceScreenState extends State<CitizenScienceScreen> {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
+              child: AnimatedButtonWrapper(child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: CitizenSciencePalette.accent,
                   foregroundColor: Colors.black,
@@ -362,7 +363,7 @@ class _CitizenScienceScreenState extends State<CitizenScienceScreen> {
                 icon: const Icon(Icons.add_a_photo_outlined, size: 19),
                 label: const Text('📸 দর্শন রিপোর্ট করুন',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              ),
+              )),
             ),
           ],
         ),
@@ -528,14 +529,14 @@ class _CitizenScienceScreenState extends State<CitizenScienceScreen> {
                   color: CitizenSciencePalette.accentSoft, size: 19),
               suffixIcon: _searchCtrl.text.trim().isEmpty
                   ? null
-                  : IconButton(
+                  : AnimatedButtonWrapper(child: IconButton(
                       icon: const Icon(Icons.close_rounded,
                           color: Colors.white38, size: 18),
                       onPressed: () {
                         _searchCtrl.clear();
                         _applyLocalFilters();
                       },
-                    ),
+                    )),
               filled: true,
               fillColor: CitizenSciencePalette.surface,
               contentPadding:

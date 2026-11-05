@@ -6,6 +6,7 @@ import '../../models/wildlife_gallery_item.dart';
 import '../../services/wildlife_gallery_admin_service.dart';
 import '../../services/push_notification_service.dart';
 import '../scientific_text.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class GalleryAdminSection extends StatefulWidget {
   final VoidCallback onUploadComplete;
@@ -108,15 +109,15 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
         title: const Text('🗑 Delete Gallery Photo', style: TextStyle(color: Colors.white)),
         content: Text('Are you sure you want to delete "${item.displayTitle}"?\n(আপনি কি নিশ্চিত যে ছবিটি স্থায়ীভাবে মুছে ফেলতে চান?)'),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancel (বাতিল)', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete (মুছে ফেলুন)'),
-          ),
+          )),
         ],
       ),
     );
@@ -249,7 +250,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                           ),
                         ),
 
-                      ElevatedButton.icon(
+                      AnimatedButtonWrapper(child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2E7D32),
                         ),
@@ -268,7 +269,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                               : (isEditing ? 'Replace Image (ঐচ্ছিক)' : 'Select Image File (ছবি বাছুন) *'),
                           style: const TextStyle(color: Colors.white),
                         ),
-                      ),
+                      )),
                       
                       _buildSectionHeader('PHOTO / ছবি'),
                       _buildTextField(titleCtrl, 'Title (শিরোনাম) *'),
@@ -406,11 +407,11 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                 ),
               ),
               actions: [
-                TextButton(
+                AnimatedButtonWrapper(child: TextButton(
                   onPressed: isUploading ? null : () => Navigator.pop(ctx),
                   child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-                ),
-                ElevatedButton(
+                )),
+                AnimatedButtonWrapper(child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
                   onPressed: isUploading
                       ? null
@@ -537,7 +538,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                     isEditing ? 'Update (হালনাগাদ)' : 'Save (সংরক্ষণ)',
                     style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                   ),
-                ),
+                )),
               ],
             );
           },
@@ -589,10 +590,10 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
           ),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Close (বন্ধ করুন)', style: TextStyle(color: Colors.white70)),
-          ),
+          )),
         ],
       ),
     );
@@ -618,18 +619,18 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                 Text('(ছবি প্রকাশ, সম্পাদনা ও সংগৃহীত ছবি নিয়ন্ত্রণ)', style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
               ],
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
               tooltip: 'রিফ্রেশ করুন',
               onPressed: _loadItems,
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
 
         Row(
           children: [
-            ElevatedButton.icon(
+            AnimatedButtonWrapper(child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2E7D32),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -637,7 +638,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
               onPressed: () => _showAddOrEditDialog(),
               icon: const Icon(Icons.add_a_photo, size: 18, color: Colors.white),
               label: const Text('➕ নতুন ছবি যুক্ত করুন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
@@ -799,7 +800,7 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                   icon: const Icon(Icons.edit, size: 16),
                                   label: const Text('সম্পাদনা'),
                                 ),
-                                ElevatedButton.icon(
+                                AnimatedButtonWrapper(child: ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: item.isPublished ? Colors.orange.shade800 : const Color(0xFF00E676),
                                     visualDensity: VisualDensity.compact,
@@ -810,12 +811,12 @@ class _GalleryAdminSectionState extends State<GalleryAdminSection> {
                                     item.isPublished ? 'Unpublish' : '📢 Publish',
                                     style: TextStyle(color: item.isPublished ? Colors.white : Colors.black, fontWeight: FontWeight.bold),
                                   ),
-                                ),
-                                IconButton(
+                                )),
+                                AnimatedButtonWrapper(child: IconButton(
                                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                                   tooltip: 'স্থায়ীভাবে মুছে ফেলুন',
                                   onPressed: () => _handleDelete(item),
-                                ),
+                                )),
                               ],
                             ),
                           ],

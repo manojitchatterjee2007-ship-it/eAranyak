@@ -7,6 +7,7 @@ import '../models/tutorial.dart';
 import '../services/sound_service.dart';
 import '../widgets/keyboard_press_effect.dart';
 import '../widgets/scientific_text.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class TutorialDetailScreen extends StatelessWidget {
   final Tutorial tutorial;
@@ -309,11 +310,11 @@ class TutorialDetailScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             icon: const Icon(Icons.share_rounded, color: Color(0xFF00E676)),
             tooltip: 'শেয়ার করুন / Share',
             onPressed: _shareTutorial,
-          ),
+          )),
         ],
       ),
       body: Stack(

@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  animated_button:
+    dependency: "direct main"
+    description:
+      name: animated_button
+      sha256: "238e093023955b3a21b14d230baeecb94fc796379e3dd8ee534c158838f24024"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   app_links:
     dependency: transitive
     description:
@@ -1060,10 +1068,10 @@ packages:
     dependency: "direct main"
     description:
       name: shared_preferences_android
-      sha256: "33b38b07d9ac7d16aff0426c61418752fd3e7a8c7dc8be786c875d6ce673b002"
+      sha256: "1e12aafe408aa50da80edfd679a2a6bf63ba7ab37c7fa98286da459a757b3399"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.4"
+    version: "2.4.28"
   shared_preferences_foundation:
     dependency: transitive
     description:

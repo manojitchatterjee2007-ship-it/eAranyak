@@ -5,6 +5,7 @@ import '../../models/vlog.dart';
 import '../../services/vlog_service.dart';
 import '../../services/push_notification_service.dart';
 import '../scientific_text.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class VlogAdminSection extends StatefulWidget {
   final VoidCallback onUploadComplete;
@@ -88,15 +89,15 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
         title: const Text('🗑 Delete Vlog Record', style: TextStyle(color: Colors.white)),
         content: Text('Are you sure you want to delete "${vlog.title}"?\n(আপনি কি নিশ্চিত যে প্রকৃতি ব্লগটি স্থায়ীভাবে মুছে ফেলতে চান?)'),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete'),
-          ),
+          )),
         ],
       ),
     );
@@ -248,7 +249,7 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                       const SizedBox(height: 12),
 
                       // Video Upload Button
-                      ElevatedButton.icon(
+                      AnimatedButtonWrapper(child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
                         onPressed: isUploading
                             ? null
@@ -268,11 +269,11 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                               : (isEditing ? 'Replace Uploaded Video' : 'Upload Video File (.mp4)'),
                           style: const TextStyle(color: Colors.white),
                         ),
-                      ),
+                      )),
                       const SizedBox(height: 8),
 
                       // Thumbnail Button
-                      ElevatedButton.icon(
+                      AnimatedButtonWrapper(child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
                         onPressed: isUploading
                             ? null
@@ -292,7 +293,7 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                               : 'Select Thumbnail Image',
                           style: const TextStyle(color: Colors.white),
                         ),
-                      ),
+                      )),
                       const SizedBox(height: 12),
 
                       SwitchListTile(
@@ -327,11 +328,11 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                 ),
               ),
               actions: [
-                TextButton(
+                AnimatedButtonWrapper(child: TextButton(
                   onPressed: isUploading ? null : () => Navigator.pop(ctx),
                   child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-                ),
-                ElevatedButton(
+                )),
+                AnimatedButtonWrapper(child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676)),
                   onPressed: isUploading
                       ? null
@@ -443,7 +444,7 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                     isEditing ? 'Update' : 'Save',
                     style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                   ),
-                ),
+                )),
               ],
             );
           },
@@ -487,10 +488,10 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
           ),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Close', style: TextStyle(color: Colors.white70)),
-          ),
+          )),
         ],
       ),
     );
@@ -517,16 +518,16 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                     style: TextStyle(fontSize: 11, color: Color(0xFF81C784))),
               ],
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
               tooltip: 'রিফ্রেশ করুন',
               onPressed: _loadVlogs,
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 12),
 
-        ElevatedButton.icon(
+        AnimatedButtonWrapper(child: ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF2E7D32),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -534,7 +535,7 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
           onPressed: () => _showAddOrEditDialog(),
           icon: const Icon(Icons.add_to_queue, size: 18, color: Colors.white),
           label: const Text('➕ নতুন নেচার ব্লগ যোগ করুন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-        ),
+        )),
         const SizedBox(height: 12),
 
         // Filter chips
@@ -675,7 +676,7 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                                   icon: const Icon(Icons.edit, size: 16),
                                   label: const Text('সম্পাদনা'),
                                 ),
-                                ElevatedButton.icon(
+                                AnimatedButtonWrapper(child: ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: item.isPublished ? Colors.orange.shade800 : const Color(0xFF00E676),
                                     visualDensity: VisualDensity.compact,
@@ -686,12 +687,12 @@ class _VlogAdminSectionState extends State<VlogAdminSection> {
                                     item.isPublished ? 'Unpublish' : '📢 Publish',
                                     style: TextStyle(color: item.isPublished ? Colors.white : Colors.black, fontWeight: FontWeight.bold),
                                   ),
-                                ),
-                                IconButton(
+                                )),
+                                AnimatedButtonWrapper(child: IconButton(
                                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                                   tooltip: 'স্থায়ীভাবে মুছে ফেলুন',
                                   onPressed: () => _handleDelete(item),
-                                ),
+                                )),
                               ],
                             ),
                           ],

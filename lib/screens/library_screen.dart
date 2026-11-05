@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
@@ -10,6 +11,7 @@ import '../widgets/realistic_rack_widget.dart';
 import '../widgets/seamless_scrolling_background.dart';
 import 'magazine_preview_screen.dart';
 import 'magazine_reader_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class LibraryScreen extends StatefulWidget {
   final String userEmail;
@@ -27,10 +29,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
   int _sceneIndex = 0;
   final TextEditingController _searchController = TextEditingController();
   final Map<String, String> _downloadStates = {};
+  Timer? _snackBarTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          ScaffoldMessenger.of(context).clearSnackBars();
+        } catch (_) {}
+      }
+    });
     _loadSceneIndex();
     _loadMagazines();
     _searchController.addListener(_onSearchChanged);
@@ -71,6 +81,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   @override
   void dispose() {
+    _snackBarTimer?.cancel();
     MagazineDownloadService.progressNotifier.removeListener(_syncActiveDownloads);
     _searchController.dispose();
     super.dispose();
@@ -142,15 +153,37 @@ class _LibraryScreenState extends State<LibraryScreen> {
       setState(() {
         _downloadStates[id] = 'downloaded';
       });
+      _snackBarTimer?.cancel();
+      if (mounted) {
+        try {
+          ScaffoldMessenger.of(context).clearSnackBars();
+        } catch (_) {}
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 4),
+          persist: false,
           backgroundColor: const Color(0xFF142419),
           content: Text(
-              '✓ "$title" সম্পূর্ণ ম্যাগাজিনটি সফলভাবে ডাউনলোড হয়েছে এবং আপনার বুকশেলফে যুক্ত হয়েছে!'),
+            '✓ "$title" সম্পূর্ণ ডাউনলোড হয়েছে',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           action: SnackBarAction(
             label: 'পড়ুন (Read)',
             textColor: const Color(0xFF00E676),
             onPressed: () {
+              _snackBarTimer?.cancel();
+              if (mounted) {
+                try {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                } catch (_) {}
+              }
               ForestAmbienceService.stopAmbience();
               Navigator.push(
                 context,
@@ -169,6 +202,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ),
       );
+      _snackBarTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted) {
+          try {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          } catch (_) {}
+        }
+      });
     } else {
       setState(() {
         _downloadStates[id] = 'none';
@@ -176,10 +216,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
       final errorDetail =
           MagazineDownloadService.progressNotifier.value[id]?.error ??
               'Unknown error';
+      _snackBarTimer?.cancel();
+      if (mounted) {
+        try {
+          ScaffoldMessenger.of(context).clearSnackBars();
+        } catch (_) {}
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 4),
+          persist: false,
           backgroundColor: const Color(0xFF321313),
-          content: Text('ডাউনলোড ব্যর্থ হয়েছে: $errorDetail'),
+          content: Text(
+            'ডাউনলোড ব্যর্থ হয়েছে: $errorDetail',
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           action: SnackBarAction(
             label: 'পুনরায় চেষ্টা (Retry)',
             textColor: const Color(0xFFFF5252),
@@ -187,6 +240,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ),
       );
+      _snackBarTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted) {
+          try {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          } catch (_) {}
+        }
+      });
     }
   }
 
@@ -294,6 +354,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     bottom: 8,
                     right: 8,
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
                         if (downloadState == 'none') {
                           SoundService.playButtonSound();
@@ -329,26 +390,44 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         }
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        width: 38,
+                        height: 38,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.8),
+                          color: Colors.black.withValues(alpha: 0.85),
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: const Color(0xFF00E676), width: 1),
+                              color: const Color(0xFF00E676), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 4,
+                            ),
+                          ],
                         ),
                         child: downloadState == 'downloaded'
                             ? const Icon(Icons.check_rounded,
-                                color: Color(0xFF00E676), size: 16)
+                                color: Color(0xFF00E676), size: 18)
                             : downloadState == 'downloading'
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Color(0xFF00E676)),
+                                ? ValueListenableBuilder<Map<String, MagazineDownloadProgress>>(
+                                    valueListenable: MagazineDownloadService.progressNotifier,
+                                    builder: (context, map, _) {
+                                      final progress = map[id]?.progress;
+                                      return SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          value: (progress != null && progress > 0.05)
+                                              ? progress
+                                              : null,
+                                          strokeWidth: 2.2,
+                                          color: const Color(0xFF00E676),
+                                        ),
+                                      );
+                                    },
                                   )
                                 : const Icon(Icons.download_rounded,
-                                    color: Color(0xFF00E676), size: 16),
+                                    color: Color(0xFF00E676), size: 18),
                       ),
                     ),
                   ),
@@ -430,14 +509,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             prefixIcon: const Icon(Icons.search_rounded,
                                 color: Color(0xFF00E676)),
                             suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
+                                ? AnimatedButtonWrapper(child: IconButton(
                                     icon: const Icon(Icons.clear_rounded,
                                         color: Colors.white54, size: 18),
                                     onPressed: () {
                                       _searchController.clear();
                                       FocusScope.of(context).unfocus();
                                     },
-                                  )
+                                  ))
                                 : null,
                             filled: true,
                             fillColor: const Color(0xFF0D1410),

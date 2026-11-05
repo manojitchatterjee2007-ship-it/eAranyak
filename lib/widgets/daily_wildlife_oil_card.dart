@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/daily_wildlife_feature.dart';
 import '../screens/daily_wildlife_screen.dart';
 import '../services/sound_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 /// Daily wildlife photo card. Front = verified high-resolution source photo
 /// (no oil-painting conversion), back = Gemini info bullets.
@@ -124,20 +125,20 @@ class _DailyWildlifeOilCardState extends State<DailyWildlifeOilCard>
                 ],
                 Row(
                   children: [
-                    TextButton.icon(
+                    AnimatedButtonWrapper(child: TextButton.icon(
                       onPressed: _toggle,
                       icon: Icon(_showingBack ? Icons.image : Icons.info_outline,
                           size: 18, color: const Color(0xFF00E676)),
                       label: Text(_showingBack ? 'ছবি দেখুন' : 'তথ্য দেখুন',
                           style: const TextStyle(color: Color(0xFF00E676))),
-                    ),
+                    )),
                     const Spacer(),
-                    TextButton.icon(
+                    AnimatedButtonWrapper(child: TextButton.icon(
                       onPressed: _open,
                       icon: const Icon(Icons.open_in_new, size: 18, color: Colors.white70),
                       label: const Text('বিস্তারিত',
                           style: TextStyle(color: Colors.white70)),
-                    ),
+                    )),
                   ],
                 ),
               ],

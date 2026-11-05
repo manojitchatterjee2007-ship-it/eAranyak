@@ -8,6 +8,7 @@ import '../services/citizen_science_service.dart';
 import '../services/sighting_validation.dart';
 import '../services/sound_service.dart';
 import '../widgets/citizen_science/sighting_card.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 /// Bengali-first "রিপোর্ট করুন" wizard: three short steps, no taxonomy
 /// knowledge required, with an explicit location-privacy choice.
@@ -231,15 +232,15 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
               style: TextStyle(color: Colors.white70, fontSize: 12.5),
             ),
             actions: [
-              TextButton(
+              AnimatedButtonWrapper(child: TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: const Text('বাতিল', style: TextStyle(color: Colors.white70)),
-              ),
-              TextButton(
+              )),
+              AnimatedButtonWrapper(child: TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('তবুও জমা দিন',
                     style: TextStyle(color: CitizenSciencePalette.accent)),
-              ),
+              )),
             ],
           ),
         );
@@ -317,7 +318,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
       appBar: AppBar(
         backgroundColor: CitizenSciencePalette.surface,
         elevation: 0,
-        leading: IconButton(
+        leading: AnimatedButtonWrapper(child: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () {
             SoundService.playButtonSound();
@@ -327,7 +328,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
               Navigator.of(context).maybePop();
             }
           },
-        ),
+        )),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -407,7 +408,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
         SizedBox(
           width: double.infinity,
           height: 50,
-          child: ElevatedButton(
+          child: AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: CitizenSciencePalette.accent,
               foregroundColor: Colors.black,
@@ -436,15 +437,15 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
                     style:
                         const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
-          ),
+          )),
         ),
         if (isLast) ...[
           const SizedBox(height: 10),
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: _isSubmitting ? null : () => _submit(asDraft: true),
             child: const Text('খসড়া হিসেবে সংরক্ষণ করুন',
                 style: TextStyle(color: CitizenSciencePalette.accentSoft)),
-          ),
+          )),
         ],
         const SizedBox(height: 6),
         const Text(
@@ -750,7 +751,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
                           fontWeight: FontWeight.bold,
                           fontSize: 13)),
                   const Spacer(),
-                  TextButton.icon(
+                  AnimatedButtonWrapper(child: TextButton.icon(
                     style: TextButton.styleFrom(
                       visualDensity: VisualDensity.compact,
                       foregroundColor: CitizenSciencePalette.accent,
@@ -759,7 +760,7 @@ class _SightingSubmissionScreenState extends State<SightingSubmissionScreen> {
                     label: const Text('আমার অবস্থান নিন',
                         style: TextStyle(fontSize: 12)),
                     onPressed: _fetchCurrentLocation,
-                  ),
+                  )),
                 ],
               ),
               const SizedBox(height: 6),
@@ -1160,10 +1161,10 @@ class SightingSuccessScreen extends StatelessWidget {
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             icon: const Icon(Icons.close, color: Colors.white70),
             onPressed: () => Navigator.of(context).pop(),
-          ),
+          )),
         ],
       ),
       body: Center(
@@ -1231,7 +1232,7 @@ class SightingSuccessScreen extends StatelessWidget {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: AnimatedButtonWrapper(child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: CitizenSciencePalette.accent,
                     foregroundColor: Colors.black,
@@ -1243,7 +1244,7 @@ class SightingSuccessScreen extends StatelessWidget {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('নাগরিক বিজ্ঞান পাতায় ফিরে যান',
                       style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
+                )),
               ),
             ],
           ),

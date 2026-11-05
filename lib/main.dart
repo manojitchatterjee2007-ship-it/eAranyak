@@ -85,6 +85,15 @@ Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize SharedPreferences early so the Android native side is ready
+  // before any UI action (e.g. magazine download) triggers first access.
+  // Prevents SharedPreferencesAndroid._throwNoInstanceError.
+  try {
+    await PrefsHelper.getPrefs();
+  } catch (e) {
+    debugPrint('[Prefs] Early SharedPreferences init failed: $e');
+  }
+
   try {
     await Supabase.initialize(
       url: supabaseUrl,

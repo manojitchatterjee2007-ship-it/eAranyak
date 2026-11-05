@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../models/kishor_medal.dart';
 import '../services/medal_composer_service.dart';
 import '../services/medal_export_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 /// Builds, previews, saves and shares a personalised Kishor Aranyak medal.
 ///
@@ -455,7 +456,7 @@ class _KishorMedalScreenState extends State<KishorMedalScreen> {
     required VoidCallback? onPressed,
   }) {
     final enabled = onPressed != null;
-    return ElevatedButton.icon(
+    return AnimatedButtonWrapper(child: ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 20),
       label: Text(label, overflow: TextOverflow.ellipsis),
@@ -469,7 +470,7 @@ class _KishorMedalScreenState extends State<KishorMedalScreen> {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-    );
+    ));
   }
 
   Widget _cropSlider({
@@ -507,7 +508,7 @@ class _KishorMedalScreenState extends State<KishorMedalScreen> {
     required VoidCallback? onPressed,
   }) {
     final busy = _busy;
-    return ElevatedButton.icon(
+    return AnimatedButtonWrapper(child: ElevatedButton.icon(
       onPressed: onPressed,
       icon: busy
           ? const SizedBox(
@@ -532,7 +533,7 @@ class _KishorMedalScreenState extends State<KishorMedalScreen> {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-    );
+    ));
   }
 }
 

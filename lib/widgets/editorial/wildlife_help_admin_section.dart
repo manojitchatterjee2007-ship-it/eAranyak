@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/wildlife_help.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class WildlifeHelpAdminSection extends StatefulWidget {
   const WildlifeHelpAdminSection({super.key});
@@ -67,11 +68,11 @@ class _WildlifeHelpAdminSectionState extends State<WildlifeHelpAdminSection> {
                 Text('(বন্যপ্রাণী সহায়তার আবেদন)', style: TextStyle(fontSize: 11, color: Color(0xFF00E676))),
               ],
             ),
-            IconButton(
+            AnimatedButtonWrapper(child: IconButton(
               icon: const Icon(Icons.refresh, color: Color(0xFF00E676)),
               tooltip: 'রিফ্রেশ করুন',
               onPressed: _loadRequests,
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 16),

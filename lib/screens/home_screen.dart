@@ -30,6 +30,7 @@ import 'writing_submission_screen.dart';
 import 'online_book_store_screen.dart';
 import 'free_book_preview_screen.dart';
 import 'library_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class NewsEditorialService {
   static String safeHeadline(String text) {
@@ -1491,10 +1492,10 @@ class _WildlifeDetailSheetState extends State<_WildlifeDetailSheet> {
                   ),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: IconButton(
+                    child: AnimatedButtonWrapper(child: IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 24),
                       onPressed: widget.onClose,
-                    ),
+                    )),
                   ),
                 ],
               ),
@@ -2260,11 +2261,11 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ),
           actions: [
-            TextButton(
+            AnimatedButtonWrapper(child: TextButton(
               onPressed: () => Navigator.pop(ctx),
               child:
                   const Text('বাতিল', style: TextStyle(color: Colors.white54)),
-            ),
+            )),
             KeyboardPressEffect(
               onTap: sending
                   ? null
@@ -3261,11 +3262,11 @@ class HomeScreenState extends State<HomeScreen> {
                                   style: const TextStyle(color: Colors.white70),
                                 ),
                                 const SizedBox(height: 8),
-                                TextButton.icon(
+                                AnimatedButtonWrapper(child: TextButton.icon(
                                   onPressed: _fetchLiveNews,
                                   icon: const Icon(Icons.refresh),
                                   label: const Text('Refresh news'),
-                                ),
+                                )),
                               ],
                             ],
                           ),
@@ -3705,7 +3706,7 @@ class HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: AnimatedButtonWrapper(child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32), padding: const EdgeInsets.symmetric(vertical: 12)),
                       onPressed: () {
                         SoundService.playButtonSound();
@@ -3718,7 +3719,7 @@ class HomeScreenState extends State<HomeScreen> {
                       },
                       icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
                       label: const Text('✍️ এখানে আপনার লেখা জমা দিন ➔', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                    ),
+                    )),
                   ),
                 ],
               ),
@@ -3880,7 +3881,7 @@ class HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: AnimatedButtonWrapper(child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E676), padding: const EdgeInsets.symmetric(vertical: 10)),
               onPressed: () {
                 SoundService.playButtonSound();
@@ -3893,7 +3894,7 @@ class HomeScreenState extends State<HomeScreen> {
               },
               icon: const Icon(Icons.shopping_bag_rounded, color: Colors.black, size: 18),
               label: const Text('🛒 বই ঘর খুলুন', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
+            )),
           ),
         ],
       ),

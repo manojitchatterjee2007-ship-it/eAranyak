@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import '../models/daily_wildlife_feature.dart';
 
 import '../services/sound_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class DailyWildlifeScreen extends StatefulWidget {
   final DailyWildlifeFeature feature;
@@ -213,7 +214,7 @@ class _DailyWildlifeScreenState extends State<DailyWildlifeScreen> {
                       ),
                     )
                   else
-                    ElevatedButton.icon(
+                    AnimatedButtonWrapper(child: ElevatedButton.icon(
                       onPressed: null,
                       icon: const Icon(Icons.volume_off),
                       label: const Text('ডাক উপলব্ধ নেই (Audio Unavailable)'),
@@ -221,7 +222,7 @@ class _DailyWildlifeScreenState extends State<DailyWildlifeScreen> {
                         disabledBackgroundColor: Colors.white12,
                         disabledForegroundColor: Colors.white54,
                       ),
-                    ),
+                    )),
                   const SizedBox(height: 24),
                   
                   if (feature.descriptionBn != null && feature.descriptionBn!.isNotEmpty) ...[

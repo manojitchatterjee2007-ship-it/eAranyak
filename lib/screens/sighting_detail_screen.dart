@@ -8,6 +8,7 @@ import '../widgets/citizen_science/sighting_card.dart';
 import '../widgets/protected_content.dart';
 import '../widgets/protected_image.dart';
 import '../widgets/scientific_text.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 /// Protected public detail view for a published sighting.
 ///
@@ -49,15 +50,15 @@ class _SightingDetailScreenState extends State<SightingDetailScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('বাতিল', style: TextStyle(color: Colors.white70)),
-          ),
-          TextButton(
+          )),
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('রিপোর্ট পাঠান',
                 style: TextStyle(color: CitizenSciencePalette.accent)),
-          ),
+          )),
         ],
       ),
     );
@@ -92,21 +93,21 @@ class _SightingDetailScreenState extends State<SightingDetailScreen> {
       appBar: AppBar(
         backgroundColor: CitizenSciencePalette.surface,
         elevation: 0,
-        leading: IconButton(
+        leading: AnimatedButtonWrapper(child: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () {
             SoundService.playButtonSound();
             Navigator.of(context).maybePop();
           },
-        ),
+        )),
         title: const Text('দর্শনের বিবরণ',
             style: TextStyle(color: Colors.white, fontSize: 16)),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             tooltip: 'রিপোর্ট করুন',
             onPressed: _reporting ? null : _report,
             icon: const Icon(Icons.flag_outlined, color: Colors.white54),
-          ),
+          )),
         ],
       ),
       body: ListView(

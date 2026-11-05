@@ -11,6 +11,7 @@ import '../widgets/keyboard_press_effect.dart';
 import '../widgets/protected_content.dart';
 import '../widgets/protected_image.dart';
 import '../widgets/scientific_text.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class WildlifeGalleryScreen extends StatefulWidget {
   final String userEmail;
@@ -117,15 +118,15 @@ class WildlifeGalleryScreenState extends State<WildlifeGalleryScreen> {
         content: const Text(
             'Are you sure you want to completely delete this gallery photo from servers?\n(আপনি কি নিশ্চিত যে ছবিটি সম্পূর্ণভাবে মুছে ফেলতে চান?)'),
         actions: [
-          TextButton(
+          AnimatedButtonWrapper(child: TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancel (বাতিল)', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
+          )),
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete (মুছে ফেলুন)'),
-          ),
+          )),
         ],
       ),
     );
@@ -500,7 +501,7 @@ class _FullscreenProtectedImageViewerState
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             icon: Icon(
               _showDetails ? Icons.info : Icons.info_outline,
               color: const Color(0xFF00E676),
@@ -509,7 +510,7 @@ class _FullscreenProtectedImageViewerState
             onPressed: () {
               setState(() => _showDetails = !_showDetails);
             },
-          ),
+          )),
         ],
       ),
       body: ProtectedContent(
@@ -560,11 +561,11 @@ class _FullscreenProtectedImageViewerState
                 child: Center(
                   child: CircleAvatar(
                     backgroundColor: Colors.black54,
-                    child: IconButton(
+                    child: AnimatedButtonWrapper(child: IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded,
                           color: Colors.white, size: 20),
                       onPressed: _prevPhoto,
-                    ),
+                    )),
                   ),
                 ),
               ),
@@ -578,11 +579,11 @@ class _FullscreenProtectedImageViewerState
                 child: Center(
                   child: CircleAvatar(
                     backgroundColor: Colors.black54,
-                    child: IconButton(
+                    child: AnimatedButtonWrapper(child: IconButton(
                       icon: const Icon(Icons.arrow_forward_ios_rounded,
                           color: Colors.white, size: 20),
                       onPressed: _nextPhoto,
-                    ),
+                    )),
                   ),
                 ),
               ),

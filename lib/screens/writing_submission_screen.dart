@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/writing_submission_service.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class WritingSubmissionScreen extends StatefulWidget {
   const WritingSubmissionScreen({super.key});
@@ -205,7 +206,7 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
           style: TextStyle(color: Colors.white.withValues(alpha: 0.80), fontSize: 14, height: 1.5),
         ),
         actions: [
-          ElevatedButton(
+          AnimatedButtonWrapper(child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),
               foregroundColor: Colors.white,
@@ -218,7 +219,7 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
               Navigator.of(context).pop(); // Return to home screen
             },
             child: const Text('ধন্যবাদ', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
+          )),
         ],
       ),
     );
@@ -524,7 +525,7 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
                     SizedBox(
                       width: double.infinity,
                       height: 52,
-                      child: ElevatedButton(
+                      child: AnimatedButtonWrapper(child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2E7D32),
                           foregroundColor: Colors.white,
@@ -563,7 +564,7 @@ class _WritingSubmissionScreenState extends State<WritingSubmissionScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                      ),
+                      )),
                     ),
                     const SizedBox(height: 30),
                   ],

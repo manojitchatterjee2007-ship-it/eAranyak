@@ -7,6 +7,7 @@ import '../widgets/keyboard_press_effect.dart';
 import '../widgets/nature_background.dart';
 import '../widgets/scientific_text.dart';
 import 'vlog_detail_screen.dart';
+import 'package:earanyak/widgets/animated_button_wrapper.dart';
 
 class VlogScreen extends StatefulWidget {
   final String? initialVlogId;
@@ -119,14 +120,14 @@ class _VlogScreenState extends State<VlogScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
         ),
         actions: [
-          IconButton(
+          AnimatedButtonWrapper(child: IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF00E676)),
             tooltip: 'রিফ্রেশ / Refresh',
             onPressed: () {
               SoundService.playButtonSound();
               _loadVlogs();
             },
-          ),
+          )),
         ],
       ),
       body: Stack(
