@@ -8,6 +8,9 @@ import '../services/push_notification_service.dart';
 import '../services/forest_ambience_service.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/nature_background.dart';
+import '../widgets/baya_weaver_home_icon.dart';
+import '../widgets/bookworm_bookshelf_icon.dart';
+import '../widgets/library_icon.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
 import 'login_screen.dart';
@@ -35,7 +38,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   int _currentIndex = 0;
   String _fullName = '';
   String _mobileNumber = '';
-  String _appVersion = '3.0.0';
+  String _appVersion = '3.1.0';
   bool _isAdmin = false;
 
   final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
@@ -972,7 +975,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'eআরণ্যক 3.0 — প্রকৃতির সঙ্গে পরিচয়ের এক নতুন অধ্যায়!',
+                          'eআরণ্যক 3.1 — প্রকৃতির সঙ্গে পরিচয়ের এক নতুন অধ্যায়!',
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -983,7 +986,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   ),
                   content: const SingleChildScrollView(
                     child: Text(
-                      "প্রকৃতিকে জানা, বন্যপ্রাণী সংরক্ষণে অংশ নেওয়া এবং আনন্দের সঙ্গে শেখার অভিজ্ঞতাকে আরও সমৃদ্ধ করতে এসেছে eআরণ্যক 3.0।\n\n"
+                      "প্রকৃতিকে জানা, বন্যপ্রাণী সংরক্ষণে অংশ নেওয়া এবং আনন্দের সঙ্গে শেখার অভিজ্ঞতাকে আরও সমৃদ্ধ করতে এসেছে eআরণ্যক 3.1।\n\n"
+                      "✨ অ্যানিমেটেড নেওন নেভিগেশন আইকন (Animated Home, Bookshelf & Library Icons): হোম, বুকশেলফ ও লাইব্রেরি ট্যাবের জন্য আকর্ষণীয় এবং জীবন্ত অ্যানিমেটেড আইকন সংযোজন, যা ট্যাব নির্বাচন করলে স্বয়ংক্রিয়ভাবে অ্যানিমেট হয় এবং অন্য ট্যাবে গেলে বন্ধ থাকে।\n\n"
                       "🦉 দৈনিক বন্যপ্রাণী: প্রকৃতি ও জীববৈচিত্র্য সম্পর্কে জানার জন্য সমৃদ্ধ বিষয়বস্তু।\n\n"
                       "🌿 নাগরিক বিজ্ঞান: বন্যপ্রাণী পর্যবেক্ষণের তথ্য নথিবদ্ধ করে প্রকৃতি অনুসন্ধানে অংশ নেওয়ার সুযোগ।\n\n"
                       "🏅 কিশোর eআরণ্যক ও বনরক্ষী: কিশোর প্রকৃতিপ্রেমীদের শেখা, অংশগ্রহণ ও অগ্রগতিকে উৎসাহিত করার উদ্যোগ।\n\n"
@@ -993,7 +997,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       "🛡️ বিষয়বস্তুর সুরক্ষা: ডিজিটাল কনটেন্টের সুরক্ষা ও ব্যবস্থাপনায় উন্নয়ন।\n\n"
                       "⚙️ সামগ্রিক উন্নয়ন: সংবাদ, ছবি, নেভিগেশন ও অ্যাপের বিভিন্ন অংশে সংশোধন ও উন্নয়নের কাজ।\n\n"
                       "প্রকৃতিকে জানুন। বন্যপ্রাণীকে ভালোবাসুন। সংরক্ষণের অংশ হয়ে উঠুন।\n\n"
-                      "eআরণ্যক 3.0 — প্রকৃতির জন্য, আগামী প্রজন্মের জন্য।",
+                      "eআরণ্যক 3.1 — প্রকৃতির জন্য, আগামী প্রজন্মের জন্য।",
                       style: TextStyle(
                           color: Colors.white70, fontSize: 13, height: 1.5),
                       textAlign: TextAlign.justify,
@@ -1213,29 +1217,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             },
             items: [
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/images/baya_weaver_nest_button.png',
-                    Icons.home_rounded),
-                activeIcon: _buildNavIcon(
-                    'assets/images/baya_weaver_nest_button.png',
-                    Icons.home_rounded,
-                    active: true),
+                icon: BayaWeaverHomeIcon(isSelected: false),
+                activeIcon: BayaWeaverHomeIcon(isSelected: true),
                 label: '  নীড়\n(Home)',
               ),
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/images/bookworm_bookshelf.png',
-                    Icons.collections_bookmark_rounded),
-                activeIcon: _buildNavIcon(
-                    'assets/images/bookworm_bookshelf.png',
-                    Icons.collections_bookmark_rounded,
-                    active: true),
+                icon: BookwormBookshelfIcon(isSelected: false),
+                activeIcon: BookwormBookshelfIcon(isSelected: true),
                 label: 'বইয়ের তাক\n(Bookshelf)',
               ),
               BottomNavigationBarItem(
-                icon: _buildNavIcon(
-                    'assets/images/library.png', Icons.local_library_rounded),
-                activeIcon: _buildNavIcon(
-                    'assets/images/library.png', Icons.local_library_rounded,
-                    active: true),
+                icon: LibraryIcon(isSelected: false),
+                activeIcon: LibraryIcon(isSelected: true),
                 label: 'লাইব্রেরি\n(Library)',
               ),
               if (_isAdmin)
